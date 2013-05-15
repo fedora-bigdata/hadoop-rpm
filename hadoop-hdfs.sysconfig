@@ -1,0 +1,7 @@
+SVC_USER=hdfs
+HADOOP_IDENT_STRING=$SVC_USER
+HADOOP_PID_DIR=/var/run/hadoop-hdfs
+HADOOP_LOG_DIR=/var/log/hadoop-hdfs
+EXEC_PATH="/usr/sbin/hadoop-daemon.sh"
+IDENT_STRING=$HADOOP_IDENT_STRING
+PID_DIR=$HADOOP_PID_DIR

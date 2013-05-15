@@ -1,0 +1,17 @@
+SVC_USER=httpfs
+EXEC_PATH=/usr/sbin/httpfs.sh
+HTTPFS_CONFIG=/etc/hadoop
+HTTPFS_LOG=/var/log/hadoop-httpfs
+HTTPFS_TEMP=/var/run/hadoop-httpfs
+HTTPFS_CATALINA_HOME=/usr
+CATALINA_PID=/var/run/hadoop-httpfs/hadoop-$SVC_USER-httpfs.pid
+CATALINA_BASE=/usr/share/hadoop-httpfs
+CATALINA_TMPDIR=/var/run/hadoop-httpfs
+# HTTPFS_HTTP_PORT
+# HTTPFS_ADMIN_PORT
+
+CONF_DIR=$HTTPFS_CONFIG
+IDENT_STRING=$SVC_USER
+PID_DIR=$HTTPFS_TEMP
+CONFIG_OPT=''
+DAEMON=httpfs
