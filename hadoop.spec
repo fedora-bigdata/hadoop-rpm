@@ -133,9 +133,9 @@ Requires: /sbin/service
 Requires: zookeeper >= 3.4.0
 Requires: psmisc
 Requires: nc6
-Requires: jetty
-Requires: jersey
+#Requires: jersey
 Requires: snappy-java
+Requires: slf4j
 
 #%define hadoop_name hadoop
 #%define etc_hadoop /etc/%{name}
@@ -204,6 +204,8 @@ located.
 Summary: The Hadoop Distributed File System
 Group: System/Daemons
 Requires: %{name} = %{version}-%{release}
+Requires: apache-commons-daemon-jsvc
+Requires: jetty
 
 %description hdfs
 Hadoop Distributed File System (HDFS) is the primary storage system used by 
@@ -215,6 +217,9 @@ computations.
 Summary: The Hadoop NextGen MapReduce (YARN)
 Group: System/Daemons
 Requires: %{name} = %{version}-%{release}
+Requires: guice
+Requires: avro
+Requires: jersey
 
 %description yarn
 YARN (Hadoop NextGen MapReduce) is a general purpose data-computation framework.
@@ -428,7 +433,7 @@ Requires: jpackage-utils
 mvn-rpmbuild -Drequire.snappy=true -Pdist,native -DskipTests package javadoc:aggregate
 
 %check
-mvn-rpmbuild -Pnative test -Dmaven.test.failure.ignore=true
+mvn-rpmbuild -Pdist,native test -Dmaven.test.failure.ignore=true
 
 %clean
 rm -rf %{buildroot}
@@ -438,14 +443,14 @@ rm -rf %{buildroot}
 #########################
 %install
 install -d -m 0755 %{buildroot}/%{_libdir}
-install -d -m 0755 %{buildroot}/%{_sharedstatedir}/hadoop-hdfs
-install -d -m 0755 %{buildroot}/%{_sharedstatedir}/hadoop-httpfs/webapps
-install -d -m 0755 %{buildroot}/%{_datadir}/hadoop-hdfs
-install -d -m 0755 %{buildroot}/%{_datadir}/hadoop-httpfs
-install -d -m 0755 %{buildroot}/%{_javadir}
+install -d -m 0755 %{buildroot}/%{_sharedstatedir}/%{name}-hdfs/webapps
+install -d -m 0755 %{buildroot}/%{_sharedstatedir}/%{name}-httpfs/webapps
+install -d -m 0755 %{buildroot}/%{_datadir}/%{name}/hdfs
+install -d -m 0755 %{buildroot}/%{_datadir}/%{name}/httpfs
+install -d -m 0755 %{buildroot}/%{_javadir}/%{name}
 install -d -m 0755 %{buildroot}/%{_javadocdir}/%{name}
 install -d -m 0755 %{buildroot}/%{_sysconfdir}/sysconfig
-install -d -m 0755 %{buildroot}/%{_sysconfdir}/hadoop/tomcat
+install -d -m 0755 %{buildroot}/%{_sysconfdir}/%{name}/tomcat
 
 basedir='hadoop-dist/target/hadoop-%{hadoop_base_version}'
 
@@ -454,10 +459,22 @@ do
   cp -arf $basedir/$dir %{buildroot}/%{_prefix}
 done
 
-# We don't care about this binary
+# We don't care about this
 rm -f %{buildroot}/%{_bindir}/test-container-executor
 
 cp -arf $basedir/etc %{buildroot}
+
+# Modify hadoop-env.sh to point to correct locations for JAVA_HOME
+# and JSVC_HOME.
+sed -i "s|\${JAVA_HOME}|/usr/lib/jvm/jre|" %{buildroot}/%{_sysconfdir}/%{name}/hadoop-env.sh
+sed -i "s|\${JSVC_HOME}|/usr/bin|" %{buildroot}/%{_sysconfdir}/%{name}/hadoop-env.sh
+
+# Ensure the java provided DocumentBuilderFactory is used
+sed -i "s|\(HADOOP_OPTS.*=.*\)\$HADOOP_CLIENT_OPTS|\1 -Djavax.xml.parsers.DocumentBuilderFactory=com.sun.org.apache.xerces.internal.jaxp.DocumentBuilderFactoryImpl \$HADOOP_CLIENT_OPTS|" %{buildroot}/%{_sysconfdir}/%{name}/hadoop-env.sh
+echo "export YARN_OPTS=\$HADOOP_OPTS" >> %{buildroot}/%{_sysconfdir}/%{name}/hadoop-env.sh
+
+# Add dependencies to the CLASSPATH
+echo "export HADOOP_CLASSPATH=\$HADOOP_CLASSPATH:\$(build-classpath slf4j jetty guice avro jersey)" >>  %{buildroot}/%{_sysconfdir}/%{name}/hadoop-env.sh
 
 cp -arf $basedir/lib/native/*.so* %{buildroot}/%{_libdir}
 cp -af hadoop-hdfs-project/hadoop-hdfs/target/native/main/native/fuse-dfs/fuse_dfs %{buildroot}/%{_bindir}
@@ -470,26 +487,26 @@ do
     # (they are copies or incorrect versions), but do want other bits
     continue
   fi
-  target="hadoop-$dir"
-  install -d -m 0755 %{buildroot}/%{_javadir}/$target
-  find $basedir/share/hadoop/$dir -name *-%{hadoop_base_version}.jar | xargs cp -af -t %{buildroot}/%{_javadir}/$target
+  find $basedir/share/hadoop/$dir -name *-%{hadoop_base_version}.jar | xargs cp -af -t %{buildroot}/%{_javadir}/%{name}
 done
-mv -f %{buildroot}/%{_javadir}/hadoop-tools/* %{buildroot}/%{_javadir}/hadoop-mapreduce
-# TODO
-#rm -rf %{buildroot}/%{_javadir}/hadoop-tools
 
 # httpfs
-cp -arf $basedir/share/hadoop/httpfs/tomcat/conf/* %{buildroot}/%{_sysconfdir}/hadoop/tomcat
-cp -arf $basedir/share/hadoop/httpfs/tomcat/webapps %{buildroot}/%{_sharedstatedir}/hadoop-httpfs
-ln -s %{_sysconfdir}/hadoop/tomcat %{buildroot}/%{_datadir}/hadoop-httpfs/conf 
-ln -s %{_javadir}/tomcat %{buildroot}/%{_datadir}/hadoop-httpfs/lib
-ln -s %{_var}/log/hadoop-httpfs %{buildroot}/%{_datadir}/hadoop-httpfs/logs
-ln -s %{_sharedstatedir}/hadoop-httpfs/webapps %{buildroot}/%{_datadir}/hadoop-httpfs/webapps
-# TODO
-#rm -rf %{buildroot}/%{_datadir}/hadoop-httpfs/lib
+cp -arf $basedir/share/hadoop/httpfs/tomcat/conf/* %{buildroot}/%{_sysconfdir}/%{name}/tomcat
+cp -arf $basedir/share/hadoop/httpfs/tomcat/webapps %{buildroot}/%{_sharedstatedir}/%{name}-httpfs
+pushd %{buildroot}/%{_datadir}/%{name}/httpfs
+  %{__ln_s} %{_sysconfdir}/%{name}/tomcat conf 
+  %{__ln_s} %{_javadir}/tomcat lib
+  %{__ln_s} %{_var}/log/%{name}-httpfs logs
+  %{__ln_s} %{_sharedstatedir}/%{name}-httpfs/webapps webapps
+  %{__ln_s} %{_var}/cache/%{name}-httpfs/temp temp
+  %{__ln_s} %{_var}/cache/%{name}-httpfs/work work
+popd
 
 # install hdfs webapp bits
-cp -arf $basedir/share/hadoop/hdfs/webapps %{buildroot}/%{_datadir}/hadoop-hdfs
+cp -arf $basedir/share/hadoop/hdfs/webapps %{buildroot}/%{_sharedstatedir}/%{name}-hdfs
+pushd %{buildroot}/%{_datadir}/%{name}/hdfs
+  %{__ln_s} %{_sharedstatedir}/%{name}-hdfs/webapps webapps
+popd
 
 # javadocs
 cp -arf target/site/apidocs/* %{buildroot}/%{_javadocdir}/%{name}
@@ -512,91 +529,86 @@ cp -f %{SOURCE8} %{buildroot}/%{_sysconfdir}/sysconfig/hadoop-yarn
 cp -f %{SOURCE9} %{buildroot}/%{_sysconfdir}/sysconfig/hadoop-datanode
 
 # default config
-cp -f %{SOURCE11} %{buildroot}/%{_sysconfdir}/hadoop/core-site.xml
-cp -f %{SOURCE12} %{buildroot}/%{_sysconfdir}/hadoop/hdfs-site.xml
-cp -f %{SOURCE13} %{buildroot}/%{_sysconfdir}/hadoop/mapred-site.xml
-cp -f %{SOURCE14} %{buildroot}/%{_sysconfdir}/hadoop/yarn-site.xml
-
-#bash %{SOURCE2} \
-#  --distro-dir=$RPM_SOURCE_DIR \
-#  --build-dir=$PWD/build \
-#  --httpfs-dir=$RPM_BUILD_ROOT%{lib_httpfs} \
-#  --system-include-dir=$RPM_BUILD_ROOT%{_includedir} \
-#  --system-lib-dir=$RPM_BUILD_ROOT%{_libdir} \
-#  --system-libexec-dir=$RPM_BUILD_ROOT/%{lib_hadoop}/libexec \
-#  --hadoop-etc-dir=$RPM_BUILD_ROOT%{etc_hadoop} \
-#  --httpfs-etc-dir=$RPM_BUILD_ROOT%{etc_httpfs} \
-#  --prefix=$RPM_BUILD_ROOT \
-#  --doc-dir=$RPM_BUILD_ROOT%{doc_hadoop} \
-#  --example-dir=$RPM_BUILD_ROOT%{doc_hadoop}/examples \
-#  --native-build-string=%{hadoop_arch} \
-#  --installed-lib-dir=%{lib_hadoop} \
-#  --man-dir=$RPM_BUILD_ROOT%{man_hadoop} \
-
-install -d -m 0755 %{buildroot}/%{_initddir}/
+cp -f %{SOURCE11} %{buildroot}/%{_sysconfdir}/%{name}/core-site.xml
+cp -f %{SOURCE12} %{buildroot}/%{_sysconfdir}/%{name}/hdfs-site.xml
+cp -f %{SOURCE13} %{buildroot}/%{_sysconfdir}/%{name}/mapred-site.xml
+cp -f %{SOURCE14} %{buildroot}/%{_sysconfdir}/%{name}/yarn-site.xml
 
 # init scripts
-for service in hdfs-namenode hdfs-datanode hdfs-secondarynamenode hdfs-zkfc mapreduce-historyserver yarn-nodemanager yarn-proxyserver yarn-resourcemanager
+install -d -m 0755 %{buildroot}/%{_initddir}/
+for service in namenode datanode secondarynamenode zkfc historyserver nodemanager proxyserver resourcemanager httpfs
 do
-  d=`echo -n $service | cut -d'-' -f 2 | sed -e 's/^./\U&/g'`
-  sed -e "s|DESC|Hadoop $d|g" %{SOURCE2} > %{buildroot}/%{_initddir}/hadoop-$service
-  sed -i "s|\$daemon|$service|g" %{buildroot}/%{_initddir}/hadoop-$service
+  d=`echo -n $service | sed -e 's/^./\U&/g'`
+  sed -e "s|DESC|Hadoop $d|g" %{SOURCE2} > %{buildroot}/%{_initddir}/%{name}-$service
+  sed -i "s|\$daemon|$service|g" %{buildroot}/%{_initddir}/%{name}-$service
+  chmod 755 %{buildroot}/%{_initddir}/%{name}-$service
 done
 
-# httpfs is special of course
-sed -e "s|DESC|Hadoop Httpfs|g" %{SOURCE2} > %{buildroot}/%{_initddir}/hadoop-httpfs
-sed -i "s|\$daemon|httpfs|g" %{buildroot}/%{_initddir}/hadoop-httpfs
-
-#
-## Install top level /etc/default files
-#install -d -m 0755 $RPM_BUILD_ROOT/etc/default
-#cp $RPM_SOURCE_DIR/hadoop.default $RPM_BUILD_ROOT/etc/default/hadoop
-## FIXME: BIGTOP-463
-#echo 'export JSVC_HOME=%{libexecdir}/bigtop-utils' >> $RPM_BUILD_ROOT/etc/default/hadoop
-#%__cp $RPM_SOURCE_DIR/%{name}-fuse.default $RPM_BUILD_ROOT/etc/default/%{name}-fuse
-#
-## Generate the init.d scripts
-#for service in %{hadoop_services}
-#do
-#       init_file=$RPM_BUILD_ROOT/%{_initddir}/%{name}-${service}
-#       # On RedHat, SuSE and Mageia run-level 2 is networkless, hence excluding it
-#       env CHKCONFIG="345 85 15"       \
-#           INIT_DEFAULT_START="3 4 5"  \
-#           INIT_DEFAULT_STOP="0 1 2 6" \
-#         bash $RPM_SOURCE_DIR/init.d.tmpl $RPM_SOURCE_DIR/%{name}-${service}.svc > $init_file
-#       chmod 755 $init_file
-#       cp $RPM_SOURCE_DIR/${service/-*/}.default $RPM_BUILD_ROOT/etc/default/%{name}-${service}
-#       chmod 644 $RPM_BUILD_ROOT/etc/default/%{name}-${service}
-#done
-#
-# Install security limits
+# install security limits
 install -d -m 0755 $RPM_BUILD_ROOT/%{_sysconfdir}/security/limits.d
 for limit in hdfs yarn mapreduce
 do
   sed -e "s|name|${limit:0:6}|" %{SOURCE10} > %{buildroot}/%{_sysconfdir}/security/limits.d/${limit}.conf
 done
-#install -m 0644 %{SOURCE8} $RPM_BUILD_ROOT/etc/security/limits.d/hdfs.conf
-#install -m 0644 %{SOURCE9} $RPM_BUILD_ROOT/etc/security/limits.d/yarn.conf
-#install -m 0644 %{SOURCE10} $RPM_BUILD_ROOT/etc/security/limits.d/mapreduce.conf
-#
-## Install fuse default file
-#%__install -d -m 0755 $RPM_BUILD_ROOT/etc/default
-#%__cp %{SOURCE4} $RPM_BUILD_ROOT/etc/default/hadoop-fuse
-#
-# /var/lib/*/cache
-install -d -m 1777 $RPM_BUILD_ROOT/%{_sharedstatedir}/hadoop-yarn/cache
-install -d -m 1777 $RPM_BUILD_ROOT/%{_sharedstatedir}/hadoop-hdfs/cache
-install -d -m 1777 $RPM_BUILD_ROOT/%{_sharedstatedir}/hadoop-mapreduce/cache
+
+# /var/cache/*
+install -d -m 1777 %{buildroot}/%{_var}/cache/%{name}-yarn
+install -d -m 1777 %{buildroot}/%{_var}/cache/%{name}-hdfs
+install -d -m 1777 %{buildroot}/%{_var}/cache/%{name}-mapreduce
+install -d -m 1777 %{buildroot}/%{_var}/cache/%{name}-httpfs
 # /var/log/*
-install -d -m 0775 $RPM_BUILD_ROOT/%{_var}/log/hadoop-yarn
-install -d -m 0775 $RPM_BUILD_ROOT/%{_var}/log/hadoop-hdfs
-install -d -m 0775 $RPM_BUILD_ROOT/%{_var}/log/hadoop-mapreduce
-install -d -m 0775 $RPM_BUILD_ROOT/%{_var}/log/hadoop-httpfs
+install -d -m 0775 %{buildroot}/%{_var}/log/%{name}-yarn
+install -d -m 0775 %{buildroot}/%{_var}/log/%{name}-hdfs
+install -d -m 0775 %{buildroot}/%{_var}/log/%{name}-mapreduce
+install -d -m 0775 %{buildroot}/%{_var}/log/%{name}-httpfs
 # /var/run/*
-install -d -m 0775 $RPM_BUILD_ROOT/%{_var}/run/hadoop-yarn
-install -d -m 0775 $RPM_BUILD_ROOT/%{_var}/run/hadoop-hdfs
-install -d -m 0775 $RPM_BUILD_ROOT/%{_var}/run/hadoop-mapreduce
-install -d -m 0775 $RPM_BUILD_ROOT/%{_var}/run/hadoop-httpfs
+install -d -m 0775 %{buildroot}/%{_var}/run/%{name}-yarn
+install -d -m 0775 %{buildroot}/%{_var}/run/%{name}-hdfs
+install -d -m 0775 %{buildroot}/%{_var}/run/%{name}-mapreduce
+install -d -m 0775 %{buildroot}/%{_var}/run/%{name}-httpfs
+
+install -dm 0775 %{buildroot}%{_mavenpomdir}
+for module in hadoop-yarn-project/hadoop-yarn/hadoop-yarn-common \
+            hadoop-yarn-project/hadoop-yarn/hadoop-yarn-client \
+            hadoop-yarn-project/hadoop-yarn/hadoop-yarn-applications/hadoop-yarn-applications-unmanaged-am-launcher \
+            hadoop-yarn-project/hadoop-yarn/hadoop-yarn-applications/hadoop-yarn-applications-distributedshell \
+            hadoop-yarn-project/hadoop-yarn/hadoop-yarn-site \
+            hadoop-yarn-project/hadoop-yarn/hadoop-yarn-api \
+            hadoop-yarn-project/hadoop-yarn/hadoop-yarn-server/hadoop-yarn-server-resourcemanager \
+            hadoop-yarn-project/hadoop-yarn/hadoop-yarn-server/hadoop-yarn-server-nodemanager \
+            hadoop-yarn-project/hadoop-yarn/hadoop-yarn-server/hadoop-yarn-server-tests \
+            hadoop-yarn-project/hadoop-yarn/hadoop-yarn-server/hadoop-yarn-server-web-proxy \
+            hadoop-yarn-project/hadoop-yarn/hadoop-yarn-server/hadoop-yarn-server-common \
+            hadoop-common-project/hadoop-common \
+            hadoop-common-project/hadoop-annotations \
+            hadoop-common-project/hadoop-auth \
+            hadoop-tools/hadoop-rumen hadoop-tools/hadoop-archives \
+            hadoop-tools/hadoop-streaming hadoop-tools/hadoop-distcp \
+            hadoop-tools/hadoop-extras hadoop-tools/hadoop-datajoin\
+            hadoop-tools/hadoop-gridmix \
+            hadoop-mapreduce-project/hadoop-mapreduce-client/hadoop-mapreduce-client-core \
+            hadoop-mapreduce-project/hadoop-mapreduce-client/hadoop-mapreduce-client-app \
+            hadoop-mapreduce-project/hadoop-mapreduce-client/hadoop-mapreduce-client-jobclient \
+            hadoop-mapreduce-project/hadoop-mapreduce-client/hadoop-mapreduce-client-hs \
+            hadoop-mapreduce-project/hadoop-mapreduce-client/hadoop-mapreduce-client-shuffle \
+            hadoop-mapreduce-project/hadoop-mapreduce-client/hadoop-mapreduce-client-common \
+            hadoop-mapreduce-project/hadoop-mapreduce-examples \
+            hadoop-hdfs-project/hadoop-hdfs; do
+  base=`basename $module`
+  install -pm 644 $module/pom.xml %{buildroot}%{_mavenpomdir}/JPP.%{name}-$base-%{hadoop_base_version}.pom
+  %add_maven_depmap JPP.%{name}-$base-%{hadoop_base_version}.pom %{name}/$base-%{hadoop_base_version}.jar -f $base
+done
+
+# hadoop-common-project
+# hadoop-common-project/hadoop-auth-examples hadoop-dist
+#            hadoop-minicluster hadoop-project hadoop-client \
+#            hadoop-tools/hadoop-pipes hadoop-tools/hadoop-tools-dist \
+#hadoop-tools
+#            hadoop-mapreduce-project/hadoop-mapreduce-client \
+#            hadoop-mapreduce-project hadoop-assemblies \
+#            hadoop-hdfs-project/hadoop-hdfs-httpfs \ 
+#            hadoop-hdfs-project hadoop-project-dist
+              
 
 %pre
 getent group hadoop >/dev/null || groupadd -r hadoop
@@ -650,40 +662,44 @@ fi
 %files yarn
 %doc hadoop-dist/target/hadoop-%{hadoop_base_version}/share/doc/hadoop/yarn/*
 %defattr(-,root,root)
-%config(noreplace) %{_sysconfdir}/hadoop/yarn-env.sh
-%config(noreplace) %{_sysconfdir}/hadoop/yarn-site.xml
+%config(noreplace) %{_sysconfdir}/%{name}/yarn-env.sh
+%config(noreplace) %{_sysconfdir}/%{name}/yarn-site.xml
 %config(noreplace) %{_sysconfdir}/security/limits.d/yarn.conf
 %{_sysconfdir}/sysconfig/hadoop-yarn
-%{_initddir}/%{name}-yarn-nodemanager
-%{_initddir}/%{name}-yarn-proxyserver
-%{_initddir}/%{name}-yarn-resourcemanager
+%{_initddir}/%{name}-nodemanager
+%{_initddir}/%{name}-proxyserver
+%{_initddir}/%{name}-resourcemanager
 %{_libexecdir}/yarn-config.sh
-%{_javadir}/hadoop-yarn
+%{_javadir}/%{name}/%{name}-yarn*.jar
+%{_mavenpomdir}/JPP.%{name}-%{name}-yarn*.pom
+%{_mavendepmapfragdir}/%{name}-%{name}-yarn*
 %attr(6050,root,yarn) %{_bindir}/container-executor
 %{_bindir}/yarn
 %{_sbindir}/yarn-daemon.sh
 %{_sbindir}/yarn-daemons.sh
 %{_sbindir}/start-yarn.sh
 %{_sbindir}/stop-yarn.sh
-%attr(0775,yarn,hadoop) %dir %{_var}/run/hadoop-yarn
-%attr(0775,yarn,hadoop) %dir %{_var}/log/hadoop-yarn
-%attr(0755,yarn,hadoop) %dir %{_var}/lib/hadoop-yarn
-%attr(1777,yarn,hadoop) %dir %{_var}/lib/hadoop-yarn/cache
+%attr(0775,yarn,hadoop) %dir %{_var}/run/%{name}-yarn
+%attr(0775,yarn,hadoop) %dir %{_var}/log/%{name}-yarn
+%attr(1777,yarn,hadoop) %dir %{_var}/cache/%{name}-yarn
 
 %files hdfs
 %doc hadoop-dist/target/hadoop-%{hadoop_base_version}/share/doc/hadoop/hdfs/*
 %defattr(-,root,root)
 #%config(noreplace) /etc/default/hadoop-fuse
-%config(noreplace) %{_sysconfdir}/hadoop/hdfs-site.xml
+%config(noreplace) %{_sysconfdir}/%{name}/hdfs-site.xml
 %config(noreplace) %{_sysconfdir}/security/limits.d/hdfs.conf
 %{_sysconfdir}/sysconfig/hadoop-datanode
 %{_sysconfdir}/sysconfig/hadoop-hdfs
-%{_javadir}/hadoop-hdfs
-%{_datadir}/hadoop-hdfs
-%{_initddir}/%{name}-hdfs-datanode
-%{_initddir}/%{name}-hdfs-namenode
-%{_initddir}/%{name}-hdfs-secondarynamenode
-%{_initddir}/%{name}-hdfs-zkfc
+%{_javadir}/%{name}/%{name}-hdfs*.jar
+%{_mavenpomdir}/JPP.%{name}-%{name}-hdfs*.pom
+%{_mavendepmapfragdir}/%{name}-%{name}-hdfs*
+%{_datadir}/%{name}/hdfs
+%{_sharedstatedir}/%{name}-hdfs
+%{_initddir}/%{name}-datanode
+%{_initddir}/%{name}-namenode
+%{_initddir}/%{name}-secondarynamenode
+%{_initddir}/%{name}-zkfc
 %{_libexecdir}/hdfs-config.sh
 %{_bindir}/hdfs
 %{_sbindir}/distribute-exclude.sh
@@ -691,28 +707,49 @@ fi
 %{_sbindir}/hdfs-config.sh
 %{_sbindir}/update-hdfs-env.sh
 %{_sbindir}/hadoop-setup-hdfs.sh
-%attr(0775,hdfs,hadoop) %dir %{_var}/run/hadoop-hdfs
-%attr(0775,hdfs,hadoop) %dir %{_var}/log/hadoop-hdfs
-%attr(0755,hdfs,hadoop) %dir %{_sharedstatedir}/hadoop-hdfs
-%attr(1777,hdfs,hadoop) %dir %{_sharedstatedir}/hadoop-hdfs/cache
+%attr(0775,hdfs,hadoop) %dir %{_var}/run/%{name}-hdfs
+%attr(0775,hdfs,hadoop) %dir %{_var}/log/%{name}-hdfs
+%attr(1777,hdfs,hadoop) %dir %{_var}/cache/%{name}-hdfs
 
 %files mapreduce
 %doc hadoop-dist/target/hadoop-%{hadoop_base_version}/share/doc/hadoop/mapreduce/*
 %defattr(-,root,root)
-%config(noreplace) %{_sysconfdir}/hadoop/mapred-site.xml
-%config(noreplace) %{_sysconfdir}/hadoop/mapred-env.sh
+%config(noreplace) %{_sysconfdir}/%{name}/mapred-site.xml
+%config(noreplace) %{_sysconfdir}/%{name}/mapred-env.sh
 %config(noreplace) %{_sysconfdir}/security/limits.d/mapreduce.conf
 %{_sysconfdir}/sysconfig/hadoop-mapreduce
-%{_javadir}/hadoop-mapreduce
+%{_javadir}/%{name}/%{name}-mapreduce*.jar
+%{_javadir}/%{name}/%{name}-archives*.jar
+%{_javadir}/%{name}/%{name}-datajoin*.jar
+%{_javadir}/%{name}/%{name}-distcp*.jar
+%{_javadir}/%{name}/%{name}-extras*.jar
+%{_javadir}/%{name}/%{name}-gridmix*.jar
+%{_javadir}/%{name}/%{name}-rumen*.jar
+%{_javadir}/%{name}/%{name}-streaming*.jar
+%{_mavenpomdir}/JPP.%{name}-%{name}-mapreduce*.pom
+%{_mavenpomdir}/JPP.%{name}-%{name}-archives*.pom
+%{_mavenpomdir}/JPP.%{name}-%{name}-datajoin*.pom
+%{_mavenpomdir}/JPP.%{name}-%{name}-distcp*.pom
+%{_mavenpomdir}/JPP.%{name}-%{name}-extras*.pom
+%{_mavenpomdir}/JPP.%{name}-%{name}-gridmix*.pom
+%{_mavenpomdir}/JPP.%{name}-%{name}-rumen*.pom
+%{_mavenpomdir}/JPP.%{name}-%{name}-streaming*.pom
+%{_mavendepmapfragdir}/%{name}-%{name}-mapreduce*
+%{_mavendepmapfragdir}/%{name}-%{name}-archives*
+%{_mavendepmapfragdir}/%{name}-%{name}-datajoin*
+%{_mavendepmapfragdir}/%{name}-%{name}-distcp*
+%{_mavendepmapfragdir}/%{name}-%{name}-extras*
+%{_mavendepmapfragdir}/%{name}-%{name}-gridmix*
+%{_mavendepmapfragdir}/%{name}-%{name}-rumen*
+%{_mavendepmapfragdir}/%{name}-%{name}-streaming*
 %{_libexecdir}/mapred-config.sh
-%{_initddir}/%{name}-mapreduce-historyserver
+%{_initddir}/%{name}-historyserver
 # TODO: Fix MAPREDUCE-3980 issue
 %{_bindir}/mapred
 %{_sbindir}/mr-jobhistory-daemon.sh
-%attr(0775,mapred,hadoop) %dir %{_var}/run/hadoop-mapreduce
-%attr(0775,mapred,hadoop) %dir %{_var}/log/hadoop-mapreduce
-%attr(0755,mapred,hadoop) %dir %{_var}/lib/hadoop-mapreduce
-%attr(1777,mapred,hadoop) %dir %{_var}/lib/hadoop-mapreduce/cache
+%attr(0775,mapred,hadoop) %dir %{_var}/run/%{name}-mapreduce
+%attr(0775,mapred,hadoop) %dir %{_var}/log/%{name}-mapreduce
+%attr(1777,mapred,hadoop) %dir %{_var}/cache/%{name}-mapreduce
 
 
 %files
@@ -725,10 +762,18 @@ fi
 #%config(noreplace) %{_sysconfdir}/hadoop/slaves
 #%config(noreplace) %{_sysconfdir}/hadoop/ssl-client.xml.example
 #%config(noreplace) %{_sysconfdir}/hadoop/ssl-server.xml.example
-%config(noreplace) %{_sysconfdir}/hadoop/hadoop-env.sh
+%config(noreplace) %{_sysconfdir}/%{name}/hadoop-env.sh
 %{_sysconfdir}/sysconfig/hadoop
-%{_javadir}/hadoop-common
-%config(noreplace) %{_sysconfdir}/hadoop
+%{_javadir}/%{name}/%{name}-annotations*.jar
+%{_javadir}/%{name}/%{name}-auth*.jar
+%{_javadir}/%{name}/%{name}-common*.jar
+%{_mavenpomdir}/JPP.%{name}-%{name}-annotations*.pom
+%{_mavenpomdir}/JPP.%{name}-%{name}-auth*.pom
+%{_mavenpomdir}/JPP.%{name}-%{name}-common*.pom
+%{_mavendepmapfragdir}/%{name}-%{name}-annotations*
+%{_mavendepmapfragdir}/%{name}-%{name}-auth*
+%{_mavendepmapfragdir}/%{name}-%{name}-common*
+%config(noreplace) %{_sysconfdir}/%{name}
 %{_libexecdir}/hadoop-config.sh
 %{_libexecdir}/hadoop-layout.sh
 %{_bindir}/hadoop
@@ -763,16 +808,17 @@ fi
 %defattr(-,root,root)
 #%config(noreplace) %{etc_httpfs}/conf.empty
 #%config(noreplace) /etc/default/%{name}-httpfs
-%config(noreplace) %{_sysconfdir}/hadoop/httpfs-env.sh
-%config(noreplace) %{_sysconfdir}/hadoop/tomcat
+%config(noreplace) %{_sysconfdir}/%{name}/httpfs-env.sh
+%config(noreplace) %{_sysconfdir}/%{name}/tomcat
 %{_sysconfdir}/sysconfig/hadoop-httpfs
 %{_libexecdir}/httpfs-config.sh
 %{_initddir}/%{name}-httpfs
 %{_sbindir}/httpfs.sh
-%{_datadir}/hadoop-httpfs
+%{_datadir}/hadoop/httpfs
 %{_sharedstatedir}/hadoop-httpfs
-%attr(0775,httpfs,httpfs) %dir %{_var}/run/hadoop-httpfs
-%attr(0775,httpfs,httpfs) %dir %{_var}/log/hadoop-httpfs
+%attr(0775,httpfs,httpfs) %dir %{_var}/run/%{name}-httpfs
+%attr(0775,httpfs,httpfs) %dir %{_var}/log/%{name}-httpfs
+%attr(1777,httpfs,httpfs) %dir %{_var}/cache/%{name}-httpfs
 
 # Service file management RPMs
 #%define service_macro() \
@@ -835,7 +881,7 @@ fi
 %defattr(-,root,root)
 #%attr(0644,root,root) %config(noreplace) /etc/default/hadoop-fuse
 %{_sysconfdir}/sysconfig/hadoop-fuse
-%attr(0755,root,root) %{_bindir}/fuse_dfs
+#%attr(0755,root,root) %{_bindir}/fuse_dfs
 #%attr(0755,root,root) %{bin_hadoop}/hadoop-fuse-dfs
 
 %files javadoc

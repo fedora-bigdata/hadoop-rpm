@@ -34,18 +34,34 @@
   </property>
   <property>
      <name>hadoop.tmp.dir</name>
-     <value>/var/lib/hadoop-hdfs/cache/${user.name}</value>
+     <value>/var/cache/hadoop-hdfs/${user.name}</value>
   </property>
   <property>
      <name>dfs.namenode.name.dir</name>
-     <value>file:///var/lib/hadoop-hdfs/cache/${user.name}/dfs/name</value>
+     <value>file:///var/cache/hadoop-hdfs/${user.name}/dfs/namenode</value>
   </property>
   <property>
      <name>dfs.namenode.checkpoint.dir</name>
-     <value>file:///var/lib/hadoop-hdfs/cache/${user.name}/dfs/namesecondary</value>
+     <value>file:///var/cache/hadoop-hdfs/${user.name}/dfs/secondarynamenode</value>
   </property>
   <property>
      <name>dfs.datanode.data.dir</name>
-     <value>file:///var/lib/hadoop-hdfs/cache/${user.name}/dfs/data</value>
+     <value>file:///var/cache/hadoop-hdfs/${user.name}/dfs/datanode</value>
+  </property>
+  <property>
+      <name>dfs.http.address</name>
+      <value>0.0.0.0:50070</value>
+  </property>
+  <property>
+      <name>dfs.datanode.address</name>
+      <value>0.0.0.0:50010</value>
+  </property>
+  <property>
+      <name>dfs.datanode.http.address</name>
+      <value>0.0.0.0:50075</value>
+  </property>
+  <property>
+      <name>dfs.datanode.ipc.address</name>
+      <value>0.0.0.0:50020</value>
   </property>
 </configuration>

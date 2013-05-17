@@ -31,56 +31,27 @@
 # Should-Stop:
 ### END INIT INFO
 
-FAMILY=`basename $0 | cut -d'-' -f2`
-DAEMON=`basename $0 | cut -d'-' -f3 | cut -d'.' -f 1`
+DAEMON=`basename $0 | cut -d'-' -f2`
 
-. /lib/lsb/init-functions
+. /etc/init.d/functions
 . /etc/sysconfig/hadoop
 
-if [ -f /etc/sysconfig/hadoop-$FAMILY ] ; then
-  . /etc/sysconfig/hadoop-$FAMILY
+if [ -f /etc/sysconfig/hadoop-$DAEMON ] ; then
+  . /etc/sysconfig/hadoop-$DAEMON
 fi
 
-if [ -f /etc/sysconfig/hadoop-$FAMILY-$DAEMON ] ; then
-  . /etc/sysconfig/hadoop-$FAMILY-$DAEMON
-fi
-
-## Autodetect JAVA_HOME if not defined
-#if [ -e /usr/libexec/bigtop-detect-javahome ]; then
-#  . /usr/libexec/bigtop-detect-javahome
-#elif [ -e /usr/lib/bigtop-utils/bigtop-detect-javahome ]; then
-#  . /usr/lib/bigtop-utils/bigtop-detect-javahome
-#fi
-#
-#RETVAL_SUCCESS=0
-#
-#STATUS_RUNNING=0
-#STATUS_DEAD=1
-#STATUS_DEAD_AND_LOCK=2
-#STATUS_NOT_RUNNING=3
-#STATUS_OTHER_ERROR=102
-#
-#
-#ERROR_PROGRAM_NOT_INSTALLED=5
-#ERROR_PROGRAM_NOT_CONFIGURED=6
-#
-#
 RETVAL=0
 SLEEP_TIME=5
-#PROC_NAME="java"
+PROC_NAME="java"
 
-#DESC="Hadoop Nodemanager"
-#EXEC_PATH="/usr/sbin/yarn-daemon.sh"
-#SVC_USER="yarn"
 DAEMON_FLAGS="$DAEMON"
-#CONF_DIR="/etc/hadoop"
 PIDFILE="$PID_DIR/hadoop-$IDENT_STRING-$DAEMON.pid"
 LOCKFILE="/var/lock/subsys/hadoop-$DAEMON"
 
 start() {
   [ -x $EXEC_PATH ] || exit $ERROR_PROGRAM_NOT_INSTALLED
   [ -d $CONF_DIR ] || exit $ERROR_PROGRAM_NOT_CONFIGURED
-  log_success_msg "Starting DESC: "
+  echo -n "Starting DESC: "
 
   if [ -n "$HADOOP_SECURE_DN_USER" ]; then
     SVC_USER=root
@@ -105,7 +76,7 @@ start() {
 }
 
 stop() {
-  log_success_msg "Stopping DESC: "
+  echo -n "Stopping DESC: "
   start_daemon $EXEC_PATH $CONFIG_OPT stop $DAEMON_FLAGS
   RETVAL=$?
 
@@ -128,19 +99,19 @@ checkstatus(){
 
   case "$status" in
     $STATUS_RUNNING)
-      log_success_msg "DESC is running"
+      echo -n "DESC is running"
       ;;
     $STATUS_DEAD)
-      log_failure_msg "DESC is dead and pid file exists"
+      echo -n "DESC is dead and pid file exists"
       ;;
     $STATUS_DEAD_AND_LOCK)
-      log_failure_msg "DESC is dead and lock file exists"
+      echo -n "DESC is dead and lock file exists"
       ;;
     $STATUS_NOT_RUNNING)
-      log_failure_msg "DESC is not running"
+      echo -n "DESC is not running"
       ;;
     *)
-      log_failure_msg "DESC status is unknown"
+      echo -n "DESC status is unknown"
       ;;
   esac
   return $status
