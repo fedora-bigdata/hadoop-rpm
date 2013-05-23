@@ -130,12 +130,44 @@ Requires: /usr/sbin/useradd
 Requires: /usr/sbin/usermod
 Requires: /sbin/chkconfig
 Requires: /sbin/service
-Requires: zookeeper >= 3.4.0
+Requires: zookeeper
 Requires: psmisc
 Requires: nc6
 #Requires: jersey
 Requires: snappy-java
 Requires: slf4j
+Requires: netty
+Requires: paranamer
+Requires: protobuf-java
+Requires: xmlenc
+Requires: objectweb-asm
+Requires: avro
+Requires: apache-commons-beanutils
+Requires: apache-commons-cli
+Requires: apache-commons-codec
+Requires: apache-commons-collections
+Requires: apache-commons-configuration
+Requires: apache-commons-digester
+Requires: apache-commons-el
+Requires: apache-commons-io
+Requires: apache-commons-lang
+Requires: apache-commons-logging
+Requires: apache-commons-math
+Requires: apache-commons-net
+Requires: commons-httpclient
+Requires: guava
+Requires: jackson
+Requires: glassfish-jaxb
+Requires: glassfish-jaxb-api
+Requires: jets3t
+Requires: jettison
+#Requires: jetty
+Requires: jline
+Requires: jsch
+Requires: glassfish-jsp-api
+Requires: jsr-305
+Requires: kfs
+Requires: log4j
 
 #%define hadoop_name hadoop
 #%define etc_hadoop /etc/%{name}
@@ -220,6 +252,12 @@ Requires: %{name} = %{version}-%{release}
 Requires: guice
 Requires: avro
 Requires: jersey
+Requires: cglib
+Requires: atinject
+Requires: aopalliance
+Requires: jsr-311
+Requires: cglib
+Requires: jackson
 
 %description yarn
 YARN (Hadoop NextGen MapReduce) is a general purpose data-computation framework.
@@ -443,10 +481,15 @@ rm -rf %{buildroot}
 #########################
 %install
 install -d -m 0755 %{buildroot}/%{_libdir}
+install -d -m 0755 %{buildroot}/%{_libexecdir}/%{name}-httpfs
 install -d -m 0755 %{buildroot}/%{_sharedstatedir}/%{name}-hdfs/webapps
 install -d -m 0755 %{buildroot}/%{_sharedstatedir}/%{name}-httpfs/webapps
-install -d -m 0755 %{buildroot}/%{_datadir}/%{name}/hdfs
-install -d -m 0755 %{buildroot}/%{_datadir}/%{name}/httpfs
+install -d -m 0755 %{buildroot}/%{_datadir}/%{name}/common/lib
+install -d -m 0755 %{buildroot}/%{_datadir}/%{name}/hdfs/lib
+install -d -m 0755 %{buildroot}/%{_datadir}/%{name}/httpfs/lib
+install -d -m 0755 %{buildroot}/%{_datadir}/%{name}/httpfs/bin
+install -d -m 0755 %{buildroot}/%{_datadir}/%{name}/mapreduce/lib
+install -d -m 0755 %{buildroot}/%{_datadir}/%{name}/yarn/lib
 install -d -m 0755 %{buildroot}/%{_javadir}/%{name}
 install -d -m 0755 %{buildroot}/%{_javadocdir}/%{name}
 install -d -m 0755 %{buildroot}/%{_sysconfdir}/sysconfig
@@ -471,10 +514,14 @@ sed -i "s|\${JSVC_HOME}|/usr/bin|" %{buildroot}/%{_sysconfdir}/%{name}/hadoop-en
 
 # Ensure the java provided DocumentBuilderFactory is used
 sed -i "s|\(HADOOP_OPTS.*=.*\)\$HADOOP_CLIENT_OPTS|\1 -Djavax.xml.parsers.DocumentBuilderFactory=com.sun.org.apache.xerces.internal.jaxp.DocumentBuilderFactoryImpl \$HADOOP_CLIENT_OPTS|" %{buildroot}/%{_sysconfdir}/%{name}/hadoop-env.sh
-echo "export YARN_OPTS=\$HADOOP_OPTS" >> %{buildroot}/%{_sysconfdir}/%{name}/hadoop-env.sh
+echo "export YARN_OPTS=\"\$YARN_OPTS -Djavax.xml.parsers.DocumentBuilderFactory=com.sun.org.apache.xerces.internal.jaxp.DocumentBuilderFactoryImpl\"" >> %{buildroot}/%{_sysconfdir}/%{name}/yarn-env.sh
+
+# Add the hadoop classpath additions in front of system classpath.  This is
+# needed because of, minimally, a version incompatibility with asm
+#echo "export HADOOP_USER_CLASSPATH_FIRST=true" >>  %{buildroot}/%{_sysconfdir}/%{name}/hadoop-env.sh
 
 # Add dependencies to the CLASSPATH
-echo "export HADOOP_CLASSPATH=\$HADOOP_CLASSPATH:\$(build-classpath slf4j jetty guice avro jersey)" >>  %{buildroot}/%{_sysconfdir}/%{name}/hadoop-env.sh
+#echo "export HADOOP_CLASSPATH=\$HADOOP_CLASSPATH:\$(build-classpath objectweb-asm/asm.jar slf4j/api.jar slf4j/log4j12.jar apache-commons-logging apache-commons-codec commons-httpclient jetty guice avro jersey apache-commons-configuration guava apache-commons-lang protobuf netty apache-commons-cli tomcat atinject aopalliance jsr-311 cglib jackson)" >>  %{buildroot}/%{_sysconfdir}/%{name}/hadoop-env.sh
 
 cp -arf $basedir/lib/native/*.so* %{buildroot}/%{_libdir}
 cp -af hadoop-hdfs-project/hadoop-hdfs/target/native/main/native/fuse-dfs/fuse_dfs %{buildroot}/%{_bindir}
@@ -491,9 +538,45 @@ do
 done
 
 # httpfs
+cp -arf $basedir/share/hadoop/httpfs/tomcat/bin/*.sh %{buildroot}/%{_libexecdir}/%{name}-httpfs
+cp -arf $basedir/share/hadoop/httpfs/tomcat/bin/catalina-tasks.xml %{buildroot}/%{_libexecdir}/%{name}-httpfs
 cp -arf $basedir/share/hadoop/httpfs/tomcat/conf/* %{buildroot}/%{_sysconfdir}/%{name}/tomcat
 cp -arf $basedir/share/hadoop/httpfs/tomcat/webapps %{buildroot}/%{_sharedstatedir}/%{name}-httpfs
+
+# /usr/share file structure
+for dir in common hdfs mapreduce yarn
+do
+  pushd %{buildroot}/%{_datadir}/%{name}/$dir
+    for file in `ls %{buildroot}/%{_javadir}/%{name}/%{name}-$dir-*`
+    do
+      %{__ln_s} %{_javadir}/%{name}/$(basename $file) .
+    done
+  popd
+done
+
+pushd %{buildroot}/%{_datadir}/%{name}/common/lib
+  %{__ln_s} %{_javadir}/%{name}/%{name}-annotations-%{hadoop_base_version}.jar .
+  %{__ln_s} %{_javadir}/%{name}/%{name}-auth-%{hadoop_base_version}.jar .
+  %{_bindir}/build-jar-repository -s . objectweb-asm/asm.jar slf4j/api.jar slf4j/log4j12.jar apache-commons-logging apache-commons-codec commons-httpclient jetty guice avro jersey apache-commons-configuration guava apache-commons-lang protobuf netty apache-commons-cli tomcat jackson
+popd
+
+pushd %{buildroot}/%{_datadir}/%{name}/mapreduce/lib
+  %{__ln_s} %{_javadir}/%{name}/%{name}-archives-%{hadoop_base_version}.jar .
+  %{__ln_s} %{_javadir}/%{name}/%{name}-datajoin-%{hadoop_base_version}.jar .
+  %{__ln_s} %{_javadir}/%{name}/%{name}-distcp-%{hadoop_base_version}.jar .
+  %{__ln_s} %{_javadir}/%{name}/%{name}-extras-%{hadoop_base_version}.jar .
+  %{__ln_s} %{_javadir}/%{name}/%{name}-gridmix-%{hadoop_base_version}.jar .
+  %{__ln_s} %{_javadir}/%{name}/%{name}-rumen-%{hadoop_base_version}.jar .
+  %{__ln_s} %{_javadir}/%{name}/%{name}-streaming-%{hadoop_base_version}.jar .
+popd
+
+pushd %{buildroot}/%{_datadir}/%{name}/yarn/lib
+  %{_bindir}/build-jar-repository -s . atinject aopalliance jsr-311 cglib
+popd
+
 pushd %{buildroot}/%{_datadir}/%{name}/httpfs
+  %{_bindir}/build-jar-repository -s bin tomcat/tomcat-juli commons-daemon
+  %{__ln_s} %{_datadir}/tomcat/bin/bootstrap.jar bin
   %{__ln_s} %{_sysconfdir}/%{name}/tomcat conf 
   %{__ln_s} %{_javadir}/tomcat lib
   %{__ln_s} %{_var}/log/%{name}-httpfs logs
@@ -671,6 +754,7 @@ fi
 %{_initddir}/%{name}-resourcemanager
 %{_libexecdir}/yarn-config.sh
 %{_javadir}/%{name}/%{name}-yarn*.jar
+%{_datadir}/%{name}/yarn
 %{_mavenpomdir}/JPP.%{name}-%{name}-yarn*.pom
 %{_mavendepmapfragdir}/%{name}-%{name}-yarn*
 %attr(6050,root,yarn) %{_bindir}/container-executor
@@ -718,6 +802,7 @@ fi
 %config(noreplace) %{_sysconfdir}/%{name}/mapred-env.sh
 %config(noreplace) %{_sysconfdir}/security/limits.d/mapreduce.conf
 %{_sysconfdir}/sysconfig/hadoop-mapreduce
+%{_datadir}/%{name}/mapreduce
 %{_javadir}/%{name}/%{name}-mapreduce*.jar
 %{_javadir}/%{name}/%{name}-archives*.jar
 %{_javadir}/%{name}/%{name}-datajoin*.jar
@@ -767,6 +852,7 @@ fi
 %{_javadir}/%{name}/%{name}-annotations*.jar
 %{_javadir}/%{name}/%{name}-auth*.jar
 %{_javadir}/%{name}/%{name}-common*.jar
+%{_datadir}/%{name}/common
 %{_mavenpomdir}/JPP.%{name}-%{name}-annotations*.pom
 %{_mavenpomdir}/JPP.%{name}-%{name}-auth*.pom
 %{_mavenpomdir}/JPP.%{name}-%{name}-common*.pom
@@ -812,6 +898,7 @@ fi
 %config(noreplace) %{_sysconfdir}/%{name}/tomcat
 %{_sysconfdir}/sysconfig/hadoop-httpfs
 %{_libexecdir}/httpfs-config.sh
+%{_libexecdir}/%{name}-httpfs
 %{_initddir}/%{name}-httpfs
 %{_sbindir}/httpfs.sh
 %{_datadir}/hadoop/httpfs
