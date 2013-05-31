@@ -28,13 +28,3 @@ MAPRED_LIB_JARS_DIR=share/hadoop/mapreduce/lib
 HADOOP_MAPRED_PID_DIR=/var/run/hadoop-mapreduce
 HADOOP_MAPRED_LOG_DIR=/var/log/hadoop-mapreduce
 HADOOP_MAPRED_IDENT_STRING=mapred
-
-HTTPFS_CONFIG=/etc/hadoop
-HTTPFS_LOG=/var/log/hadoop-httpfs
-HTTPFS_TEMP=/var/run/hadoop-httpfs
-HTTPFS_CATALINA_HOME=/usr
-CATALINA_PID=/var/run/hadoop-httpfs/hadoop-$SVC_USER-httpfs.pid
-CATALINA_BASE=/usr/share/hadoop/httpfs
-CATALINA_TMPDIR=/var/run/hadoop-httpfs
-# HTTPFS_HTTP_PORT
-# HTTPFS_ADMIN_PORT
