@@ -499,7 +499,6 @@ install -d -m 0775 %{buildroot}/%{_var}/run/%{name}-mapreduce
 install -d -m 0755 %{buildroot}/%{_datadir}/%{name}/httpfs/tomcat/bin
 install -d -m 0755 %{buildroot}/%{_libexecdir}/%{name}-httpfs
 install -d -m 0755 %{buildroot}/%{_sharedstatedir}/%{name}-httpfs/webapps
-install -d -m 1777 %{buildroot}/%{_var}/cache/%{name}-httpfs
 install -d -m 0775 %{buildroot}/%{_var}/log/%{name}-httpfs
 install -d -m 0775 %{buildroot}/%{_var}/run/%{name}-httpfs
 %endif
@@ -605,7 +604,7 @@ pushd %{buildroot}/%{_datadir}/%{name}/httpfs/tomcat
 popd
 %endif
 
-# install hdfs webapp bits
+# Install hdfs webapp bits
 cp -arf $basedir/share/hadoop/hdfs/webapps %{buildroot}/%{_sharedstatedir}/%{name}-hdfs
 pushd %{buildroot}/%{_datadir}/%{name}/hdfs
   %{__ln_s} %{_sharedstatedir}/%{name}-hdfs/webapps webapps
@@ -622,7 +621,7 @@ if [ "$lib" = "%_libdir" ]; then
 fi
 sed -e "s|^HADOOP_COMMON_LIB_NATIVE_DIR\s*=.*|HADOOP_COMMON_LIB_NATIVE_DIR=$lib|" %{SOURCE1} > %{buildroot}/%{_libexecdir}/hadoop-layout.sh
 
-# default config
+# Default config
 cp -f %{SOURCE11} %{buildroot}/%{_sysconfdir}/%{name}/core-site.xml
 cp -f %{SOURCE12} %{buildroot}/%{_sysconfdir}/%{name}/hdfs-site.xml
 cp -f %{SOURCE13} %{buildroot}/%{_sysconfdir}/%{name}/mapred-site.xml
@@ -655,7 +654,7 @@ cp -f %{SOURCE6} %{buildroot}/%{_sysconfdir}/sysconfig/hadoop-httpfs
 cp -f %{SOURCE15} %{buildroot}/%{_sysconfdir}/%{name}/httpfs-env.sh
 %endif
 
-# install security limits
+# Install security limits
 install -d -m 0755 $RPM_BUILD_ROOT/%{_sysconfdir}/security/limits.d
 for limit in hdfs yarn mapreduce
 do
@@ -706,22 +705,22 @@ done
 getent group hadoop >/dev/null || groupadd -r hadoop
 
 %pre hdfs
-getent group hdfs >/dev/null   || groupadd -r hdfs
-getent passwd hdfs >/dev/null || /usr/sbin/useradd --comment "Hadoop HDFS" --shell /bin/bash -M -r -g hdfs -G hadoop --home %{state_hdfs} hdfs
+getent group hdfs >/dev/null || groupadd -r hdfs
+getent passwd hdfs >/dev/null || /usr/sbin/useradd --comment "Hadoop HDFS" --shell /bin/bash -M -r -g hdfs -G hadoop --home %{var}/cache/%{name}-hdfs hdfs
 
 %if %{package_httpfs}
 %pre httpfs 
-getent group httpfs >/dev/null   || groupadd -r httpfs
-getent passwd httpfs >/dev/null || /usr/sbin/useradd --comment "Hadoop HTTPFS" --shell /bin/bash -M -r -g httpfs -G httpfs --home %{run_httpfs} httpfs
+getent group httpfs >/dev/null || groupadd -r httpfs
+getent passwd httpfs >/dev/null || /usr/sbin/useradd --comment "Hadoop HTTPFS" --shell /bin/bash -M -r -g httpfs -G httpfs --home %{var}/run/%{name}-httpfs httpfs
 %endif
 
 %pre yarn
-getent group yarn >/dev/null   || groupadd -r yarn
-getent passwd yarn >/dev/null || /usr/sbin/useradd --comment "Hadoop Yarn" --shell /bin/bash -M -r -g yarn -G hadoop --home %{state_yarn} yarn
+getent group yarn >/dev/null || groupadd -r yarn
+getent passwd yarn >/dev/null || /usr/sbin/useradd --comment "Hadoop Yarn" --shell /bin/bash -M -r -g yarn -G hadoop --home %{var}/cache/%{name}-yarn yarn
 
 %pre mapreduce
-getent group mapred >/dev/null   || groupadd -r mapred
-getent passwd mapred >/dev/null || /usr/sbin/useradd --comment "Hadoop MapReduce" --shell /bin/bash -M -r -g mapred -G hadoop --home %{state_mapreduce} mapred
+getent group mapred >/dev/null || groupadd -r mapred
+getent passwd mapred >/dev/null || /usr/sbin/useradd --comment "Hadoop MapReduce" --shell /bin/bash -M -r -g mapred -G hadoop --home %{var}/cache/%{name}-mapreduce mapred
 
 #%post
 #%{alternatives_cmd} --install %{config_hadoop} %{name}-conf %{etc_hadoop}/conf.empty 10
@@ -929,7 +928,6 @@ fi
 %{_tmpfilesdir}/hadoop-httpfs.conf
 %attr(0775,httpfs,httpfs) %dir %{_var}/run/%{name}-httpfs
 %attr(0775,httpfs,httpfs) %dir %{_var}/log/%{name}-httpfs
-%attr(1777,httpfs,httpfs) %dir %{_var}/cache/%{name}-httpfs
 %endif
 
 # Service file management RPMs
