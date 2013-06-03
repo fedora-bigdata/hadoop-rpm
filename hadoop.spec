@@ -424,12 +424,14 @@ Summary: Mountable HDFS
 Group: Development/Libraries
 Requires: %{name} = %{version}-%{release}
 Requires: %{name}-libhdfs = %{version}-%{release}
-Requires: %{name}-client = %{version}-%{release}
+Requires: %{name}-hdfs = %{version}-%{release}
+Requires: %{name}-yarn = %{version}-%{release}
+Requires: %{name}-mapreduce = %{version}-%{release}
 Requires: fuse
+Requires: fuse-libs
 
 %description hdfs-fuse
-These projects (enumerated below) allow HDFS to be mounted (on most flavors of
-Unix) as a standard file system using
+Allow HDFS to be mounted as a standard file system
 
 %package javadoc
 Summary: Javadoc for %{name}
@@ -785,7 +787,6 @@ fi
 %files hdfs
 %doc hadoop-dist/target/hadoop-%{hadoop_base_version}/share/doc/hadoop/hdfs/*
 %defattr(-,root,root)
-#%config(noreplace) /etc/default/hadoop-fuse
 %config(noreplace) %{_sysconfdir}/%{name}/hdfs-site.xml
 %config(noreplace) %{_sysconfdir}/security/limits.d/hdfs.conf
 %{_sysconfdir}/sysconfig/hadoop-datanode
@@ -885,7 +886,6 @@ fi
 %{_libexecdir}/hadoop-layout.sh
 %{_bindir}/hadoop
 %{_bindir}/rcc
-%{_bindir}/fuse_dfs
 %{_sbindir}/hadoop-daemon.sh
 %{_sbindir}/hadoop-daemons.sh
 %{_sbindir}/hadoop-create-user.sh
@@ -985,9 +985,8 @@ fi
 %files hdfs-fuse
 %doc hadoop-dist/target/hadoop-%{hadoop_base_version}/share/doc/hadoop/hdfs/*
 %defattr(-,root,root)
-#%attr(0644,root,root) %config(noreplace) /etc/default/hadoop-fuse
 %{_sysconfdir}/sysconfig/hadoop-fuse
-#%attr(0755,root,root) %{_bindir}/fuse_dfs
+%{_bindir}/fuse_dfs
 #%attr(0755,root,root) %{bin_hadoop}/hadoop-fuse-dfs
 
 %files javadoc
