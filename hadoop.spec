@@ -171,48 +171,6 @@ Requires: jsr-305
 Requires: kfs
 Requires: log4j
 
-#%define hadoop_name hadoop
-#%define etc_hadoop /etc/%{name}
-#%define etc_yarn /etc/yarn
-#%define etc_httpfs /etc/%{name}-httpfs
-#%define config_hadoop %{etc_hadoop}/conf
-#%define config_yarn %{etc_yarn}/conf
-#%define config_httpfs %{etc_httpfs}/conf
-#%define lib_hadoop_dirname /usr/lib
-#%define lib_hadoop %{lib_hadoop_dirname}/%{name}
-#%define lib_httpfs %{lib_hadoop_dirname}/%{name}-httpfs
-#%define lib_hdfs %{lib_hadoop_dirname}/%{name}-hdfs
-#%define lib_yarn %{lib_hadoop_dirname}/%{name}-yarn
-#%define lib_mapreduce %{lib_hadoop_dirname}/%{name}-mapreduce
-#%define log_hadoop_dirname /var/log
-#%define log_hadoop %{log_hadoop_dirname}/%{name}
-#%define log_yarn %{log_hadoop_dirname}/%{name}-yarn
-#%define log_hdfs %{log_hadoop_dirname}/%{name}-hdfs
-#%define log_httpfs %{log_hadoop_dirname}/%{name}-httpfs
-#%define log_mapreduce %{log_hadoop_dirname}/%{name}-mapreduce
-#%define run_hadoop_dirname /var/run
-#%define run_hadoop %{run_hadoop_dirname}/hadoop
-#%define run_yarn %{run_hadoop_dirname}/%{name}-yarn
-#%define run_hdfs %{run_hadoop_dirname}/%{name}-hdfs
-#%define run_httpfs %{run_hadoop_dirname}/%{name}-httpfs
-#%define run_mapreduce %{run_hadoop_dirname}/%{name}-mapreduce
-#%define state_hadoop_dirname /var/lib
-#%define state_hadoop %{state_hadoop_dirname}/hadoop
-#%define state_yarn %{state_hadoop_dirname}/%{name}-yarn
-#%define state_hdfs %{state_hadoop_dirname}/%{name}-hdfs
-#%define state_mapreduce %{state_hadoop_dirname}/%{name}-mapreduce
-#%define bin_hadoop %{_bindir}
-#%define man_hadoop %{_mandir}
-#%define doc_hadoop %{_docdir}/%{name}-%{hadoop_version}
-#%define httpfs_services httpfs
-#%define mapreduce_services mapreduce-historyserver
-#%define hdfs_services hdfs-namenode hdfs-secondarynamenode hdfs-datanode hdfs-zkfc
-#%define yarn_services yarn-resourcemanager yarn-nodemanager yarn-proxyserver
-#%define hadoop_services %{hdfs_services} %{mapreduce_services} %{yarn_services} %{httpfs_services}
-## Hadoop outputs built binaries into %{hadoop_build}
-#%define hadoop_build_path build
-#%define static_images_dir src/webapps/static/images
-
 %description
 Hadoop is a software platform that lets one easily write and
 run applications that process vast amounts of data.
@@ -243,9 +201,9 @@ Requires: jetty
 
 %description hdfs
 Hadoop Distributed File System (HDFS) is the primary storage system used by 
-Hadoop applications. HDFS creates multiple replicas of data blocks and distributes 
-them on compute nodes throughout a cluster to enable reliable, extremely rapid 
-computations.
+Hadoop applications. HDFS creates multiple replicas of data blocks and
+distributes them on compute nodes throughout a cluster to enable reliable,
+extremely rapid computations.
 
 %package yarn
 Summary: The Hadoop NextGen MapReduce (YARN)
@@ -287,54 +245,6 @@ Hadoop MapReduce is a programming model and software framework for writing
 applications that rapidly process vast amounts of data in parallel on large
 clusters of compute nodes.
 
-
-#%package hdfs-namenode
-#Summary: The Hadoop namenode manages the block locations of HDFS files
-#Group: System/Daemons
-#Requires: %{name}-hdfs = %{version}-%{release}
-#Requires(pre): %{name} = %{version}-%{release}
-#
-#%description hdfs-namenode
-#The Hadoop Distributed Filesystem (HDFS) requires one unique server, the
-#namenode, which manages the block locations of files on the filesystem.
-#
-#
-#%package hdfs-secondarynamenode
-#Summary: Hadoop Secondary namenode
-#Group: System/Daemons
-#Requires: %{name}-hdfs = %{version}-%{release}
-#Requires(pre): %{name} = %{version}-%{release}
-#
-#%description hdfs-secondarynamenode
-#The Secondary Name Node periodically compacts the Name Node EditLog
-#into a checkpoint.  This compaction ensures that Name Node restarts
-#do not incur unnecessary downtime.
-#
-#%package hdfs-zkfc
-#Summary: Hadoop HDFS failover controller
-#Group: System/Daemons
-#Requires: %{name}-hdfs = %{version}-%{release}
-#Requires(pre): %{name} = %{version}-%{release}
-#
-#%description hdfs-zkfc
-#The Hadoop HDFS failover controller is a ZooKeeper client which also
-#monitors and manages the state of the NameNode. Each of the machines
-#which runs a NameNode also runs a ZKFC, and that ZKFC is responsible
-#for: Health monitoring, ZooKeeper session management, ZooKeeper-based
-#election.
-#
-#%package hdfs-datanode
-#Summary: Hadoop Data Node
-#Group: System/Daemons
-#Requires: %{name}-hdfs = %{version}-%{release}
-#Requires: apache-commons-daemon-jsvc
-#Requires(pre): %{name} = %{version}-%{release}
-#
-#%description hdfs-datanode
-#The Data Nodes in the Hadoop Cluster are responsible for serving up
-#blocks of data over the network to Hadoop Distributed Filesystem
-#(HDFS) clients.
-
 %if %{package_httpfs}
 %package httpfs
 Summary: HTTPFS for Hadoop
@@ -348,73 +258,10 @@ The server providing HTTP REST API support for the complete
 FileSystem/FileContext interface in HDFS.
 %endif
 
-#%package yarn-resourcemanager
-#Summary: YARN Resource Manager
-#Group: System/Daemons
-#Requires: %{name}-yarn = %{version}-%{release}
-#Requires(pre): %{name} = %{version}-%{release}
-#
-#%description yarn-resourcemanager
-#The resource manager manages the global assignment of compute resources to
-#applications
-#
-#%package yarn-nodemanager
-#Summary: YARN Node Manager
-#Group: System/Daemons
-#Requires: %{name}-yarn = %{version}-%{release}
-#Requires(pre): %{name} = %{version}-%{release}
-#
-#%description yarn-nodemanager
-#The NodeManager is the per-machine framework agent who is responsible for
-#containers, monitoring their resource usage (cpu, memory, disk, network) and
-#reporting the same to the ResourceManager/Scheduler.
-#
-#%package yarn-proxyserver
-#Summary: YARN Web Proxy
-#Group: System/Daemons
-#Requires: %{name}-yarn = %{version}-%{release}
-#Requires(pre): %{name} = %{version}-%{release}
-#
-#%description yarn-proxyserver
-#The web proxy server sits in front of the YARN application master web UI.
-#
-#%package mapreduce-historyserver
-#Summary: MapReduce History Server
-#Group: System/Daemons
-#Requires: %{name}-mapreduce = %{version}-%{release}
-#Requires(pre): %{name} = %{version}-%{release}
-#
-#%description mapreduce-historyserver
-#The History server keeps records of the different activities being performed
-#on an Apache Hadoop cluster
-
-#%package conf-pseudo
-#Summary: Pseudo-distributed Hadoop configuration
-#Group: System/Daemons
-#Requires: %{name} = %{version}-%{release}
-#Requires: %{name}-hdfs-namenode = %{version}-%{release}
-#Requires: %{name}-hdfs-datanode = %{version}-%{release}
-#Requires: %{name}-hdfs-secondarynamenode = %{version}-%{release}
-#Requires: %{name}-yarn-resourcemanager = %{version}-%{release}
-#Requires: %{name}-yarn-nodemanager = %{version}-%{release}
-#Requires: %{name}-mapreduce-historyserver = %{version}-%{release}
-#
-#%description conf-pseudo
-#Contains configuration files for a "pseudo-distributed" Hadoop deployment.
-#In this mode, each of the hadoop components runs as a separate Java process,
-#but all on the same machine.
-#
-#%package doc
-#Summary: Hadoop Documentation
-#Group: Documentation
-#%description doc
-#Documentation for Hadoop
-
 %package libhdfs
 Summary: Hadoop Filesystem Library
 Group: Development/Libraries
 Requires: %{name}-hdfs = %{version}-%{release}
-# TODO: reconcile libjvm
 
 %description libhdfs
 Hadoop Filesystem Library
@@ -454,14 +301,6 @@ Requires: jpackage-utils
 %pom_add_dep org.apache.zookeeper:zookeeper hadoop-hdfs-project/hadoop-hdfs
 %pom_add_dep org.apache.zookeeper:zookeeper-test hadoop-hdfs-project/hadoop-hdfs
 
-#%pom_remove_plugin org.codehaus.mojo:findbugs-maven-plugin hadoop-hdfs-project/hadoop-hdfs-httpfs
-#%pom_remove_plugin org.codehaus.mojo:findbugs-maven-plugin hadoop-mapreduce-project
-#%pom_remove_plugin org.codehaus.mojo:findbugs-maven-plugin hadoop-project-dist
-#%pom_remove_plugin org.codehaus.mojo:findbugs-maven-plugin hadoop-project
-#%pom_remove_plugin org.codehaus.mojo:findbugs-maven-plugin hadoop-tools/hadoop-rumen
-#%pom_remove_plugin org.codehaus.mojo:findbugs-maven-plugin hadoop-tools/hadoop-streaming
-#%pom_remove_plugin org.codehaus.mojo:findbugs-maven-plugin hadoop-yarn-project
-
 %build
 mvn-rpmbuild -Drequire.snappy=true -Pdist,native -DskipTests package javadoc:aggregate
 
@@ -471,9 +310,6 @@ mvn-rpmbuild -Pdist,native test -Dmaven.test.failure.ignore=true
 %clean
 rm -rf %{buildroot}
 
-#########################
-#### INSTALL SECTION ####
-#########################
 %install
 install -d -m 0755 %{buildroot}/%{_libdir}
 install -d -m 0755 %{buildroot}/%{_sharedstatedir}/%{name}-hdfs/webapps
@@ -529,13 +365,6 @@ sed -i "s|\${JSVC_HOME}|/usr/bin|" %{buildroot}/%{_sysconfdir}/%{name}/hadoop-en
 # Ensure the java provided DocumentBuilderFactory is used
 sed -i "s|\(HADOOP_OPTS.*=.*\)\$HADOOP_CLIENT_OPTS|\1 -Djavax.xml.parsers.DocumentBuilderFactory=com.sun.org.apache.xerces.internal.jaxp.DocumentBuilderFactoryImpl \$HADOOP_CLIENT_OPTS|" %{buildroot}/%{_sysconfdir}/%{name}/hadoop-env.sh
 echo "export YARN_OPTS=\"\$YARN_OPTS -Djavax.xml.parsers.DocumentBuilderFactory=com.sun.org.apache.xerces.internal.jaxp.DocumentBuilderFactoryImpl\"" >> %{buildroot}/%{_sysconfdir}/%{name}/yarn-env.sh
-
-# Add the hadoop classpath additions in front of system classpath.  This is
-# needed because of, minimally, a version incompatibility with asm
-#echo "export HADOOP_USER_CLASSPATH_FIRST=true" >>  %{buildroot}/%{_sysconfdir}/%{name}/hadoop-env.sh
-
-# Add dependencies to the CLASSPATH
-#echo "export HADOOP_CLASSPATH=\$HADOOP_CLASSPATH:\$(build-classpath objectweb-asm/asm.jar slf4j/api.jar slf4j/log4j12.jar apache-commons-logging apache-commons-codec commons-httpclient jetty guice avro jersey apache-commons-configuration guava apache-commons-lang protobuf netty apache-commons-cli tomcat atinject aopalliance jsr-311 cglib jackson)" >>  %{buildroot}/%{_sysconfdir}/%{name}/hadoop-env.sh
 
 cp -arf $basedir/lib/native/*.so* %{buildroot}/%{_libdir}
 cp -af hadoop-hdfs-project/hadoop-hdfs/target/native/main/native/fuse-dfs/fuse_dfs %{buildroot}/%{_bindir}
@@ -722,13 +551,6 @@ getent passwd yarn >/dev/null || /usr/sbin/useradd --comment "Hadoop Yarn" --she
 getent group mapred >/dev/null || groupadd -r mapred
 getent passwd mapred >/dev/null || /usr/sbin/useradd --comment "Hadoop MapReduce" --shell /bin/bash -M -r -g mapred -G hadoop --home %{var}/cache/%{name}-mapreduce mapred
 
-#%post
-#%{alternatives_cmd} --install %{config_hadoop} %{name}-conf %{etc_hadoop}/conf.empty 10
-#
-#%post httpfs
-#%{alternatives_cmd} --install %{config_httpfs} %{name}-httpfs-conf %{etc_httpfs}/conf.empty 10
-#chkconfig --add %{name}-httpfs
-
 %preun
 if [ "$1" = 0 ]; then
   # Stop any services that might be running
@@ -736,7 +558,19 @@ if [ "$1" = 0 ]; then
   do
      service hadoop-$service stop 1>/dev/null 2>/dev/null || :
   done
-#  %{alternatives_cmd} --remove %{name}-conf %{etc_hadoop}/conf.empty || :
+fi
+
+%preun hdfs
+if [ "$1" = 0 ]; then
+  service hadoop-datanode stop 1>/dev/null 2>/dev/null || :
+  service hadoop-namenode stop 1>/dev/null 2>/dev/null || :
+  service hadoop-secondardnamenode stop 1>/dev/null 2>/dev/null || :
+  service hadoop-zkfc stop 1>/dev/null 2>/dev/null || :
+fi
+
+%preun yarn
+if [ "$1" = 0 ]; then
+  service hadoop-hdfs stop 1>/dev/null 2>/dev/null || :
 fi
 
 %if %{package_httpfs}
@@ -848,7 +682,6 @@ fi
 %{_mavendepmapfragdir}/%{name}-%{name}-streaming*
 %{_libexecdir}/mapred-config.sh
 %{_initddir}/%{name}-historyserver
-# TODO: Fix MAPREDUCE-3980 issue
 %{_bindir}/mapred
 %{_sbindir}/mr-jobhistory-daemon.sh
 %{_tmpfilesdir}/hadoop-mapreduce.conf
@@ -880,7 +713,6 @@ fi
 %{_mavendepmapfragdir}/%{name}-%{name}-annotations*
 %{_mavendepmapfragdir}/%{name}-%{name}-auth*
 %{_mavendepmapfragdir}/%{name}-%{name}-common*
-#%config(noreplace) %{_sysconfdir}/%{name}
 %{_libexecdir}/hadoop-config.sh
 %{_libexecdir}/hadoop-layout.sh
 %{_bindir}/hadoop
@@ -903,11 +735,6 @@ fi
 %{_sbindir}/slaves.sh
 %{_sbindir}/update-hadoop-env.sh
 %{_libdir}/libhadoop.*
-#%{man_hadoop}/man1/hadoop.1.*
-
-#%files doc
-#%defattr(-,root,root)
-#%doc %{doc_hadoop}
 
 %if %{package_httpfs}
 %files httpfs
