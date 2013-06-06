@@ -394,10 +394,14 @@ done
 pushd %{buildroot}/%{_datadir}/%{name}/common/lib
   %{__ln_s} %{_javadir}/%{name}/%{name}-annotations-%{hadoop_base_version}.jar .
   %{__ln_s} %{_javadir}/%{name}/%{name}-auth-%{hadoop_base_version}.jar .
-  %{_bindir}/build-jar-repository -s . objectweb-asm/asm.jar slf4j/api.jar slf4j/log4j12.jar apache-commons-logging apache-commons-codec commons-httpclient jetty guice avro jersey apache-commons-configuration guava apache-commons-lang protobuf netty apache-commons-cli tomcat jackson
+  %{_bindir}/build-jar-repository -s . objectweb-asm/asm avro/avro commons-cli commons-codec commons-configuration commons-el commons-httpclient commons-io commons-lang commons-logging commons-math3 commons-net ecj guava hawtjni-runtime httpcomponents/httpclient httpcomponents/httpcore istack-commons-runtime jackson/jackson-core-asl jackson/jackson-jaxrs jackson/jackson-mapper-asl jackson/jackson-xc jansi jansi-native java-xmlbuilder tomcat-servlet-api glassfish-jsp glassfish-jsp-api glassfish-jaxb/jaxb-impl jersey/jersey-core jersey/jersey-json jersey/jersey-server jersey/jersey-servlet jets3t/jets3t jettison jetty/jetty-continuation jetty/jetty-http jetty/jetty-io jetty/jetty-security jetty/jetty-server jetty/jetty-servlet jetty/jetty-util jetty/jetty-webapp jetty/jetty-xml jline jsch jsr-311 kfs log4j netty paranamer/paranamer protobuf relaxngDatatype slf4j/api slf4j/log4j12 snappy-java tomcat/tomcat-el-2.2-api txw2 xmlenc zookeeper
 popd
 
-pushd %{buildroot}/%{_datadir}/%{name}/mapreduce/lib
+pushd %{buildroot}/%{_datadir}/%{name}/hdfs/lib
+  %{_bindir}/build-jar-repository -s . objectweb-asm/asm commons-cli commons-codec commons-daemon apache-commons-io commons-lang commons-logging guava hawtjni-runtime jackson/jackson-core-asl jackson/jackson-mapper-asl jansi jansi-native tomcat-servlet-api jersey/jersey-core jersey/jersey-server jetty/jetty-continuation jetty/jetty-http jetty/jetty-io jetty/jetty-server jetty/jetty-util jline jsr-311 log4j netty protobuf slf4j/api xmlenc zookeeper
+popd
+
+pushd %{buildroot}/%{_datadir}/%{name}/mapreduce
   %{__ln_s} %{_javadir}/%{name}/%{name}-archives-%{hadoop_base_version}.jar .
   %{__ln_s} %{_javadir}/%{name}/%{name}-datajoin-%{hadoop_base_version}.jar .
   %{__ln_s} %{_javadir}/%{name}/%{name}-distcp-%{hadoop_base_version}.jar .
@@ -407,8 +411,14 @@ pushd %{buildroot}/%{_datadir}/%{name}/mapreduce/lib
   %{__ln_s} %{_javadir}/%{name}/%{name}-streaming-%{hadoop_base_version}.jar .
 popd
 
+pushd %{buildroot}/%{_datadir}/%{name}/mapreduce/lib
+  %{__ln_s} %{_javadir}/%{name}/%{name}-annotations-%{hadoop_base_version}.jar .
+  %{_bindir}/build-jar-repository -s . atinject aopalliance objectweb-asm/asm avro/avro apache-commons-io guava guice hamcrest/core jackson/jackson-core-asl jackson/jackson-mapper-asl jersey/jersey-core jersey/jersey-guice jersey/jersey-server jersey/jersey-servlet jsr-311 junit log4j netty paranamer/paranamer protobuf snappy-java
+popd
+
 pushd %{buildroot}/%{_datadir}/%{name}/yarn/lib
-  %{_bindir}/build-jar-repository -s . atinject aopalliance jsr-311 cglib
+  %{__ln_s} %{_javadir}/%{name}/%{name}-annotations-%{hadoop_base_version}.jar .
+  %{_bindir}/build-jar-repository -s . atinject aopalliance objectweb-asm/asm avro/avro cglib apache-commons-io guava guice hamcrest/core jackson/jackson-core-asl jackson/jackson-mapper-asl jersey/jersey-core jersey/jersey-guice jersey/jersey-server jersey/jersey-servlet jsr-311 junit log4j netty paranamer/paranamer protobuf snappy-java
 popd
 
 %if %{package_httpfs}
