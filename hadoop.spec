@@ -556,21 +556,21 @@ getent group hadoop >/dev/null || groupadd -r hadoop
 
 %pre hdfs
 getent group hdfs >/dev/null || groupadd -r hdfs
-getent passwd hdfs >/dev/null || /usr/sbin/useradd --comment "Hadoop HDFS" --shell /bin/bash -M -r -g hdfs -G hadoop --home %{var}/cache/%{name}-hdfs hdfs
+getent passwd hdfs >/dev/null || /usr/sbin/useradd --comment "Hadoop HDFS" --shell /sbin/nologin -M -r -g hdfs -G hadoop --home %{_var}/cache/%{name}-hdfs hdfs
 
 %if %{package_httpfs}
 %pre httpfs 
 getent group httpfs >/dev/null || groupadd -r httpfs
-getent passwd httpfs >/dev/null || /usr/sbin/useradd --comment "Hadoop HTTPFS" --shell /bin/bash -M -r -g httpfs -G httpfs --home %{var}/run/%{name}-httpfs httpfs
+getent passwd httpfs >/dev/null || /usr/sbin/useradd --comment "Hadoop HTTPFS" --shell /sbin/nologin -M -r -g httpfs -G httpfs --home %{_var}/run/%{name}-httpfs httpfs
 %endif
 
 %pre yarn
 getent group yarn >/dev/null || groupadd -r yarn
-getent passwd yarn >/dev/null || /usr/sbin/useradd --comment "Hadoop Yarn" --shell /bin/bash -M -r -g yarn -G hadoop --home %{var}/cache/%{name}-yarn yarn
+getent passwd yarn >/dev/null || /usr/sbin/useradd --comment "Hadoop Yarn" --shell /sbin/nologin -M -r -g yarn -G hadoop --home %{_var}/cache/%{name}-yarn yarn
 
 %pre mapreduce
 getent group mapred >/dev/null || groupadd -r mapred
-getent passwd mapred >/dev/null || /usr/sbin/useradd --comment "Hadoop MapReduce" --shell /bin/bash -M -r -g mapred -G hadoop --home %{var}/cache/%{name}-mapreduce mapred
+getent passwd mapred >/dev/null || /usr/sbin/useradd --comment "Hadoop MapReduce" --shell /sbin/nologin -M -r -g mapred -G hadoop --home %{_var}/cache/%{name}-mapreduce mapred
 
 %preun hdfs
 %systemd_preun %{hdfs_services}
