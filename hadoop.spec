@@ -467,7 +467,7 @@ if [ "$lib" = "%_libdir" ]; then
   echo "_libdir is not located in /usr.  Lib location is wrong"
   exit 1
 fi
-sed -e "s|^HADOOP_COMMON_LIB_NATIVE_DIR\s*=.*|HADOOP_COMMON_LIB_NATIVE_DIR=$lib|" %{SOURCE1} > %{buildroot}/%{_libexecdir}/hadoop-layout.sh
+sed -e "s|HADOOP_COMMON_LIB_NATIVE_DIR\s*=.*|HADOOP_COMMON_LIB_NATIVE_DIR=$lib|" %{SOURCE1} > %{buildroot}/%{_libexecdir}/hadoop-layout.sh
 
 # Default config
 cp -f %{SOURCE8} %{buildroot}/%{_sysconfdir}/%{name}/core-site.xml
