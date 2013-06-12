@@ -13,12 +13,15 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-#
-# Hadoop Fedora/RHEL RPM spec file
-#
+# Currently disabled because httpfs doesn't play well with the directory
+# layout and isn't flexible enough to allow customization.
+%global package_httpfs 0
 
 %global hadoop_base_version 2.0.2-alpha
-%global package_httpfs 0
+%global hdfs_services hadoop-zkfc.service hadoop-datanode.service hadoop-secondarynamenode.service hadoop-namenode.service
+%global mapreduce_services hadoop-historyserver.service
+%global yarn_services hadoop-proxyserver.service hadoop-resourcemanager.service hadoop-nodemanager.service
+%global httpfs_services hadoop-httpfs.service
 
 Name:   hadoop
 Version: 2.0.2
@@ -29,22 +32,20 @@ URL:    http://hadoop.apache.org/core/
 Group:  Development/Libraries
 Source0: %{name}-%{hadoop_base_version}.tar.gz
 Source1: hadoop-layout.sh
-Source2: hadoop.init
-Source3: hadoop.sysconfig
-Source4: hadoop-fuse.sysconfig
-Source5: hadoop-hdfs.sysconfig
-Source6: hadoop-httpfs.sysconfig
-Source7: hadoop-mapreduce.sysconfig
-Source8: hadoop-yarn.sysconfig
-Source9: hadoop-datanode.sysconfig
-Source10: hadoop-limits.conf
-Source11: hadoop-core-site.xml
-Source12: hadoop-hdfs-site.xml
-Source13: hadoop-mapred-site.xml
-Source14: hadoop-yarn-site.xml
-Source15: hadoop-httpfs-env.sh
+Source2: hadoop-hdfs.service.template
+Source3: hadoop-mapreduce.service.template
+Source4: hadoop-yarn.service.template
+Source5: hadoop-httpfs.service
+Source6: hadoop-datanode.sysconfig
+Source7: hadoop-limits.conf
+Source8: hadoop-core-site.xml
+Source9: hadoop-hdfs-site.xml
+Source10: hadoop-mapred-site.xml
+Source11: hadoop-yarn-site.xml
+Source12: hadoop-httpfs-env.sh
 Patch0: hadoop-fedora-integration.patch
 Buildroot: %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id} -u -n)
+BuildRequires: systemd
 BuildRequires: maven-compiler-plugin
 BuildRequires: maven-enforcer-plugin
 BuildRequires: maven-install-plugin
@@ -196,8 +197,10 @@ located.
 Summary: The Hadoop Distributed File System
 Group: System/Daemons
 Requires: %{name} = %{version}-%{release}
+Requires(pre): %{name} = %{version}-%{release}
 Requires: apache-commons-daemon-jsvc
 Requires: jetty
+%systemd_requires
 
 %description hdfs
 Hadoop Distributed File System (HDFS) is the primary storage system used by 
@@ -209,6 +212,7 @@ extremely rapid computations.
 Summary: The Hadoop NextGen MapReduce (YARN)
 Group: System/Daemons
 Requires: %{name} = %{version}-%{release}
+Requires(pre): %{name} = %{version}-%{release}
 Requires: guice
 Requires: avro
 Requires: jersey
@@ -218,6 +222,7 @@ Requires: aopalliance
 Requires: jsr-311
 Requires: cglib
 Requires: jackson
+%systemd_requires
 
 %description yarn
 YARN (Hadoop NextGen MapReduce) is a general purpose data-computation framework.
@@ -239,6 +244,8 @@ NodeManager(s) to execute and monitor the tasks.
 Summary: The Hadoop MapReduce (MRv2)
 Group: System/Daemons
 Requires: %{name}-yarn = %{version}-%{release}
+Requires(pre): %{name} = %{version}-%{release}
+%systemd_requires
 
 %description mapreduce
 Hadoop MapReduce is a programming model and software framework for writing
@@ -251,7 +258,7 @@ Summary: HTTPFS for Hadoop
 Group: System/Daemons
 Requires: %{name}-hdfs = %{version}-%{release}
 Requires: tomcat
-Requires(pre): %{name} = %{version}-%{release}
+%systemd_requires
 
 %description httpfs
 The server providing HTTP REST API support for the complete
@@ -262,6 +269,8 @@ FileSystem/FileContext interface in HDFS.
 Summary: Hadoop Filesystem Library
 Group: Development/Libraries
 Requires: %{name}-hdfs = %{version}-%{release}
+Requires: zlib
+Requires: lzo
 
 %description libhdfs
 Hadoop Filesystem Library
@@ -461,43 +470,45 @@ fi
 sed -e "s|^HADOOP_COMMON_LIB_NATIVE_DIR\s*=.*|HADOOP_COMMON_LIB_NATIVE_DIR=$lib|" %{SOURCE1} > %{buildroot}/%{_libexecdir}/hadoop-layout.sh
 
 # Default config
-cp -f %{SOURCE11} %{buildroot}/%{_sysconfdir}/%{name}/core-site.xml
-cp -f %{SOURCE12} %{buildroot}/%{_sysconfdir}/%{name}/hdfs-site.xml
-cp -f %{SOURCE13} %{buildroot}/%{_sysconfdir}/%{name}/mapred-site.xml
-cp -f %{SOURCE14} %{buildroot}/%{_sysconfdir}/%{name}/yarn-site.xml
+cp -f %{SOURCE8} %{buildroot}/%{_sysconfdir}/%{name}/core-site.xml
+cp -f %{SOURCE9} %{buildroot}/%{_sysconfdir}/%{name}/hdfs-site.xml
+cp -f %{SOURCE10} %{buildroot}/%{_sysconfdir}/%{name}/mapred-site.xml
+cp -f %{SOURCE11} %{buildroot}/%{_sysconfdir}/%{name}/yarn-site.xml
 
-# init scripts
-install -d -m 0755 %{buildroot}/%{_initddir}/
-services="namenode datanode secondarynamenode zkfc historyserver nodemanager proxyserver resourcemanager"
-%if %{package_httpfs}
-services="$services httpfs"
-%endif
-for service in $services
+# systemd configuration
+install -d -m 0755 %{buildroot}/%{_unitdir}/
+for service in %{hdfs_services} %{mapreduce_services} %{yarn_services}
 do
-  d=`echo -n $service | sed -e 's/^./\U&/g'`
-  sed -e "s|DESC|Hadoop $d|g" %{SOURCE2} > %{buildroot}/%{_initddir}/%{name}-$service
-  sed -i "s|\$daemon|$service|g" %{buildroot}/%{_initddir}/%{name}-$service
-  chmod 755 %{buildroot}/%{_initddir}/%{name}-$service
+  s=`echo $service | cut -d'-' -f 2 | cut -d'.' -f 1`
+  if [[ "%{hdfs_services}" == *$service* ]]
+  then
+    src=%{SOURCE2}
+  elif [[ "%{mapreduce_services}" == *$service* ]]
+  then
+    src=%{SOURCE3}
+  elif [[ "%{yarn_services}" == *$service* ]]
+  then
+    src=%{SOURCE4}
+  else
+    echo "Failed to determine type of service for %service"
+    exit 1
+  fi
+  sed -e "s|DAEMON|$s|g" $src > %{buildroot}/%{_unitdir}/%{name}-$s.service
 done
 
-# init script customizations
-cp -f %{SOURCE3} %{buildroot}/%{_sysconfdir}/sysconfig/hadoop
-cp -f %{SOURCE4} %{buildroot}/%{_sysconfdir}/sysconfig/hadoop-fuse
-cp -f %{SOURCE5} %{buildroot}/%{_sysconfdir}/sysconfig/hadoop-hdfs
-cp -f %{SOURCE7} %{buildroot}/%{_sysconfdir}/sysconfig/hadoop-mapreduce
-cp -f %{SOURCE8} %{buildroot}/%{_sysconfdir}/sysconfig/hadoop-yarn
-cp -f %{SOURCE9} %{buildroot}/%{_sysconfdir}/sysconfig/hadoop-datanode
+# startup script customizations
+cp -f %{SOURCE6} %{buildroot}/%{_sysconfdir}/sysconfig/hadoop-datanode
 
 %if %{package_httpfs}
-cp -f %{SOURCE6} %{buildroot}/%{_sysconfdir}/sysconfig/hadoop-httpfs
-cp -f %{SOURCE15} %{buildroot}/%{_sysconfdir}/%{name}/httpfs-env.sh
+cp -f %{SOURCE5} %{buildroot}/%{_unitdir}
+cp -f %{SOURCE12} %{buildroot}/%{_sysconfdir}/%{name}/httpfs-env.sh
 %endif
 
 # Install security limits
 install -d -m 0755 $RPM_BUILD_ROOT/%{_sysconfdir}/security/limits.d
 for limit in hdfs yarn mapreduce
 do
-  sed -e "s|name|${limit:0:6}|" %{SOURCE10} > %{buildroot}/%{_sysconfdir}/security/limits.d/${limit}.conf
+  sed -e "s|name|${limit:0:6}|" %{SOURCE7} > %{buildroot}/%{_sysconfdir}/security/limits.d/${limit}.conf
 done
 
 # Ensure /var/run directories are recreated on boot
@@ -561,42 +572,46 @@ getent passwd yarn >/dev/null || /usr/sbin/useradd --comment "Hadoop Yarn" --she
 getent group mapred >/dev/null || groupadd -r mapred
 getent passwd mapred >/dev/null || /usr/sbin/useradd --comment "Hadoop MapReduce" --shell /bin/bash -M -r -g mapred -G hadoop --home %{var}/cache/%{name}-mapreduce mapred
 
-%preun
-if [ "$1" = 0 ]; then
-  # Stop any services that might be running
-  for service in %{hadoop_services}
-  do
-     service hadoop-$service stop 1>/dev/null 2>/dev/null || :
-  done
-fi
-
 %preun hdfs
-if [ "$1" = 0 ]; then
-  service hadoop-datanode stop 1>/dev/null 2>/dev/null || :
-  service hadoop-namenode stop 1>/dev/null 2>/dev/null || :
-  service hadoop-secondardnamenode stop 1>/dev/null 2>/dev/null || :
-  service hadoop-zkfc stop 1>/dev/null 2>/dev/null || :
-fi
+%systemd_preun %{hdfs_services}
+
+%preun mapreduce
+%systemd_preun %{mapreduce_services}
 
 %preun yarn
-if [ "$1" = 0 ]; then
-  service hadoop-hdfs stop 1>/dev/null 2>/dev/null || :
-fi
+%systemd_preun %{yarn_services}
 
 %if %{package_httpfs}
 %preun httpfs
-if [ $1 = 0 ]; then
-  service %{name}-httpfs stop > /dev/null 2>&1
-  chkconfig --del %{name}-httpfs
-#  %{alternatives_cmd} --remove %{name}-httpfs-conf %{etc_httpfs}/conf.empty || :
-fi
+%systemd_preun %{httpfs_services}
 %endif
+
+%post hdfs
+%systemd_post %{hdfs_services}
+
+%post mapreduce
+%systemd_post %{mapreduce_services}
+
+%post yarn
+%systemd_post %{yarn_services}
+
+%if %{package_httpfs}
+%post httpfs
+%systemd_post %{httpfs_services}
+%endif
+
+%postun hdfs
+%systemd_postun_with_restart %{hdfs_services}
+
+%postun mapreduce
+%systemd_postun_with_restart %{mapreduce_services}
+
+%postun yarn
+%systemd_postun_with_restart %{yarn_services}
 
 %if %{package_httpfs}
 %postun httpfs
-if [ $1 -ge 1 ]; then
-  service %{name}-httpfs condrestart >/dev/null 2>&1
-fi
+%systemd_postun_with_restart %{httpfs_services}
 %endif
 
 
@@ -607,10 +622,9 @@ fi
 %config(noreplace) %{_sysconfdir}/%{name}/yarn-env.sh
 %config(noreplace) %{_sysconfdir}/%{name}/yarn-site.xml
 %config(noreplace) %{_sysconfdir}/security/limits.d/yarn.conf
-%{_sysconfdir}/sysconfig/hadoop-yarn
-%{_initddir}/%{name}-nodemanager
-%{_initddir}/%{name}-proxyserver
-%{_initddir}/%{name}-resourcemanager
+%{_unitdir}/%{name}-nodemanager.service
+%{_unitdir}/%{name}-proxyserver.service
+%{_unitdir}/%{name}-resourcemanager.service
 %{_libexecdir}/yarn-config.sh
 %{_javadir}/%{name}/%{name}-yarn*.jar
 %{_datadir}/%{name}/yarn
@@ -633,16 +647,15 @@ fi
 %config(noreplace) %{_sysconfdir}/%{name}/hdfs-site.xml
 %config(noreplace) %{_sysconfdir}/security/limits.d/hdfs.conf
 %{_sysconfdir}/sysconfig/hadoop-datanode
-%{_sysconfdir}/sysconfig/hadoop-hdfs
 %{_javadir}/%{name}/%{name}-hdfs*.jar
 %{_mavenpomdir}/JPP.%{name}-%{name}-hdfs*.pom
 %{_mavendepmapfragdir}/%{name}-%{name}-hdfs*
 %{_datadir}/%{name}/hdfs
 %{_sharedstatedir}/%{name}-hdfs
-%{_initddir}/%{name}-datanode
-%{_initddir}/%{name}-namenode
-%{_initddir}/%{name}-secondarynamenode
-%{_initddir}/%{name}-zkfc
+%{_unitdir}/%{name}-datanode.service
+%{_unitdir}/%{name}-namenode.service
+%{_unitdir}/%{name}-secondarynamenode.service
+%{_unitdir}/%{name}-zkfc.service
 %{_libexecdir}/hdfs-config.sh
 %{_bindir}/hdfs
 %{_sbindir}/distribute-exclude.sh
@@ -664,7 +677,6 @@ fi
 %config(noreplace) %{_sysconfdir}/%{name}/mapred-site.xml
 %config(noreplace) %{_sysconfdir}/%{name}/mapred-site.xml.template
 %config(noreplace) %{_sysconfdir}/security/limits.d/mapreduce.conf
-%{_sysconfdir}/sysconfig/hadoop-mapreduce
 %{_datadir}/%{name}/mapreduce
 %{_javadir}/%{name}/%{name}-mapreduce*.jar
 %{_javadir}/%{name}/%{name}-archives*.jar
@@ -691,7 +703,7 @@ fi
 %{_mavendepmapfragdir}/%{name}-%{name}-rumen*
 %{_mavendepmapfragdir}/%{name}-%{name}-streaming*
 %{_libexecdir}/mapred-config.sh
-%{_initddir}/%{name}-historyserver
+%{_unitdir}/%{name}-historyserver.service
 %{_bindir}/mapred
 %{_sbindir}/mr-jobhistory-daemon.sh
 %{_tmpfilesdir}/hadoop-mapreduce.conf
@@ -712,7 +724,6 @@ fi
 %config(noreplace) %{_sysconfdir}/%{name}/slaves
 %config(noreplace) %{_sysconfdir}/%{name}/ssl-client.xml.example
 %config(noreplace) %{_sysconfdir}/%{name}/ssl-server.xml.example
-%{_sysconfdir}/sysconfig/hadoop
 %{_javadir}/%{name}/%{name}-annotations*.jar
 %{_javadir}/%{name}/%{name}-auth*.jar
 %{_javadir}/%{name}/%{name}-common*.jar
@@ -755,10 +766,9 @@ fi
 %config(noreplace) %{_sysconfdir}/%{name}/httpfs-signature.secret
 %config(noreplace) %{_sysconfdir}/%{name}/httpfs-site.xml
 %config(noreplace) %{_sysconfdir}/%{name}/tomcat
-%{_sysconfdir}/sysconfig/hadoop-httpfs
 %{_libexecdir}/httpfs-config.sh
 %{_libexecdir}/%{name}-httpfs
-%{_initddir}/%{name}-httpfs
+%{_unitdir}/%{name}-httpfs.service
 %{_sbindir}/httpfs.sh
 %{_datadir}/hadoop/httpfs
 %{_sharedstatedir}/hadoop-httpfs
@@ -766,48 +776,6 @@ fi
 %attr(0775,httpfs,httpfs) %dir %{_var}/run/%{name}-httpfs
 %attr(0775,httpfs,httpfs) %dir %{_var}/log/%{name}-httpfs
 %endif
-
-# Service file management RPMs
-#%define service_macro() \
-#%files %1 \
-#%defattr(-,root,root) \
-#%{_initddir}/%{name}-%1 \
-#%config(noreplace) /etc/default/%{name}-%1 \
-#%post %1 \
-#chkconfig --add %{name}-%1 \
-#\
-#%preun %1 \
-#if [ $1 = 0 ]; then \
-#  service %{name}-%1 stop > /dev/null 2>&1 \
-#  chkconfig --del %{name}-%1 \
-#fi \
-#%postun %1 \
-#if [ $1 -ge 1 ]; then \
-#  service %{name}-%1 condrestart >/dev/null 2>&1 \
-#fi
-
-#%service_macro hdfs-namenode
-#%service_macro hdfs-secondarynamenode
-#%service_macro hdfs-zkfc
-#%service_macro hdfs-datanode
-#%service_macro yarn-resourcemanager
-#%service_macro yarn-nodemanager
-#%service_macro yarn-proxyserver
-#%service_macro mapreduce-historyserver
-
-# Pseudo-distributed Hadoop installation
-#%post conf-pseudo
-#%{alternatives_cmd} --install %{config_hadoop} %{name}-conf %{etc_hadoop}/conf.pseudo 30
-#
-#%preun conf-pseudo
-#if [ "$1" = 0 ]; then
-#        %{alternatives_cmd} --remove %{name}-conf %{etc_hadoop}/conf.pseudo
-#        rm -f %{etc_hadoop}/conf
-#fi
-#
-#%files conf-pseudo
-#%defattr(-,root,root)
-#%config(noreplace) %attr(755,root,root) %{etc_hadoop}/conf.pseudo
 
 %files libhdfs
 %doc hadoop-dist/target/hadoop-%{hadoop_base_version}/share/doc/hadoop/hdfs/*
@@ -820,7 +788,6 @@ fi
 %files hdfs-fuse
 %doc hadoop-dist/target/hadoop-%{hadoop_base_version}/share/doc/hadoop/hdfs/*
 %defattr(-,root,root)
-%{_sysconfdir}/sysconfig/hadoop-fuse
 %{_bindir}/fuse_dfs
 #%attr(0755,root,root) %{bin_hadoop}/hadoop-fuse-dfs
 

@@ -1,4 +1,0 @@
-SVC_USER=hdfs
-EXEC_PATH="/usr/sbin/hadoop-daemon.sh"
-IDENT_STRING=$HADOOP_IDENT_STRING
-PID_DIR=$HADOOP_PID_DIR

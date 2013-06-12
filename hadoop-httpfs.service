@@ -1,0 +1,16 @@
+[Unit]
+Description=The Hadoop httpfs daemon
+After=network.target
+After=NetworkManager.target
+
+[Service]
+Type=forking
+EnvironmentFile=-/etc/sysconfig/hadoop-httpfs
+ExecStart=/usr/sbin/httpfs.sh start
+ExecStop=/usr/sbin/httpfs.sh stop
+User=httpfs
+Group=httpfs
+PIDFile=/var/run/hadoop-httpfs/hadoop-httpfs.pid
+
+[Install]
+WantedBy=multi-user.target

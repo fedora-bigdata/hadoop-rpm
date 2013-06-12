@@ -16,10 +16,9 @@ export HADOOP_IDENT_STRING=hdfs
 export HADOOP_YARN_HOME=$HADOOP_PREFIX
 export YARN_DIR=share/hadoop/yarn
 export YARN_LIB_JARS_DIR=share/hadoop/yarn/lib
-export YARN_IDENT_STRING=yarn
 export YARN_PID_DIR=/var/run/hadoop-yarn
 export YARN_LOG_DIR=/var/log/hadoop-yarn
-export YARN_CONF_DIR=$HADOOP_CONF_DIR
+export YARN_CONF_DIR=/etc/hadoop
 export YARN_IDENT_STRING=yarn
 
 export HADOOP_MAPRED_HOME=$HADOOP_PREFIX

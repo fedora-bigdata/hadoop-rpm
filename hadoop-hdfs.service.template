@@ -1,0 +1,17 @@
+[Unit]
+Description=The Hadoop DAEMON daemon
+After=network.target
+After=NetworkManager.target
+
+[Service]
+Type=forking
+EnvironmentFile=-/etc/sysconfig/hadoop-hdfs
+EnvironmentFile=-/etc/sysconfig/hadoop-DAEMON
+ExecStart=/usr/sbin/hadoop-daemon.sh start DAEMON
+ExecStop=/usr/sbin/hadoop-daemon.sh stop DAEMON
+User=hdfs
+Group=hdfs
+PIDFile=/var/run/hadoop-hdfs/hadoop-hdfs-DAEMON.pid
+
+[Install]
+WantedBy=multi-user.target

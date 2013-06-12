@@ -3,3 +3,4 @@
 # HADOOP_SECURE_DN_PID_DIR=/var/run/hadoop-hdfs
 # HADOOP_SECURE_DN_LOG_DIR=/var/log/hadoop-hdfs
 # JSVC_HOME=/usr/bin
+# USER=root

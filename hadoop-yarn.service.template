@@ -1,0 +1,17 @@
+[Unit]
+Description=The Hadoop DAEMON daemon
+After=network.target
+After=NetworkManager.target
+
+[Service]
+Type=forking
+EnvironmentFile=-/etc/sysconfig/hadoop-yarn
+EnvironmentFile=-/etc/sysconfig/hadoop-DAEMON
+ExecStart=/usr/sbin/yarn-daemon.sh start DAEMON
+ExecStop=/usr/sbin/yarn-daemon.sh stop DAEMON
+User=yarn
+Group=yarn
+PIDFile=/var/run/hadoop-yarn/yarn-yarn-DAEMON.pid
+
+[Install]
+WantedBy=multi-user.target
