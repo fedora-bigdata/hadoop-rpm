@@ -295,7 +295,15 @@ Group: Documentation
 Requires: jpackage-utils
 
 %description javadoc
-%{summary}.
+This package contains the API documentation for %{name}
+
+%package devel
+Summary: Headers for ${name}
+Group: Development/System
+Requires: %{name}-libhdfs = %{version}-%{release}
+
+%description devel
+Header files for %{name}'s libhdfs library and other utilities
 
 %prep
 %setup -q -n %{name}-%{hadoop_base_version}-src
@@ -321,6 +329,7 @@ rm -rf %{buildroot}
 
 %install
 install -d -m 0755 %{buildroot}/%{_libdir}
+install -d -m 0755 %{buildroot}/%{_includedir}/%{name}
 install -d -m 0755 %{buildroot}/%{_sharedstatedir}/%{name}-hdfs/webapps
 install -d -m 0755 %{buildroot}/%{_datadir}/%{name}/common/lib
 install -d -m 0755 %{buildroot}/%{_datadir}/%{name}/hdfs/lib
@@ -359,6 +368,7 @@ done
 rm -f %{buildroot}/%{_bindir}/test-container-executor
 
 cp -arf $basedir/etc %{buildroot}
+cp -arf $basedir/include/* %{buildroot}/%{_includedir}/%{name}
 
 %if 0%{package_httpfs} == 0
 rm -f %{buildroot}/%{_sbindir}/httpfs.sh
@@ -781,16 +791,15 @@ getent passwd mapred >/dev/null || /usr/sbin/useradd --comment "Hadoop MapReduce
 %doc hadoop-dist/target/hadoop-%{hadoop_base_version}/share/doc/hadoop/hdfs/*
 %defattr(-,root,root)
 %{_libdir}/libhdfs*
-#%{_includedir}/hdfs.h
-# -devel should be its own package
-#%doc %{_docdir}/libhdfs-%{hadoop_version}
 
 %files hdfs-fuse
 %doc hadoop-dist/target/hadoop-%{hadoop_base_version}/share/doc/hadoop/hdfs/*
 %defattr(-,root,root)
 %{_bindir}/fuse_dfs
-#%attr(0755,root,root) %{bin_hadoop}/hadoop-fuse-dfs
 
 %files javadoc
 %doc hadoop-dist/target/hadoop-%{hadoop_base_version}/share/doc/hadoop/common/*
 %doc %{_javadocdir}/%{name}
+
+%files devel
+%{_includedir}/%{name}
