@@ -1,0 +1,7 @@
+/var/log/hadoop-NAME/*.log
+{
+    missingok
+    copytruncate
+    compress
+    weekly
+}

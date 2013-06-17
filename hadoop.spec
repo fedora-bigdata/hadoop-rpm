@@ -1,18 +1,3 @@
-# Licensed to the Apache Software Foundation (ASF) under one or more
-# contributor license agreements.  See the NOTICE file distributed with
-# this work for additional information regarding copyright ownership.
-# The ASF licenses this file to You under the Apache License, Version 2.0
-# (the "License"); you may not use this file except in compliance with
-# the License.  You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
-
 # Currently disabled because httpfs doesn't play well with the directory
 # layout and isn't flexible enough to allow customization.
 %global package_httpfs 0
@@ -26,17 +11,17 @@
 Name:   hadoop
 Version: 2.0.2
 Release: 0.1%{?dist}
-Summary: Hadoop is a software platform for processing vast amounts of data
+Summary: A software platform for processing vast amounts of data
 License: ASL 2.0
-URL:    http://hadoop.apache.org/core/
 Group:  Development/Libraries
+URL: https://github.com/apache/hadoop-common.git
 Source0: %{name}-%{hadoop_base_version}.tar.gz
 Source1: hadoop-layout.sh
 Source2: hadoop-hdfs.service.template
 Source3: hadoop-mapreduce.service.template
 Source4: hadoop-yarn.service.template
 Source5: hadoop-httpfs.service
-Source6: hadoop-datanode.sysconfig
+Source6: hadoop.logrotate
 Source7: hadoop-limits.conf
 Source8: hadoop-core-site.xml
 Source9: hadoop-hdfs-site.xml
@@ -195,7 +180,7 @@ located.
 
 %package hdfs
 Summary: The Hadoop Distributed File System
-Group: System/Daemons
+Group: Applications/System
 Requires: %{name} = %{version}-%{release}
 Requires(pre): %{name} = %{version}-%{release}
 Requires: apache-commons-daemon-jsvc
@@ -210,7 +195,7 @@ extremely rapid computations.
 
 %package yarn
 Summary: The Hadoop NextGen MapReduce (YARN)
-Group: System/Daemons
+Group: Applications/System
 Requires: %{name} = %{version}-%{release}
 Requires(pre): %{name} = %{version}-%{release}
 Requires: guice
@@ -220,13 +205,12 @@ Requires: cglib
 Requires: atinject
 Requires: aopalliance
 Requires: jsr-311
-Requires: cglib
 Requires: jackson
 %systemd_requires
 
 %description yarn
 YARN (Hadoop NextGen MapReduce) is a general purpose data-computation framework.
-The fundamental idea of YARN is to split up the two major functionalities of
+The fundamental idea of YARN is to split up the two major tasks of
 the JobTracker, resource management and job scheduling/monitoring, into
 separate daemons: ResourceManager and NodeManager.
 
@@ -242,7 +226,7 @@ NodeManager(s) to execute and monitor the tasks.
 
 %package mapreduce
 Summary: The Hadoop MapReduce (MRv2)
-Group: System/Daemons
+Group: Applications/System
 Requires: %{name}-yarn = %{version}-%{release}
 Requires(pre): %{name} = %{version}-%{release}
 %systemd_requires
@@ -255,7 +239,7 @@ clusters of compute nodes.
 %if %{package_httpfs}
 %package httpfs
 Summary: HTTPFS for Hadoop
-Group: System/Daemons
+Group: Applications/System
 Requires: %{name}-hdfs = %{version}-%{release}
 Requires: tomcat
 %systemd_requires
@@ -269,7 +253,6 @@ FileSystem/FileContext interface in HDFS.
 Summary: Hadoop Filesystem Library
 Group: Development/Libraries
 Requires: %{name}-hdfs = %{version}-%{release}
-Requires: zlib
 Requires: lzo
 
 %description libhdfs
@@ -284,7 +267,6 @@ Requires: %{name}-hdfs = %{version}-%{release}
 Requires: %{name}-yarn = %{version}-%{release}
 Requires: %{name}-mapreduce = %{version}-%{release}
 Requires: fuse
-Requires: fuse-libs
 
 %description hdfs-fuse
 Allow HDFS to be mounted as a standard file system
@@ -337,8 +319,8 @@ install -d -m 0755 %{buildroot}/%{_datadir}/%{name}/mapreduce/lib
 install -d -m 0755 %{buildroot}/%{_datadir}/%{name}/yarn/lib
 install -d -m 0755 %{buildroot}/%{_javadir}/%{name}
 install -d -m 0755 %{buildroot}/%{_javadocdir}/%{name}
-install -d -m 0755 %{buildroot}/%{_sysconfdir}/sysconfig
 install -d -m 0755 %{buildroot}/%{_sysconfdir}/%{name}/tomcat
+install -d -m 0755 %{buildroot}/%{_sysconfdir}/logrotate.d
 install -d -m 0755 %{buildroot}/%{_tmpfilesdir}
 install -d -m 1777 %{buildroot}/%{_var}/cache/%{name}-yarn
 install -d -m 1777 %{buildroot}/%{_var}/cache/%{name}-hdfs
@@ -385,7 +367,13 @@ sed -i "s|\${JSVC_HOME}|/usr/bin|" %{buildroot}/%{_sysconfdir}/%{name}/hadoop-en
 sed -i "s|\(HADOOP_OPTS.*=.*\)\$HADOOP_CLIENT_OPTS|\1 -Djavax.xml.parsers.DocumentBuilderFactory=com.sun.org.apache.xerces.internal.jaxp.DocumentBuilderFactoryImpl \$HADOOP_CLIENT_OPTS|" %{buildroot}/%{_sysconfdir}/%{name}/hadoop-env.sh
 echo "export YARN_OPTS=\"\$YARN_OPTS -Djavax.xml.parsers.DocumentBuilderFactory=com.sun.org.apache.xerces.internal.jaxp.DocumentBuilderFactoryImpl\"" >> %{buildroot}/%{_sysconfdir}/%{name}/yarn-env.sh
 
-cp -arf $basedir/lib/native/*.so* %{buildroot}/%{_libdir}
+cp -arf $basedir/lib/native/*.so.* %{buildroot}/%{_libdir}
+for file in `%{buildroot}/%{_libdir}/*.so`
+do
+  f=basename $file
+  mv -f $file %{buildroot}/%{_libdir}/$file.0
+done
+
 cp -af hadoop-hdfs-project/hadoop-hdfs/target/native/main/native/fuse-dfs/fuse_dfs %{buildroot}/%{_bindir}
 
 for dir in `ls $basedir/share/hadoop`
@@ -506,9 +494,6 @@ do
   sed -e "s|DAEMON|$s|g" $src > %{buildroot}/%{_unitdir}/%{name}-$s.service
 done
 
-# startup script customizations
-cp -f %{SOURCE6} %{buildroot}/%{_sysconfdir}/sysconfig/hadoop-datanode
-
 %if %{package_httpfs}
 cp -f %{SOURCE5} %{buildroot}/%{_unitdir}
 cp -f %{SOURCE12} %{buildroot}/%{_sysconfdir}/%{name}/httpfs-env.sh
@@ -528,6 +513,17 @@ echo "d %{_var}/run/%{name}-mapreduce 0775 mapred hadoop -" > %{buildroot}/%{_tm
 %if %{package_httpfs}
 echo "d %{_var}/run/%{name}-httpfs 0775 httpfs hadoop -" > %{buildroot}/%{_tmpfilesdir}/hadoop-httpfs.conf
 %endif
+
+# logrotate config
+sys_types="hdfs yarn mapreduce"
+%if %{package_httpfs}
+sys_types="$sys_types httpfs"
+%endif
+for type in $sys_types
+do
+  sed -e "s|NAME|$type|" %{SOURCE6} > %{buildroot}/%{_sysconfdir}/logrotate.d/%{name}-$type
+done
+sed -i "s|{|%{_var}/log/hadoop-hdfs/*.audit\n{|" %{buildroot}/%{_sysconfdir}/logrotate.d/%{name}-hdfs
 
 install -dm 0775 %{buildroot}%{_mavenpomdir}
 for module in hadoop-yarn-project/hadoop-yarn/hadoop-yarn-common \
@@ -596,6 +592,9 @@ getent passwd mapred >/dev/null || /usr/sbin/useradd --comment "Hadoop MapReduce
 %systemd_preun %{httpfs_services}
 %endif
 
+%post -p /sbin/ldconfig
+%post libhdfs -p /sbin/ldconfig
+
 %post hdfs
 %systemd_post %{hdfs_services}
 
@@ -609,6 +608,9 @@ getent passwd mapred >/dev/null || /usr/sbin/useradd --comment "Hadoop MapReduce
 %post httpfs
 %systemd_post %{httpfs_services}
 %endif
+
+%postun -p /sbin/ldconfig
+%postun libhdfs -p /sbin/ldconfig
 
 %postun hdfs
 %systemd_postun_with_restart %{hdfs_services}
@@ -647,16 +649,16 @@ getent passwd mapred >/dev/null || /usr/sbin/useradd --comment "Hadoop MapReduce
 %{_sbindir}/start-yarn.sh
 %{_sbindir}/stop-yarn.sh
 %{_tmpfilesdir}/hadoop-yarn.conf
-%attr(0775,yarn,hadoop) %dir %{_var}/run/%{name}-yarn
-%attr(0775,yarn,hadoop) %dir %{_var}/log/%{name}-yarn
-%attr(1777,yarn,hadoop) %dir %{_var}/cache/%{name}-yarn
+%config(noreplace) %attr(644, root, root) %{_sysconfdir}/logrotate.d/%{name}-yarn
+%attr(0755,yarn,hadoop) %dir %{_var}/run/%{name}-yarn
+%attr(0755,yarn,hadoop) %dir %{_var}/log/%{name}-yarn
+%attr(0755,yarn,hadoop) %dir %{_var}/cache/%{name}-yarn
 
 %files hdfs
 %doc hadoop-dist/target/hadoop-%{hadoop_base_version}/share/doc/hadoop/hdfs/*
 %defattr(-,root,root)
 %config(noreplace) %{_sysconfdir}/%{name}/hdfs-site.xml
 %config(noreplace) %{_sysconfdir}/security/limits.d/hdfs.conf
-%{_sysconfdir}/sysconfig/hadoop-datanode
 %{_javadir}/%{name}/%{name}-hdfs*.jar
 %{_mavenpomdir}/JPP.%{name}-%{name}-hdfs*.pom
 %{_mavendepmapfragdir}/%{name}-%{name}-hdfs*
@@ -674,9 +676,10 @@ getent passwd mapred >/dev/null || /usr/sbin/useradd --comment "Hadoop MapReduce
 %{_sbindir}/update-hdfs-env.sh
 %{_sbindir}/hadoop-setup-hdfs.sh
 %{_tmpfilesdir}/hadoop-hdfs.conf
-%attr(0775,hdfs,hadoop) %dir %{_var}/run/%{name}-hdfs
-%attr(0775,hdfs,hadoop) %dir %{_var}/log/%{name}-hdfs
-%attr(1777,hdfs,hadoop) %dir %{_var}/cache/%{name}-hdfs
+%config(noreplace) %attr(644, root, root) %{_sysconfdir}/logrotate.d/%{name}-hdfs
+%attr(0755,hdfs,hadoop) %dir %{_var}/run/%{name}-hdfs
+%attr(0755,hdfs,hadoop) %dir %{_var}/log/%{name}-hdfs
+%attr(0755,hdfs,hadoop) %dir %{_var}/cache/%{name}-hdfs
 
 %files mapreduce
 %doc hadoop-dist/target/hadoop-%{hadoop_base_version}/share/doc/hadoop/mapreduce/*
@@ -717,9 +720,10 @@ getent passwd mapred >/dev/null || /usr/sbin/useradd --comment "Hadoop MapReduce
 %{_bindir}/mapred
 %{_sbindir}/mr-jobhistory-daemon.sh
 %{_tmpfilesdir}/hadoop-mapreduce.conf
-%attr(0775,mapred,hadoop) %dir %{_var}/run/%{name}-mapreduce
-%attr(0775,mapred,hadoop) %dir %{_var}/log/%{name}-mapreduce
-%attr(1777,mapred,hadoop) %dir %{_var}/cache/%{name}-mapreduce
+%config(noreplace) %attr(644, root, root) %{_sysconfdir}/logrotate.d/%{name}-mapreduce
+%attr(0755,mapred,hadoop) %dir %{_var}/run/%{name}-mapreduce
+%attr(0755,mapred,hadoop) %dir %{_var}/log/%{name}-mapreduce
+%attr(0755,mapred,hadoop) %dir %{_var}/cache/%{name}-mapreduce
 
 
 %files
@@ -783,8 +787,9 @@ getent passwd mapred >/dev/null || /usr/sbin/useradd --comment "Hadoop MapReduce
 %{_datadir}/hadoop/httpfs
 %{_sharedstatedir}/hadoop-httpfs
 %{_tmpfilesdir}/hadoop-httpfs.conf
-%attr(0775,httpfs,httpfs) %dir %{_var}/run/%{name}-httpfs
-%attr(0775,httpfs,httpfs) %dir %{_var}/log/%{name}-httpfs
+%config(noreplace) %attr(644, root, root) %{_sysconfdir}/logrotate.d/%{name}-httpfs
+%attr(0755,httpfs,httpfs) %dir %{_var}/run/%{name}-httpfs
+%attr(0755,httpfs,httpfs) %dir %{_var}/log/%{name}-httpfs
 %endif
 
 %files libhdfs
@@ -802,4 +807,8 @@ getent passwd mapred >/dev/null || /usr/sbin/useradd --comment "Hadoop MapReduce
 %doc %{_javadocdir}/%{name}
 
 %files devel
+%doc hadoop-dist/target/hadoop-%{hadoop_base_version}/share/doc/hadoop/common/*
 %{_includedir}/%{name}
+
+%changelog
+
