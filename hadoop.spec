@@ -2,6 +2,9 @@
 # layout and isn't flexible enough to allow customization.
 %global package_httpfs 0
 
+%global commit 812b8ce7e062eb480e1114738bf9b267f46b3c73
+%global shortcommit %(c=%{commit}; echo ${c:0:7})
+
 %global hadoop_base_version 2.0.2-alpha
 %global hdfs_services hadoop-zkfc.service hadoop-datanode.service hadoop-secondarynamenode.service hadoop-namenode.service
 %global mapreduce_services hadoop-historyserver.service
@@ -10,12 +13,13 @@
 
 Name:   hadoop
 Version: 2.0.2
-Release: 0.1%{?dist}
+Release: 1%{?dist}
 Summary: A software platform for processing vast amounts of data
 License: ASL 2.0
 Group:  Development/Libraries
 URL: https://github.com/apache/hadoop-common.git
-Source0: %{name}-%{hadoop_base_version}.tar.gz
+#Source0: %{name}-%{hadoop_base_version}.tar.gz
+Source0: https://github.com/apache/hadoop-common/archive/%{commit}/%{name}-%{version}-%{shortcommit}.tar.gz
 Source1: hadoop-layout.sh
 Source2: hadoop-hdfs.service.template
 Source3: hadoop-mapreduce.service.template
@@ -28,240 +32,204 @@ Source9: hadoop-hdfs-site.xml
 Source10: hadoop-mapred-site.xml
 Source11: hadoop-yarn-site.xml
 Source12: hadoop-httpfs-env.sh
+# This patch includes the following upstream tickets:
+# https://issues.apache.org/jira/browse/HADOOP-9594
+# https://issues.apache.org/jira/browse/HADOOP-9605
+# https://issues.apache.org/jira/browse/HADOOP-9607
+# https://issues.apache.org/jira/browse/HADOOP-9610
+# https://issues.apache.org/jira/browse/HADOOP-9611
+# https://issues.apache.org/jira/browse/HADOOP-9613
+# https://issues.apache.org/jira/browse/HADOOP-9623
+# https://issues.apache.org/jira/browse/HADOOP-9650
+# As well as still baking changes for tomcat/jspc
 Patch0: hadoop-fedora-integration.patch
 Buildroot: %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id} -u -n)
-BuildRequires: systemd
+BuildRequires: ant
+BuildRequires: apache-commons-cli
+BuildRequires: apache-commons-configuration
+BuildRequires: apache-commons-daemon
+BuildRequires: apache-commons-el
+BuildRequires: apache-commons-io
+BuildRequires: apache-commons-lang
+BuildRequires: apache-commons-logging
+BuildRequires: apache-commons-math
+BuildRequires: apache-commons-net
+BuildRequires: apache-rat-plugin
+BuildRequires: avro
+BuildRequires: bookkeeper-java
+BuildRequires: cmake
+BuildRequires: commons-codec
+BuildRequires: commons-httpclient
+BuildRequires: ecj >= 1:4.2.1-6
+BuildRequires: fuse
+BuildRequires: fuse-devel
+BuildRequires: fusesource-pom
+BuildRequires: gmaven
+BuildRequires: grizzly
+BuildRequires: guava
+BuildRequires: guice-servlet
+BuildRequires: guice-extensions
+BuildRequires: hsqldb
+BuildRequires: jackson
+BuildRequires: jansi
+BuildRequires: jansi-native
+BuildRequires: java-devel
+BuildRequires: javapackages-tools
+BuildRequires: jdiff
+BuildRequires: jersey
+BuildRequires: jersey-contribs
+BuildRequires: jets3t
+# May need to break down into specific jetty rpms
+BuildRequires: jetty
+BuildRequires: jsch
+BuildRequires: json_simple
+BuildRequires: jspc
+BuildRequires: jspc-compilers
+BuildRequires: jspc-maven-plugin
+BuildRequires: junit
+BuildRequires: kfs
+BuildRequires: log4j
+BuildRequires: maven
+BuildRequires: maven-antrun-plugin
+BuildRequires: maven-assembly-plugin
+BuildRequires: maven-clean-plugin
 BuildRequires: maven-compiler-plugin
+BuildRequires: maven-dependency-plugin
 BuildRequires: maven-enforcer-plugin
 BuildRequires: maven-install-plugin
 BuildRequires: maven-invoker-plugin
 BuildRequires: maven-javadoc-plugin
 BuildRequires: maven-plugin-cobertura
+BuildRequires: maven-plugin-exec
 BuildRequires: maven-plugin-plugin
 BuildRequires: maven-release-plugin
 BuildRequires: maven-remote-resources-plugin
-BuildRequires: maven-surefire-plugin
-BuildRequires: maven-clean-plugin
-BuildRequires: maven-assembly-plugin
 BuildRequires: maven-shade-plugin
-BuildRequires: maven-antrun-plugin
-BuildRequires: apache-rat-plugin
-BuildRequires: maven-plugin-exec
-BuildRequires: native-maven-plugin
-BuildRequires: znerd-oss-parent
-BuildRequires: jspc-maven-plugin
-BuildRequires: jspc-compilers
-BuildRequires: gmaven
-BuildRequires: fusesource-pom
-BuildRequires: json_simple
-BuildRequires: grizzly
-BuildRequires: openssl-devel
-BuildRequires: jspc
-# May need to break down into specific jetty rpms
-BuildRequires: jetty
-BuildRequires: maven
-BuildRequires: javapackages-tools
-BuildRequires: fuse-devel
-BuildRequires: fuse
-BuildRequires: cmake
-BuildRequires: protobuf-compiler
-BuildRequires: jetty
-BuildRequires: jersey
-BuildRequires: java-devel
-BuildRequires: junit
+BuildRequires: maven-surefire-plugin
+BuildRequires: maven-war-plugin
 BuildRequires: mockito
-BuildRequires: slf4j
-BuildRequires: servlet3
-BuildRequires: commons-codec
-BuildRequires: apache-commons-cli
-BuildRequires: apache-commons-math
-BuildRequires: log4j
-BuildRequires: guava
-BuildRequires: commons-httpclient
-BuildRequires: apache-commons-io
-BuildRequires: apache-commons-net
-BuildRequires: tomcat-lib
-BuildRequires: apache-commons-el
-BuildRequires: apache-commons-logging
-BuildRequires: jets3t
-BuildRequires: apache-commons-lang
-BuildRequires: apache-commons-configuration
-BuildRequires: apache-commons-daemon
-BuildRequires: jackson
-BuildRequires: avro
-BuildRequires: kfs
-BuildRequires: ant
-BuildRequires: protobuf-java
-BuildRequires: jsch
-BuildRequires: zookeeper-java
-BuildRequires: xmlenc
-BuildRequires: bookkeeper-java
+BuildRequires: native-maven-plugin
 BuildRequires: netty
-BuildRequires: guice-servlet
-BuildRequires: guice-extensions
-BuildRequires: jersey-contribs
-BuildRequires: jersey-test-framework
-BuildRequires: grizzly
-BuildRequires: jdiff
-BuildRequires: ecj >= 4.2.1-6
-BuildRequires: hsqldb
-BuildRequires: snappy-devel
+BuildRequires: openssl-devel
+BuildRequires: protobuf-compiler
+BuildRequires: protobuf-java
+BuildRequires: servlet3
+BuildRequires: slf4j
 BuildRequires: snappy
-BuildRequires: jansi
-BuildRequires: jansi-native
+BuildRequires: snappy-devel
+BuildRequires: systemd
+BuildRequires: tomcat-lib
+BuildRequires: xmlenc
+BuildRequires: znerd-oss-parent
+BuildRequires: zookeeper-java
 
 # For tests
+BuildRequires: jersey-test-framework
 BuildRequires: maven-surefire-provider-junit4
 
-Requires: coreutils
+%description
+Hadoop is a framework that allows for the distributed processing of large data
+sets across clusters of computers using simple programming models.  It is
+designed to scale up from single servers to thousands of machines, each
+offering local computation and storage.
+
+%package common
+Summary: Common files needed by hadoop daemons
+Group: Applications/System
 Requires: /usr/sbin/useradd
-Requires: /usr/sbin/usermod
-Requires: /sbin/chkconfig
-Requires: /sbin/service
-Requires: zookeeper
-Requires: psmisc
-Requires: nc6
-#Requires: jersey
-Requires: snappy-java
-Requires: slf4j
-Requires: netty
-Requires: paranamer
-Requires: protobuf-java
-Requires: xmlenc
-Requires: objectweb-asm
-Requires: avro
-Requires: apache-commons-beanutils
 Requires: apache-commons-cli
 Requires: apache-commons-codec
-Requires: apache-commons-collections
 Requires: apache-commons-configuration
-Requires: apache-commons-digester
 Requires: apache-commons-el
 Requires: apache-commons-io
 Requires: apache-commons-lang
 Requires: apache-commons-logging
 Requires: apache-commons-math
 Requires: apache-commons-net
+Requires: avro
 Requires: commons-httpclient
-Requires: guava
-Requires: jackson
+Requires: coreutils
+Requires: ecj >= 1:4.2.1-6
 Requires: glassfish-jaxb
-Requires: glassfish-jaxb-api
+Requires: glassfish-jsp
+Requires: glassfish-jsp-api
+Requires: guava
+Requires: hawtjni
+Requires: httpcomponents-client
+Requires: httpcomponents-core
+Requires: istack-commons
+Requires: jackson
+Requires: jansi
+Requires: jansi-native
+Requires: java
+Requires: java-base64
+Requires: java-xmlbuilder
+Requires: jersey
 Requires: jets3t
 Requires: jettison
-#Requires: jetty
+Requires: jetty-continuation
+Requires: jetty-http
+Requires: jetty-io
+Requires: jetty-security
+Requires: jetty-server
+Requires: jetty-servlet
+Requires: jetty-util
+Requires: jetty-webapp
+Requires: jetty-xml
 Requires: jline
 Requires: jsch
-Requires: glassfish-jsp-api
-Requires: jsr-305
+Requires: jsr-311
 Requires: kfs
 Requires: log4j
+Requires: nc6
+Requires: netty
+Requires: objectweb-asm
+Requires: paranamer
+Requires: protobuf-java
+Requires: relaxngDatatype
+Requires: servlet3
+Requires: slf4j
+Requires: snappy-java
+Requires: tomcat-el-2.2-api
+Requires: txw2
+Requires: xmlenc
+Requires: zookeeper-java
 
-%description
-Hadoop is a software platform that lets one easily write and
-run applications that process vast amounts of data.
+%description common
+Hadoop is a framework that allows for the distributed processing of large data
+sets across clusters of computers using simple programming models.  It is
+designed to scale up from single servers to thousands of machines, each
+offering local computation and storage.  The hadoop-common package contains
+common files and utilities needed by other Hadoop modules.
 
-Here's what makes Hadoop especially useful:
-* Scalable: Hadoop can reliably store and process petabytes.
-* Economical: It distributes the data and processing across clusters
-              of commonly available computers. These clusters can number
-              into the thousands of nodes.
-* Efficient: By distributing the data, Hadoop can process it in parallel
-             on the nodes where the data is located. This makes it
-             extremely rapid.
-* Reliable: Hadoop automatically maintains multiple copies of data and
-            automatically redeploys computing tasks based on failures.
+%package devel
+Summary: Headers for Hadoop
+Group: Development/System
+Requires: %{name}-libhdfs = %{version}-%{release}
 
-Hadoop implements MapReduce, using the Hadoop Distributed File System (HDFS).
-MapReduce divides applications into many small blocks of work. HDFS creates
-multiple replicas of data blocks for reliability, placing them on compute
-nodes around the cluster. MapReduce can then process the data where it is
-located.
+%description devel
+Header files for Hadoop's libhdfs library and other utilities
 
 %package hdfs
 Summary: The Hadoop Distributed File System
 Group: Applications/System
-Requires: %{name} = %{version}-%{release}
-Requires(pre): %{name} = %{version}-%{release}
+Requires: %{name}-common = %{version}-%{release}
+Requires(pre): %{name}-common = %{version}-%{release}
+Requires: apache-commons-daemon
 Requires: apache-commons-daemon-jsvc
-Requires: jetty
 %systemd_requires
 
 %description hdfs
-Hadoop Distributed File System (HDFS) is the primary storage system used by 
-Hadoop applications. HDFS creates multiple replicas of data blocks and
-distributes them on compute nodes throughout a cluster to enable reliable,
-extremely rapid computations.
-
-%package yarn
-Summary: The Hadoop NextGen MapReduce (YARN)
-Group: Applications/System
-Requires: %{name} = %{version}-%{release}
-Requires(pre): %{name} = %{version}-%{release}
-Requires: guice
-Requires: avro
-Requires: jersey
-Requires: cglib
-Requires: atinject
-Requires: aopalliance
-Requires: jsr-311
-Requires: jackson
-%systemd_requires
-
-%description yarn
-YARN (Hadoop NextGen MapReduce) is a general purpose data-computation framework.
-The fundamental idea of YARN is to split up the two major tasks of
-the JobTracker, resource management and job scheduling/monitoring, into
-separate daemons: ResourceManager and NodeManager.
-
-The ResourceManager is the ultimate authority that arbitrates resources among
-all the applications in the system. The NodeManager is a per-node slave
-managing allocation of computational resources on a single node. Both work in
-support of per-application ApplicationMaster (AM).
-
-An ApplicationMaster is, in effect, a framework specific library and is tasked
-with negotiating resources from the ResourceManager and working with the
-NodeManager(s) to execute and monitor the tasks. 
-
-
-%package mapreduce
-Summary: The Hadoop MapReduce (MRv2)
-Group: Applications/System
-Requires: %{name}-yarn = %{version}-%{release}
-Requires(pre): %{name} = %{version}-%{release}
-%systemd_requires
-
-%description mapreduce
-Hadoop MapReduce is a programming model and software framework for writing
-applications that rapidly process vast amounts of data in parallel on large
-clusters of compute nodes.
-
-%if %{package_httpfs}
-%package httpfs
-Summary: HTTPFS for Hadoop
-Group: Applications/System
-Requires: %{name}-hdfs = %{version}-%{release}
-Requires: tomcat
-%systemd_requires
-
-%description httpfs
-The server providing HTTP REST API support for the complete
-FileSystem/FileContext interface in HDFS.
-%endif
-
-%package libhdfs
-Summary: Hadoop Filesystem Library
-Group: Development/Libraries
-Requires: %{name}-hdfs = %{version}-%{release}
-Requires: lzo
-
-%description libhdfs
-Hadoop Filesystem Library
+Hadoop is a framework that allows for the distributed processing of large data
+sets across clusters of computers using simple programming models.  It is
+designed to scale up from single servers to thousands of machines, each
+offering local computation and storage.  The Hadoop Distributed File System
+(HDFS) is the primary storage system used by Hadoop applications.
 
 %package hdfs-fuse
-Summary: Mountable HDFS
+Summary: Allows mounting of Hadoop HDFS
 Group: Development/Libraries
-Requires: %{name} = %{version}-%{release}
+Requires: %{name}-common = %{version}-%{release}
 Requires: %{name}-libhdfs = %{version}-%{release}
 Requires: %{name}-hdfs = %{version}-%{release}
 Requires: %{name}-yarn = %{version}-%{release}
@@ -269,26 +237,102 @@ Requires: %{name}-mapreduce = %{version}-%{release}
 Requires: fuse
 
 %description hdfs-fuse
-Allow HDFS to be mounted as a standard file system
+Hadoop is a framework that allows for the distributed processing of large data
+sets across clusters of computers using simple programming models.  It is
+designed to scale up from single servers to thousands of machines, each
+offering local computation and storage.  This package provides tools that
+allow HDFS to be mounted as a standard file system through fuse.
+
+%if %{package_httpfs}
+%package httpfs
+Summary: Provides web access to HDFS
+Group: Applications/System
+Requires: %{name}-hdfs = %{version}-%{release}
+Requires: apache-commons-dbcp
+Requires: tomcat
+Requires: tomcat-lib
+%systemd_requires
+
+%description httpfs
+Hadoop is a framework that allows for the distributed processing of large data
+sets across clusters of computers using simple programming models.  It is
+designed to scale up from single servers to thousands of machines, each
+offering local computation and storage.  This package provides a server
+that provides HTTP REST API support for the complete FileSystem/FileContext
+interface in HDFS.
+%endif
 
 %package javadoc
-Summary: Javadoc for %{name}
+Summary: Javadoc for Hadoop
 Group: Documentation
 Requires: jpackage-utils
 
 %description javadoc
 This package contains the API documentation for %{name}
 
-%package devel
-Summary: Headers for ${name}
-Group: Development/System
-Requires: %{name}-libhdfs = %{version}-%{release}
+%package libhdfs
+Summary: The Hadoop Filesystem Library
+Group: Development/Libraries
+Requires: %{name}-hdfs = %{version}-%{release}
+Requires: lzo
+Requires: zlib
 
-%description devel
-Header files for %{name}'s libhdfs library and other utilities
+%description libhdfs
+Hadoop is a framework that allows for the distributed processing of large data
+sets across clusters of computers using simple programming models.  It is
+designed to scale up from single servers to thousands of machines, each
+offering local computation and storage.  This package provides the Hadoop
+Filesystem Library
+
+%package mapreduce
+Summary: Hadoop MapReduce (MRv2)
+Group: Applications/System
+Requires: %{name}-yarn = %{version}-%{release}
+Requires(pre): %{name}-common = %{version}-%{release}
+%systemd_requires
+
+%description mapreduce
+Hadoop is a framework that allows for the distributed processing of large data
+sets across clusters of computers using simple programming models.  It is
+designed to scale up from single servers to thousands of machines, each
+offering local computation and storage.  Hadoop MapReduce is a programming
+model and software framework for writing applications that rapidly process vast
+amounts of data in parallel on large clusters of compute nodes.
+
+%package mapreduce-examples
+Summary: Hadoop MapReduce (MRv2) examples
+Group: Applications/System
+Requires: %{name}-mapreduce = %{version}-%{release}
+Requires: hsqldb
+
+%description mapreduce-examples
+This package contains mapreduce examples.
+
+%package yarn
+Summary: Hadoop YARN
+Group: Applications/System
+Requires: %{name}-common = %{version}-%{release}
+Requires(pre): %{name}-common = %{version}-%{release}
+Requires: aopalliance
+Requires: atinject
+Requires: cglib
+Requires: google-guice
+Requires: guice-servlet
+Requires: hamcrest
+Requires: jersey-contribs
+Requires: junit
+%systemd_requires
+
+%description yarn
+Hadoop is a framework that allows for the distributed processing of large data
+sets across clusters of computers using simple programming models.  It is
+designed to scale up from single servers to thousands of machines, each
+offering local computation and storage.  YARN (Hadoop NextGen MapReduce) is
+a general purpose data-computation framework.
 
 %prep
-%setup -q -n %{name}-%{hadoop_base_version}-src
+#%%setup -qn %{name}-%{hadoop_base_version}
+%setup -qn %{name}-common-%{commit}
 %patch0 -p1
 
 # The hadoop test suite needs classes from the zookeeper test suite.
@@ -333,6 +377,7 @@ install -d -m 0775 %{buildroot}/%{_var}/run/%{name}-hdfs
 install -d -m 0775 %{buildroot}/%{_var}/run/%{name}-mapreduce
 %if %{package_httpfs}
 install -d -m 0755 %{buildroot}/%{_datadir}/%{name}/httpfs/tomcat/bin
+install -d -m 0755 %{buildroot}/%{_datadir}/%{name}/httpfs/tomcat/lib
 install -d -m 0755 %{buildroot}/%{_libexecdir}/%{name}-httpfs
 install -d -m 0755 %{buildroot}/%{_sharedstatedir}/%{name}-httpfs/webapps
 install -d -m 0775 %{buildroot}/%{_var}/log/%{name}-httpfs
@@ -351,6 +396,19 @@ rm -f %{buildroot}/%{_bindir}/test-container-executor
 
 cp -arf $basedir/etc %{buildroot}
 cp -arf $basedir/include/* %{buildroot}/%{_includedir}/%{name}
+cp -arf $basedir/lib/native/*.so* %{buildroot}/%{_libdir}
+cp -af hadoop-hdfs-project/hadoop-hdfs/target/native/main/native/fuse-dfs/fuse_dfs %{buildroot}/%{_bindir}
+
+for dir in `ls $basedir/share/hadoop`
+do
+  if [ $dir == "httpfs" ]
+  then
+    # We need to handle httpfs differently.  We don't want the jar files
+    # (they are copies or incorrect versions), but do want other bits
+    continue
+  fi
+  find $basedir/share/hadoop/$dir -name *-%{hadoop_base_version}.jar | xargs cp -af -t %{buildroot}/%{_javadir}/%{name}
+done
 
 %if 0%{package_httpfs} == 0
 rm -f %{buildroot}/%{_sbindir}/httpfs.sh
@@ -367,26 +425,6 @@ sed -i "s|\${JSVC_HOME}|/usr/bin|" %{buildroot}/%{_sysconfdir}/%{name}/hadoop-en
 sed -i "s|\(HADOOP_OPTS.*=.*\)\$HADOOP_CLIENT_OPTS|\1 -Djavax.xml.parsers.DocumentBuilderFactory=com.sun.org.apache.xerces.internal.jaxp.DocumentBuilderFactoryImpl \$HADOOP_CLIENT_OPTS|" %{buildroot}/%{_sysconfdir}/%{name}/hadoop-env.sh
 echo "export YARN_OPTS=\"\$YARN_OPTS -Djavax.xml.parsers.DocumentBuilderFactory=com.sun.org.apache.xerces.internal.jaxp.DocumentBuilderFactoryImpl\"" >> %{buildroot}/%{_sysconfdir}/%{name}/yarn-env.sh
 
-cp -arf $basedir/lib/native/*.so.* %{buildroot}/%{_libdir}
-for file in `%{buildroot}/%{_libdir}/*.so`
-do
-  f=basename $file
-  mv -f $file %{buildroot}/%{_libdir}/$file.0
-done
-
-cp -af hadoop-hdfs-project/hadoop-hdfs/target/native/main/native/fuse-dfs/fuse_dfs %{buildroot}/%{_bindir}
-
-for dir in `ls $basedir/share/hadoop`
-do
-  if [ $dir == "httpfs" ]
-  then
-    # We need to handle httpfs differently.  We don't want the jar files
-    # (they are copies or incorrect versions), but do want other bits
-    continue
-  fi
-  find $basedir/share/hadoop/$dir -name *-%{hadoop_base_version}.jar | xargs cp -af -t %{buildroot}/%{_javadir}/%{name}
-done
-
 # /usr/share file structure
 for dir in common hdfs mapreduce yarn
 do
@@ -401,12 +439,34 @@ done
 pushd %{buildroot}/%{_datadir}/%{name}/common/lib
   %{__ln_s} %{_javadir}/%{name}/%{name}-annotations-%{hadoop_base_version}.jar .
   %{__ln_s} %{_javadir}/%{name}/%{name}-auth-%{hadoop_base_version}.jar .
-  %{_bindir}/build-jar-repository -s . objectweb-asm/asm avro/avro commons-cli commons-codec commons-configuration commons-el commons-httpclient commons-io commons-lang commons-logging commons-math3 commons-net ecj guava hawtjni-runtime httpcomponents/httpclient httpcomponents/httpcore istack-commons-runtime jackson/jackson-core-asl jackson/jackson-jaxrs jackson/jackson-mapper-asl jackson/jackson-xc jansi jansi-native java-xmlbuilder tomcat-servlet-api glassfish-jsp glassfish-jsp-api glassfish-jaxb/jaxb-impl jersey/jersey-core jersey/jersey-json jersey/jersey-server jersey/jersey-servlet jets3t/jets3t jettison jetty/jetty-continuation jetty/jetty-http jetty/jetty-io jetty/jetty-security jetty/jetty-server jetty/jetty-servlet jetty/jetty-util jetty/jetty-webapp jetty/jetty-xml jline jsch jsr-311 kfs log4j netty paranamer/paranamer protobuf relaxngDatatype slf4j/api slf4j/log4j12 snappy-java tomcat/tomcat-el-2.2-api txw2 xmlenc zookeeper
+  %{_bindir}/build-jar-repository -s . objectweb-asm/asm avro/avro base64 commons-cli commons-codec commons-configuration commons-el commons-httpclient commons-io commons-lang commons-logging commons-math3 commons-net ecj guava hawtjni-runtime httpcomponents/httpclient httpcomponents/httpcore istack-commons-runtime jackson/jackson-core-asl jackson/jackson-jaxrs jackson/jackson-mapper-asl jackson/jackson-xc jansi jansi-native java-xmlbuilder tomcat-servlet-api glassfish-jsp glassfish-jsp-api glassfish-jaxb/jaxb-impl jersey/jersey-core jersey/jersey-json jersey/jersey-server jersey/jersey-servlet jets3t/jets3t jettison jetty/jetty-continuation jetty/jetty-http jetty/jetty-io jetty/jetty-security jetty/jetty-server jetty/jetty-servlet jetty/jetty-util jetty/jetty-webapp jetty/jetty-xml jline jsch jsr-311 kfs log4j netty paranamer/paranamer protobuf relaxngDatatype slf4j/api slf4j/log4j12 snappy-java tomcat/tomcat-el-2.2-api txw2 xmlenc zookeeper
 popd
 
 pushd %{buildroot}/%{_datadir}/%{name}/hdfs/lib
   %{_bindir}/build-jar-repository -s . objectweb-asm/asm commons-cli commons-codec commons-daemon apache-commons-io commons-lang commons-logging guava hawtjni-runtime jackson/jackson-core-asl jackson/jackson-mapper-asl jansi jansi-native tomcat-servlet-api jersey/jersey-core jersey/jersey-server jetty/jetty-continuation jetty/jetty-http jetty/jetty-io jetty/jetty-server jetty/jetty-util jline jsr-311 log4j netty protobuf slf4j/api xmlenc zookeeper
 popd
+
+%if %{package_httpfs}
+# httpfs
+cp -arf $basedir/share/hadoop/httpfs/tomcat/bin/*.sh %{buildroot}/%{_libexecdir}/%{name}-httpfs
+cp -arf $basedir/share/hadoop/httpfs/tomcat/bin/catalina-tasks.xml %{buildroot}/%{_datadir}/%{name}/httpfs/tomcat/bin
+cp -arf $basedir/share/hadoop/httpfs/tomcat/conf/* %{buildroot}/%{_sysconfdir}/%{name}/tomcat
+cp -arf $basedir/share/hadoop/httpfs/tomcat/webapps %{buildroot}/%{_sharedstatedir}/%{name}-httpfs
+pushd %{buildroot}/%{_datadir}/%{name}/httpfs/tomcat
+  %{_bindir}/build-jar-repository -s bin tomcat/tomcat-juli commons-daemon
+  %{_bindir}/build-jar-repository -s lib tomcat/annotations-api tomcat/catalina-ant tomcat/catalina-ha tomcat/catalina tomcat/catalina-tribes ecj tomcat/tomcat-el-2.2-api tomcat/jasper-el tomcat/jasper glassfish-jsp-api tomcat-servlet-api tomcat/tomcat-coyote commons-dbcp tomcat/tomcat-i18n-es tomcat/tomcat-i18n-fr tomcat/tomcat-i18n-ja
+  %{__ln_s} %{_datadir}/tomcat/bin/bootstrap.jar bin
+  for f in `ls %{buildroot}/%{_libexecdir}/%{name}-httpfs`
+  do
+    %{__ln_s} %{_libexecdir}/%{name}-httpfs/$f bin
+  done
+  %{__ln_s} %{_sysconfdir}/%{name}/tomcat conf 
+  %{__ln_s} %{_var}/log/%{name}-httpfs logs
+  %{__ln_s} %{_sharedstatedir}/%{name}-httpfs/webapps webapps
+  %{__ln_s} %{_var}/cache/%{name}-httpfs/temp temp
+  %{__ln_s} %{_var}/cache/%{name}-httpfs/work work
+popd
+%endif
 
 pushd %{buildroot}/%{_datadir}/%{name}/mapreduce
   %{__ln_s} %{_javadir}/%{name}/%{name}-archives-%{hadoop_base_version}.jar .
@@ -420,35 +480,13 @@ popd
 
 pushd %{buildroot}/%{_datadir}/%{name}/mapreduce/lib
   %{__ln_s} %{_javadir}/%{name}/%{name}-annotations-%{hadoop_base_version}.jar .
-  %{_bindir}/build-jar-repository -s . atinject aopalliance objectweb-asm/asm avro/avro apache-commons-io guava guice hamcrest/core jackson/jackson-core-asl jackson/jackson-mapper-asl jersey/jersey-core jersey/jersey-guice jersey/jersey-server jersey/jersey-servlet jsr-311 junit log4j netty paranamer/paranamer protobuf snappy-java
+  %{_bindir}/build-jar-repository -s . aopalliance atinject objectweb-asm/asm avro/avro apache-commons-io guava google-guice guice/guice-servlet hamcrest/core jackson/jackson-core-asl jackson/jackson-mapper-asl jersey/jersey-core jersey/jersey-guice jersey/jersey-server jersey/jersey-servlet jsr-311 junit log4j netty paranamer/paranamer protobuf snappy-java
 popd
 
 pushd %{buildroot}/%{_datadir}/%{name}/yarn/lib
   %{__ln_s} %{_javadir}/%{name}/%{name}-annotations-%{hadoop_base_version}.jar .
-  %{_bindir}/build-jar-repository -s . atinject aopalliance objectweb-asm/asm avro/avro cglib apache-commons-io guava guice hamcrest/core jackson/jackson-core-asl jackson/jackson-mapper-asl jersey/jersey-core jersey/jersey-guice jersey/jersey-server jersey/jersey-servlet jsr-311 junit log4j netty paranamer/paranamer protobuf snappy-java
+  %{_bindir}/build-jar-repository -s . aopalliance atinject objectweb-asm/asm avro/avro cglib apache-commons-io guava google-guice guice/guice-servlet hamcrest/core jackson/jackson-core-asl jackson/jackson-mapper-asl jersey/jersey-core jersey/jersey-guice jersey/jersey-server jersey/jersey-servlet jsr-311 junit log4j netty paranamer/paranamer protobuf snappy-java
 popd
-
-%if %{package_httpfs}
-# httpfs
-cp -arf $basedir/share/hadoop/httpfs/tomcat/bin/*.sh %{buildroot}/%{_libexecdir}/%{name}-httpfs
-cp -arf $basedir/share/hadoop/httpfs/tomcat/bin/catalina-tasks.xml %{buildroot}/%{_datadir}/%{name}/httpfs/tomcat/bin
-cp -arf $basedir/share/hadoop/httpfs/tomcat/conf/* %{buildroot}/%{_sysconfdir}/%{name}/tomcat
-cp -arf $basedir/share/hadoop/httpfs/tomcat/webapps %{buildroot}/%{_sharedstatedir}/%{name}-httpfs
-pushd %{buildroot}/%{_datadir}/%{name}/httpfs/tomcat
-  %{_bindir}/build-jar-repository -s bin tomcat/tomcat-juli commons-daemon
-  %{__ln_s} %{_datadir}/tomcat/bin/bootstrap.jar bin
-  for f in `ls %{buildroot}/%{_libexecdir}/%{name}-httpfs`
-  do
-    %{__ln_s} %{_libexecdir}/%{name}-httpfs/$f bin
-  done
-  %{__ln_s} %{_sysconfdir}/%{name}/tomcat conf 
-  %{__ln_s} %{_javadir}/tomcat lib
-  %{__ln_s} %{_var}/log/%{name}-httpfs logs
-  %{__ln_s} %{_sharedstatedir}/%{name}-httpfs/webapps webapps
-  %{__ln_s} %{_var}/cache/%{name}-httpfs/temp temp
-  %{__ln_s} %{_var}/cache/%{name}-httpfs/work work
-popd
-%endif
 
 # Install hdfs webapp bits
 cp -arf $basedir/share/hadoop/hdfs/webapps %{buildroot}/%{_sharedstatedir}/%{name}-hdfs
@@ -557,7 +595,7 @@ for module in hadoop-yarn-project/hadoop-yarn/hadoop-yarn-common \
   %add_maven_depmap JPP.%{name}-$base-%{hadoop_base_version}.pom %{name}/$base-%{hadoop_base_version}.jar -f $base
 done
 
-%pre
+%pre common
 getent group hadoop >/dev/null || groupadd -r hadoop
 
 %pre hdfs
@@ -570,16 +608,21 @@ getent group httpfs >/dev/null || groupadd -r httpfs
 getent passwd httpfs >/dev/null || /usr/sbin/useradd --comment "Hadoop HTTPFS" --shell /sbin/nologin -M -r -g httpfs -G httpfs --home %{_var}/run/%{name}-httpfs httpfs
 %endif
 
-%pre yarn
-getent group yarn >/dev/null || groupadd -r yarn
-getent passwd yarn >/dev/null || /usr/sbin/useradd --comment "Hadoop Yarn" --shell /sbin/nologin -M -r -g yarn -G hadoop --home %{_var}/cache/%{name}-yarn yarn
-
 %pre mapreduce
 getent group mapred >/dev/null || groupadd -r mapred
 getent passwd mapred >/dev/null || /usr/sbin/useradd --comment "Hadoop MapReduce" --shell /sbin/nologin -M -r -g mapred -G hadoop --home %{_var}/cache/%{name}-mapreduce mapred
 
+%pre yarn
+getent group yarn >/dev/null || groupadd -r yarn
+getent passwd yarn >/dev/null || /usr/sbin/useradd --comment "Hadoop Yarn" --shell /sbin/nologin -M -r -g yarn -G hadoop --home %{_var}/cache/%{name}-yarn yarn
+
 %preun hdfs
 %systemd_preun %{hdfs_services}
+
+%if %{package_httpfs}
+%preun httpfs
+%systemd_preun %{httpfs_services}
+%endif
 
 %preun mapreduce
 %systemd_preun %{mapreduce_services}
@@ -587,16 +630,17 @@ getent passwd mapred >/dev/null || /usr/sbin/useradd --comment "Hadoop MapReduce
 %preun yarn
 %systemd_preun %{yarn_services}
 
-%if %{package_httpfs}
-%preun httpfs
-%systemd_preun %{httpfs_services}
-%endif
-
-%post -p /sbin/ldconfig
-%post libhdfs -p /sbin/ldconfig
+%post common -p /sbin/ldconfig
 
 %post hdfs
 %systemd_post %{hdfs_services}
+
+%if %{package_httpfs}
+%post httpfs
+%systemd_post %{httpfs_services}
+%endif
+
+%post libhdfs -p /sbin/ldconfig
 
 %post mapreduce
 %systemd_post %{mapreduce_services}
@@ -604,16 +648,17 @@ getent passwd mapred >/dev/null || /usr/sbin/useradd --comment "Hadoop MapReduce
 %post yarn
 %systemd_post %{yarn_services}
 
-%if %{package_httpfs}
-%post httpfs
-%systemd_post %{httpfs_services}
-%endif
-
-%postun -p /sbin/ldconfig
-%postun libhdfs -p /sbin/ldconfig
+%postun common -p /sbin/ldconfig
 
 %postun hdfs
 %systemd_postun_with_restart %{hdfs_services}
+
+%if %{package_httpfs}
+%postun httpfs
+%systemd_postun_with_restart %{httpfs_services}
+%endif
+
+%postun libhdfs -p /sbin/ldconfig
 
 %postun mapreduce
 %systemd_postun_with_restart %{mapreduce_services}
@@ -621,112 +666,7 @@ getent passwd mapred >/dev/null || /usr/sbin/useradd --comment "Hadoop MapReduce
 %postun yarn
 %systemd_postun_with_restart %{yarn_services}
 
-%if %{package_httpfs}
-%postun httpfs
-%systemd_postun_with_restart %{httpfs_services}
-%endif
-
-
-%files yarn
-%doc hadoop-dist/target/hadoop-%{hadoop_base_version}/share/doc/hadoop/yarn/*
-%defattr(-,root,root)
-%config(noreplace) %{_sysconfdir}/%{name}/container-executor.cfg
-%config(noreplace) %{_sysconfdir}/%{name}/yarn-env.sh
-%config(noreplace) %{_sysconfdir}/%{name}/yarn-site.xml
-%config(noreplace) %{_sysconfdir}/security/limits.d/yarn.conf
-%{_unitdir}/%{name}-nodemanager.service
-%{_unitdir}/%{name}-proxyserver.service
-%{_unitdir}/%{name}-resourcemanager.service
-%{_libexecdir}/yarn-config.sh
-%{_javadir}/%{name}/%{name}-yarn*.jar
-%{_datadir}/%{name}/yarn
-%{_mavenpomdir}/JPP.%{name}-%{name}-yarn*.pom
-%{_mavendepmapfragdir}/%{name}-%{name}-yarn*
-%attr(6050,root,yarn) %{_bindir}/container-executor
-%{_bindir}/yarn
-%{_sbindir}/yarn-daemon.sh
-%{_sbindir}/yarn-daemons.sh
-%{_sbindir}/start-yarn.sh
-%{_sbindir}/stop-yarn.sh
-%{_tmpfilesdir}/hadoop-yarn.conf
-%config(noreplace) %attr(644, root, root) %{_sysconfdir}/logrotate.d/%{name}-yarn
-%attr(0755,yarn,hadoop) %dir %{_var}/run/%{name}-yarn
-%attr(0755,yarn,hadoop) %dir %{_var}/log/%{name}-yarn
-%attr(0755,yarn,hadoop) %dir %{_var}/cache/%{name}-yarn
-
-%files hdfs
-%doc hadoop-dist/target/hadoop-%{hadoop_base_version}/share/doc/hadoop/hdfs/*
-%defattr(-,root,root)
-%config(noreplace) %{_sysconfdir}/%{name}/hdfs-site.xml
-%config(noreplace) %{_sysconfdir}/security/limits.d/hdfs.conf
-%{_javadir}/%{name}/%{name}-hdfs*.jar
-%{_mavenpomdir}/JPP.%{name}-%{name}-hdfs*.pom
-%{_mavendepmapfragdir}/%{name}-%{name}-hdfs*
-%{_datadir}/%{name}/hdfs
-%{_sharedstatedir}/%{name}-hdfs
-%{_unitdir}/%{name}-datanode.service
-%{_unitdir}/%{name}-namenode.service
-%{_unitdir}/%{name}-secondarynamenode.service
-%{_unitdir}/%{name}-zkfc.service
-%{_libexecdir}/hdfs-config.sh
-%{_bindir}/hdfs
-%{_sbindir}/distribute-exclude.sh
-%{_sbindir}/refresh-namenodes.sh
-%{_sbindir}/hdfs-config.sh
-%{_sbindir}/update-hdfs-env.sh
-%{_sbindir}/hadoop-setup-hdfs.sh
-%{_tmpfilesdir}/hadoop-hdfs.conf
-%config(noreplace) %attr(644, root, root) %{_sysconfdir}/logrotate.d/%{name}-hdfs
-%attr(0755,hdfs,hadoop) %dir %{_var}/run/%{name}-hdfs
-%attr(0755,hdfs,hadoop) %dir %{_var}/log/%{name}-hdfs
-%attr(0755,hdfs,hadoop) %dir %{_var}/cache/%{name}-hdfs
-
-%files mapreduce
-%doc hadoop-dist/target/hadoop-%{hadoop_base_version}/share/doc/hadoop/mapreduce/*
-%defattr(-,root,root)
-%config(noreplace) %{_sysconfdir}/%{name}/mapred-env.sh
-%config(noreplace) %{_sysconfdir}/%{name}/mapred-queues.xml
-%config(noreplace) %{_sysconfdir}/%{name}/mapred-queues.xml.template
-%config(noreplace) %{_sysconfdir}/%{name}/mapred-site.xml
-%config(noreplace) %{_sysconfdir}/%{name}/mapred-site.xml.template
-%config(noreplace) %{_sysconfdir}/security/limits.d/mapreduce.conf
-%{_datadir}/%{name}/mapreduce
-%{_javadir}/%{name}/%{name}-mapreduce*.jar
-%{_javadir}/%{name}/%{name}-archives*.jar
-%{_javadir}/%{name}/%{name}-datajoin*.jar
-%{_javadir}/%{name}/%{name}-distcp*.jar
-%{_javadir}/%{name}/%{name}-extras*.jar
-%{_javadir}/%{name}/%{name}-gridmix*.jar
-%{_javadir}/%{name}/%{name}-rumen*.jar
-%{_javadir}/%{name}/%{name}-streaming*.jar
-%{_mavenpomdir}/JPP.%{name}-%{name}-mapreduce*.pom
-%{_mavenpomdir}/JPP.%{name}-%{name}-archives*.pom
-%{_mavenpomdir}/JPP.%{name}-%{name}-datajoin*.pom
-%{_mavenpomdir}/JPP.%{name}-%{name}-distcp*.pom
-%{_mavenpomdir}/JPP.%{name}-%{name}-extras*.pom
-%{_mavenpomdir}/JPP.%{name}-%{name}-gridmix*.pom
-%{_mavenpomdir}/JPP.%{name}-%{name}-rumen*.pom
-%{_mavenpomdir}/JPP.%{name}-%{name}-streaming*.pom
-%{_mavendepmapfragdir}/%{name}-%{name}-mapreduce*
-%{_mavendepmapfragdir}/%{name}-%{name}-archives*
-%{_mavendepmapfragdir}/%{name}-%{name}-datajoin*
-%{_mavendepmapfragdir}/%{name}-%{name}-distcp*
-%{_mavendepmapfragdir}/%{name}-%{name}-extras*
-%{_mavendepmapfragdir}/%{name}-%{name}-gridmix*
-%{_mavendepmapfragdir}/%{name}-%{name}-rumen*
-%{_mavendepmapfragdir}/%{name}-%{name}-streaming*
-%{_libexecdir}/mapred-config.sh
-%{_unitdir}/%{name}-historyserver.service
-%{_bindir}/mapred
-%{_sbindir}/mr-jobhistory-daemon.sh
-%{_tmpfilesdir}/hadoop-mapreduce.conf
-%config(noreplace) %attr(644, root, root) %{_sysconfdir}/logrotate.d/%{name}-mapreduce
-%attr(0755,mapred,hadoop) %dir %{_var}/run/%{name}-mapreduce
-%attr(0755,mapred,hadoop) %dir %{_var}/log/%{name}-mapreduce
-%attr(0755,mapred,hadoop) %dir %{_var}/cache/%{name}-mapreduce
-
-
-%files
+%files common
 %doc hadoop-dist/target/hadoop-%{hadoop_base_version}/share/doc/hadoop/common/*
 %defattr(-,root,root)
 %config(noreplace) %{_sysconfdir}/%{name}/configuration.xsl
@@ -771,6 +711,42 @@ getent passwd mapred >/dev/null || /usr/sbin/useradd --comment "Hadoop MapReduce
 %{_sbindir}/update-hadoop-env.sh
 %{_libdir}/libhadoop.*
 
+%files devel
+%doc hadoop-dist/target/hadoop-%{hadoop_base_version}/share/doc/hadoop/common/*
+%{_includedir}/%{name}
+
+%files hdfs
+%doc hadoop-dist/target/hadoop-%{hadoop_base_version}/share/doc/hadoop/hdfs/*
+%defattr(-,root,root)
+%config(noreplace) %{_sysconfdir}/%{name}/hdfs-site.xml
+%config(noreplace) %{_sysconfdir}/security/limits.d/hdfs.conf
+%{_javadir}/%{name}/%{name}-hdfs*.jar
+%{_mavenpomdir}/JPP.%{name}-%{name}-hdfs*.pom
+%{_mavendepmapfragdir}/%{name}-%{name}-hdfs*
+%{_datadir}/%{name}/hdfs
+%{_sharedstatedir}/%{name}-hdfs
+%{_unitdir}/%{name}-datanode.service
+%{_unitdir}/%{name}-namenode.service
+%{_unitdir}/%{name}-secondarynamenode.service
+%{_unitdir}/%{name}-zkfc.service
+%{_libexecdir}/hdfs-config.sh
+%{_bindir}/hdfs
+%{_sbindir}/distribute-exclude.sh
+%{_sbindir}/refresh-namenodes.sh
+%{_sbindir}/hdfs-config.sh
+%{_sbindir}/update-hdfs-env.sh
+%{_sbindir}/hadoop-setup-hdfs.sh
+%{_tmpfilesdir}/hadoop-hdfs.conf
+%config(noreplace) %attr(644, root, root) %{_sysconfdir}/logrotate.d/%{name}-hdfs
+%attr(0755,hdfs,hadoop) %dir %{_var}/run/%{name}-hdfs
+%attr(0755,hdfs,hadoop) %dir %{_var}/log/%{name}-hdfs
+%attr(0755,hdfs,hadoop) %dir %{_var}/cache/%{name}-hdfs
+
+%files hdfs-fuse
+%doc hadoop-dist/target/hadoop-%{hadoop_base_version}/share/doc/hadoop/hdfs/*
+%defattr(-,root,root)
+%{_bindir}/fuse_dfs
+
 %if %{package_httpfs}
 %files httpfs
 %doc hadoop-dist/target/hadoop-%{hadoop_base_version}/share/doc/hadoop/common/*
@@ -792,23 +768,91 @@ getent passwd mapred >/dev/null || /usr/sbin/useradd --comment "Hadoop MapReduce
 %attr(0755,httpfs,httpfs) %dir %{_var}/log/%{name}-httpfs
 %endif
 
+%files javadoc
+%doc hadoop-dist/target/hadoop-%{hadoop_base_version}/share/doc/hadoop/common/*
+%doc %{_javadocdir}/%{name}
+
 %files libhdfs
 %doc hadoop-dist/target/hadoop-%{hadoop_base_version}/share/doc/hadoop/hdfs/*
 %defattr(-,root,root)
 %{_libdir}/libhdfs*
 
-%files hdfs-fuse
-%doc hadoop-dist/target/hadoop-%{hadoop_base_version}/share/doc/hadoop/hdfs/*
+%files mapreduce
+%doc hadoop-dist/target/hadoop-%{hadoop_base_version}/share/doc/hadoop/mapreduce/*
 %defattr(-,root,root)
-%{_bindir}/fuse_dfs
+%config(noreplace) %{_sysconfdir}/%{name}/mapred-env.sh
+#%config(noreplace) %{_sysconfdir}/%{name}/mapred-queues.xml
+%config(noreplace) %{_sysconfdir}/%{name}/mapred-queues.xml.template
+%config(noreplace) %{_sysconfdir}/%{name}/mapred-site.xml
+%config(noreplace) %{_sysconfdir}/%{name}/mapred-site.xml.template
+%config(noreplace) %{_sysconfdir}/security/limits.d/mapreduce.conf
+%{_datadir}/%{name}/mapreduce
+%{_javadir}/%{name}/%{name}-mapreduce-client*.jar
+%{_javadir}/%{name}/%{name}-archives*.jar
+%{_javadir}/%{name}/%{name}-datajoin*.jar
+%{_javadir}/%{name}/%{name}-distcp*.jar
+%{_javadir}/%{name}/%{name}-extras*.jar
+%{_javadir}/%{name}/%{name}-gridmix*.jar
+%{_javadir}/%{name}/%{name}-rumen*.jar
+%{_javadir}/%{name}/%{name}-streaming*.jar
+%{_mavenpomdir}/JPP.%{name}-%{name}-mapreduce-client*.pom
+%{_mavenpomdir}/JPP.%{name}-%{name}-archives*.pom
+%{_mavenpomdir}/JPP.%{name}-%{name}-datajoin*.pom
+%{_mavenpomdir}/JPP.%{name}-%{name}-distcp*.pom
+%{_mavenpomdir}/JPP.%{name}-%{name}-extras*.pom
+%{_mavenpomdir}/JPP.%{name}-%{name}-gridmix*.pom
+%{_mavenpomdir}/JPP.%{name}-%{name}-rumen*.pom
+%{_mavenpomdir}/JPP.%{name}-%{name}-streaming*.pom
+%{_mavendepmapfragdir}/%{name}-%{name}-mapreduce-client*
+%{_mavendepmapfragdir}/%{name}-%{name}-archives*
+%{_mavendepmapfragdir}/%{name}-%{name}-datajoin*
+%{_mavendepmapfragdir}/%{name}-%{name}-distcp*
+%{_mavendepmapfragdir}/%{name}-%{name}-extras*
+%{_mavendepmapfragdir}/%{name}-%{name}-gridmix*
+%{_mavendepmapfragdir}/%{name}-%{name}-rumen*
+%{_mavendepmapfragdir}/%{name}-%{name}-streaming*
+%{_libexecdir}/mapred-config.sh
+%{_unitdir}/%{name}-historyserver.service
+%{_bindir}/mapred
+%{_sbindir}/mr-jobhistory-daemon.sh
+%{_tmpfilesdir}/hadoop-mapreduce.conf
+%config(noreplace) %attr(644, root, root) %{_sysconfdir}/logrotate.d/%{name}-mapreduce
+%attr(0755,mapred,hadoop) %dir %{_var}/run/%{name}-mapreduce
+%attr(0755,mapred,hadoop) %dir %{_var}/log/%{name}-mapreduce
+%attr(0755,mapred,hadoop) %dir %{_var}/cache/%{name}-mapreduce
 
-%files javadoc
-%doc hadoop-dist/target/hadoop-%{hadoop_base_version}/share/doc/hadoop/common/*
-%doc %{_javadocdir}/%{name}
+%files mapreduce-examples
+%doc hadoop-dist/target/hadoop-%{hadoop_base_version}/share/doc/hadoop/mapreduce/*
+%{_javadir}/%{name}/%{name}-mapreduce-examples*.jar
+%{_mavenpomdir}/JPP.%{name}-%{name}-mapreduce-examples*.pom
+%{_mavendepmapfragdir}/%{name}-%{name}-mapreduce-examples*
 
-%files devel
-%doc hadoop-dist/target/hadoop-%{hadoop_base_version}/share/doc/hadoop/common/*
-%{_includedir}/%{name}
+%files yarn
+%doc hadoop-dist/target/hadoop-%{hadoop_base_version}/share/doc/hadoop/yarn/*
+%defattr(-,root,root)
+%config(noreplace) %{_sysconfdir}/%{name}/container-executor.cfg
+%config(noreplace) %{_sysconfdir}/%{name}/yarn-env.sh
+%config(noreplace) %{_sysconfdir}/%{name}/yarn-site.xml
+%config(noreplace) %{_sysconfdir}/security/limits.d/yarn.conf
+%{_unitdir}/%{name}-nodemanager.service
+%{_unitdir}/%{name}-proxyserver.service
+%{_unitdir}/%{name}-resourcemanager.service
+%{_libexecdir}/yarn-config.sh
+%{_javadir}/%{name}/%{name}-yarn*.jar
+%{_datadir}/%{name}/yarn
+%{_mavenpomdir}/JPP.%{name}-%{name}-yarn*.pom
+%{_mavendepmapfragdir}/%{name}-%{name}-yarn*
+%attr(6050,root,yarn) %{_bindir}/container-executor
+%{_bindir}/yarn
+%{_sbindir}/yarn-daemon.sh
+%{_sbindir}/yarn-daemons.sh
+%{_sbindir}/start-yarn.sh
+%{_sbindir}/stop-yarn.sh
+%{_tmpfilesdir}/hadoop-yarn.conf
+%config(noreplace) %attr(644, root, root) %{_sysconfdir}/logrotate.d/%{name}-yarn
+%attr(0755,yarn,hadoop) %dir %{_var}/run/%{name}-yarn
+%attr(0755,yarn,hadoop) %dir %{_var}/log/%{name}-yarn
+%attr(0755,yarn,hadoop) %dir %{_var}/cache/%{name}-yarn
 
 %changelog
 
