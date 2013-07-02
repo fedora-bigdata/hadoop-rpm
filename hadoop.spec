@@ -32,6 +32,7 @@ Source9: hadoop-hdfs-site.xml
 Source10: hadoop-mapred-site.xml
 Source11: hadoop-yarn-site.xml
 Source12: hadoop-httpfs-env.sh
+Source13: hdfs-create-dirs
 # This patch includes the following upstream tickets:
 # https://issues.apache.org/jira/browse/HADOOP-9594
 # https://issues.apache.org/jira/browse/HADOOP-9605
@@ -563,6 +564,9 @@ do
 done
 sed -i "s|{|%{_var}/log/hadoop-hdfs/*.audit\n{|" %{buildroot}/%{_sysconfdir}/logrotate.d/%{name}-hdfs
 
+# hdfs init script
+cp -arf %{SOURCE13} %{buildroot}/%{_sbindir}
+
 install -dm 0775 %{buildroot}%{_mavenpomdir}
 for module in hadoop-yarn-project/hadoop-yarn/hadoop-yarn-common \
             hadoop-yarn-project/hadoop-yarn/hadoop-yarn-client \
@@ -733,9 +737,10 @@ getent passwd yarn >/dev/null || /usr/sbin/useradd --comment "Hadoop Yarn" --she
 %{_bindir}/hdfs
 %{_sbindir}/distribute-exclude.sh
 %{_sbindir}/refresh-namenodes.sh
-%{_sbindir}/hdfs-config.sh
-%{_sbindir}/update-hdfs-env.sh
 %{_sbindir}/hadoop-setup-hdfs.sh
+%{_sbindir}/hdfs-config.sh
+%{_sbindir}/hdfs-create-dirs
+%{_sbindir}/update-hdfs-env.sh
 %{_tmpfilesdir}/hadoop-hdfs.conf
 %config(noreplace) %attr(644, root, root) %{_sysconfdir}/logrotate.d/%{name}-hdfs
 %attr(0755,hdfs,hadoop) %dir %{_var}/run/%{name}-hdfs
