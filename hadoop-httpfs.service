@@ -11,6 +11,7 @@ ExecStop=/usr/sbin/httpfs.sh stop
 User=httpfs
 Group=httpfs
 PIDFile=/var/run/hadoop-httpfs/hadoop-httpfs.pid
+ControlGroup=cpu:/hadoop memory:/hadoop
 
 [Install]
 WantedBy=multi-user.target
