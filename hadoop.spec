@@ -62,7 +62,6 @@ BuildRequires: cmake
 BuildRequires: commons-codec
 BuildRequires: commons-httpclient
 BuildRequires: ecj >= 1:4.2.1-6
-BuildRequires: fuse
 BuildRequires: fuse-devel
 BuildRequires: fusesource-pom
 BuildRequires: gmaven
@@ -100,6 +99,7 @@ BuildRequires: maven-enforcer-plugin
 BuildRequires: maven-install-plugin
 BuildRequires: maven-invoker-plugin
 BuildRequires: maven-javadoc-plugin
+BuildRequires: maven-local
 BuildRequires: maven-plugin-cobertura
 BuildRequires: maven-plugin-exec
 BuildRequires: maven-plugin-plugin
@@ -116,8 +116,6 @@ BuildRequires: protobuf-compiler
 BuildRequires: protobuf-java
 BuildRequires: servlet3
 BuildRequires: slf4j
-BuildRequires: snappy
-BuildRequires: snappy-devel
 BuildRequires: systemd
 BuildRequires: tomcat-lib
 BuildRequires: xmlenc
