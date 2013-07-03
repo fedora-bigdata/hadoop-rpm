@@ -2,23 +2,24 @@
 # layout and isn't flexible enough to allow customization.
 %global package_httpfs 0
 
-%global commit 812b8ce7e062eb480e1114738bf9b267f46b3c73
+%global commit b92d9bcf559cc2e62fc166e09bd2852766b27bec
 %global shortcommit %(c=%{commit}; echo ${c:0:7})
 
-%global hadoop_base_version 2.0.2-alpha
+%global hadoop_base_version 2.0.5
+%global hadoop_version %{hadoop_base_version}-alpha
 %global hdfs_services hadoop-zkfc.service hadoop-datanode.service hadoop-secondarynamenode.service hadoop-namenode.service
 %global mapreduce_services hadoop-historyserver.service
 %global yarn_services hadoop-proxyserver.service hadoop-resourcemanager.service hadoop-nodemanager.service
 %global httpfs_services hadoop-httpfs.service
 
 Name:   hadoop
-Version: 2.0.2
+Version: %{hadoop_base_version}
 Release: 1%{?dist}
 Summary: A software platform for processing vast amounts of data
 License: ASL 2.0
 Group:  Development/Libraries
 URL: https://github.com/apache/hadoop-common.git
-#Source0: %{name}-%{hadoop_base_version}.tar.gz
+#Source0: %{name}-%{hadoop_version}.tar.gz
 Source0: https://github.com/apache/hadoop-common/archive/%{commit}/%{name}-%{version}-%{shortcommit}.tar.gz
 Source1: hadoop-layout.sh
 Source2: hadoop-hdfs.service.template
@@ -44,6 +45,8 @@ Source13: hdfs-create-dirs
 # https://issues.apache.org/jira/browse/HADOOP-9650
 # As well as still baking changes for tomcat/jspc
 Patch0: hadoop-fedora-integration.patch
+# Remove the kfs dependency (https://issues.apache.org/jira/browse/HADOOP-8886)
+Patch1: hadoop-8886.patch
 Buildroot: %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id} -u -n)
 BuildRequires: ant
 BuildRequires: apache-commons-cli
@@ -87,7 +90,6 @@ BuildRequires: jspc
 BuildRequires: jspc-compilers
 BuildRequires: jspc-maven-plugin
 BuildRequires: junit
-BuildRequires: kfs
 BuildRequires: log4j
 BuildRequires: maven
 BuildRequires: maven-antrun-plugin
@@ -178,7 +180,6 @@ Requires: jetty-xml
 Requires: jline
 Requires: jsch
 Requires: jsr-311
-Requires: kfs
 Requires: log4j
 Requires: nc6
 Requires: netty
@@ -330,9 +331,10 @@ offering local computation and storage.  YARN (Hadoop NextGen MapReduce) is
 a general purpose data-computation framework.
 
 %prep
-#%%setup -qn %{name}-%{hadoop_base_version}
+#%%setup -qn %{name}-%{hadoop_version}
 %setup -qn %{name}-common-%{commit}
 %patch0 -p1
+%patch1 -p0
 
 # The hadoop test suite needs classes from the zookeeper test suite.
 # We need to modify the deps to use the pom for the zookeeper-test jar
@@ -383,7 +385,7 @@ install -d -m 0775 %{buildroot}/%{_var}/log/%{name}-httpfs
 install -d -m 0775 %{buildroot}/%{_var}/run/%{name}-httpfs
 %endif
 
-basedir='hadoop-dist/target/hadoop-%{hadoop_base_version}'
+basedir='hadoop-dist/target/hadoop-%{hadoop_version}'
 
 for dir in bin libexec sbin
 do
@@ -406,7 +408,7 @@ do
     # (they are copies or incorrect versions), but do want other bits
     continue
   fi
-  find $basedir/share/hadoop/$dir -name *-%{hadoop_base_version}.jar | xargs cp -af -t %{buildroot}/%{_javadir}/%{name}
+  find $basedir/share/hadoop/$dir -name *-%{hadoop_version}.jar | xargs cp -af -t %{buildroot}/%{_javadir}/%{name}
 done
 
 %if 0%{package_httpfs} == 0
@@ -436,9 +438,9 @@ do
 done
 
 pushd %{buildroot}/%{_datadir}/%{name}/common/lib
-  %{__ln_s} %{_javadir}/%{name}/%{name}-annotations-%{hadoop_base_version}.jar .
-  %{__ln_s} %{_javadir}/%{name}/%{name}-auth-%{hadoop_base_version}.jar .
-  %{_bindir}/build-jar-repository -s . objectweb-asm/asm avro/avro base64 commons-cli commons-codec commons-configuration commons-el commons-httpclient commons-io commons-lang commons-logging commons-math3 commons-net ecj guava hawtjni-runtime httpcomponents/httpclient httpcomponents/httpcore istack-commons-runtime jackson/jackson-core-asl jackson/jackson-jaxrs jackson/jackson-mapper-asl jackson/jackson-xc jansi jansi-native java-xmlbuilder tomcat-servlet-api glassfish-jsp glassfish-jsp-api glassfish-jaxb/jaxb-impl jersey/jersey-core jersey/jersey-json jersey/jersey-server jersey/jersey-servlet jets3t/jets3t jettison jetty/jetty-continuation jetty/jetty-http jetty/jetty-io jetty/jetty-security jetty/jetty-server jetty/jetty-servlet jetty/jetty-util jetty/jetty-webapp jetty/jetty-xml jline jsch jsr-311 kfs log4j netty paranamer/paranamer protobuf relaxngDatatype slf4j/api slf4j/log4j12 snappy-java tomcat/tomcat-el-2.2-api txw2 xmlenc zookeeper
+  %{__ln_s} %{_javadir}/%{name}/%{name}-annotations-%{hadoop_version}.jar .
+  %{__ln_s} %{_javadir}/%{name}/%{name}-auth-%{hadoop_version}.jar .
+  %{_bindir}/build-jar-repository -s . objectweb-asm/asm avro/avro base64 commons-cli commons-codec commons-configuration commons-el commons-httpclient commons-io commons-lang commons-logging commons-math3 commons-net ecj guava hawtjni-runtime httpcomponents/httpclient httpcomponents/httpcore istack-commons-runtime jackson/jackson-core-asl jackson/jackson-jaxrs jackson/jackson-mapper-asl jackson/jackson-xc jansi jansi-native java-xmlbuilder tomcat-servlet-api glassfish-jsp glassfish-jsp-api glassfish-jaxb/jaxb-impl jersey/jersey-core jersey/jersey-json jersey/jersey-server jersey/jersey-servlet jets3t/jets3t jettison jetty/jetty-continuation jetty/jetty-http jetty/jetty-io jetty/jetty-security jetty/jetty-server jetty/jetty-servlet jetty/jetty-util jetty/jetty-webapp jetty/jetty-xml jline jsch jsr-311 log4j netty paranamer/paranamer protobuf relaxngDatatype slf4j/api slf4j/log4j12 snappy-java tomcat/tomcat-el-2.2-api txw2 xmlenc zookeeper
 popd
 
 pushd %{buildroot}/%{_datadir}/%{name}/hdfs/lib
@@ -468,22 +470,22 @@ popd
 %endif
 
 pushd %{buildroot}/%{_datadir}/%{name}/mapreduce
-  %{__ln_s} %{_javadir}/%{name}/%{name}-archives-%{hadoop_base_version}.jar .
-  %{__ln_s} %{_javadir}/%{name}/%{name}-datajoin-%{hadoop_base_version}.jar .
-  %{__ln_s} %{_javadir}/%{name}/%{name}-distcp-%{hadoop_base_version}.jar .
-  %{__ln_s} %{_javadir}/%{name}/%{name}-extras-%{hadoop_base_version}.jar .
-  %{__ln_s} %{_javadir}/%{name}/%{name}-gridmix-%{hadoop_base_version}.jar .
-  %{__ln_s} %{_javadir}/%{name}/%{name}-rumen-%{hadoop_base_version}.jar .
-  %{__ln_s} %{_javadir}/%{name}/%{name}-streaming-%{hadoop_base_version}.jar .
+  %{__ln_s} %{_javadir}/%{name}/%{name}-archives-%{hadoop_version}.jar .
+  %{__ln_s} %{_javadir}/%{name}/%{name}-datajoin-%{hadoop_version}.jar .
+  %{__ln_s} %{_javadir}/%{name}/%{name}-distcp-%{hadoop_version}.jar .
+  %{__ln_s} %{_javadir}/%{name}/%{name}-extras-%{hadoop_version}.jar .
+  %{__ln_s} %{_javadir}/%{name}/%{name}-gridmix-%{hadoop_version}.jar .
+  %{__ln_s} %{_javadir}/%{name}/%{name}-rumen-%{hadoop_version}.jar .
+  %{__ln_s} %{_javadir}/%{name}/%{name}-streaming-%{hadoop_version}.jar .
 popd
 
 pushd %{buildroot}/%{_datadir}/%{name}/mapreduce/lib
-  %{__ln_s} %{_javadir}/%{name}/%{name}-annotations-%{hadoop_base_version}.jar .
+  %{__ln_s} %{_javadir}/%{name}/%{name}-annotations-%{hadoop_version}.jar .
   %{_bindir}/build-jar-repository -s . aopalliance atinject objectweb-asm/asm avro/avro apache-commons-io guava google-guice guice/guice-servlet hamcrest/core jackson/jackson-core-asl jackson/jackson-mapper-asl jersey/jersey-core jersey/jersey-guice jersey/jersey-server jersey/jersey-servlet jsr-311 junit log4j netty paranamer/paranamer protobuf snappy-java
 popd
 
 pushd %{buildroot}/%{_datadir}/%{name}/yarn/lib
-  %{__ln_s} %{_javadir}/%{name}/%{name}-annotations-%{hadoop_base_version}.jar .
+  %{__ln_s} %{_javadir}/%{name}/%{name}-annotations-%{hadoop_version}.jar .
   %{_bindir}/build-jar-repository -s . aopalliance atinject objectweb-asm/asm avro/avro cglib apache-commons-io guava google-guice guice/guice-servlet hamcrest/core jackson/jackson-core-asl jackson/jackson-mapper-asl jersey/jersey-core jersey/jersey-guice jersey/jersey-server jersey/jersey-servlet jsr-311 junit log4j netty paranamer/paranamer protobuf snappy-java
 popd
 
@@ -563,7 +565,7 @@ done
 sed -i "s|{|%{_var}/log/hadoop-hdfs/*.audit\n{|" %{buildroot}/%{_sysconfdir}/logrotate.d/%{name}-hdfs
 
 # hdfs init script
-cp -arf %{SOURCE13} %{buildroot}/%{_sbindir}
+install -m 755 %{SOURCE13} %{buildroot}/%{_sbindir}
 
 install -dm 0775 %{buildroot}%{_mavenpomdir}
 for module in hadoop-yarn-project/hadoop-yarn/hadoop-yarn-common \
@@ -593,8 +595,8 @@ for module in hadoop-yarn-project/hadoop-yarn/hadoop-yarn-common \
             hadoop-mapreduce-project/hadoop-mapreduce-examples \
             hadoop-hdfs-project/hadoop-hdfs; do
   base=`basename $module`
-  install -pm 644 $module/pom.xml %{buildroot}%{_mavenpomdir}/JPP.%{name}-$base-%{hadoop_base_version}.pom
-  %add_maven_depmap JPP.%{name}-$base-%{hadoop_base_version}.pom %{name}/$base-%{hadoop_base_version}.jar -f $base
+  install -pm 644 $module/pom.xml %{buildroot}%{_mavenpomdir}/JPP.%{name}-$base-%{hadoop_version}.pom
+  %add_maven_depmap JPP.%{name}-$base-%{hadoop_version}.pom %{name}/$base-%{hadoop_version}.jar -f $base
 done
 
 %pre common
@@ -669,13 +671,14 @@ getent passwd yarn >/dev/null || /usr/sbin/useradd --comment "Hadoop Yarn" --she
 %systemd_postun_with_restart %{yarn_services}
 
 %files common
-%doc hadoop-dist/target/hadoop-%{hadoop_base_version}/share/doc/hadoop/common/*
+%doc hadoop-dist/target/hadoop-%{hadoop_version}/share/doc/hadoop/common/*
 %defattr(-,root,root)
 %config(noreplace) %{_sysconfdir}/%{name}/configuration.xsl
 %config(noreplace) %{_sysconfdir}/%{name}/core-site.xml
-%config(noreplace) %{_sysconfdir}/%{name}/hadoop-env.sh
-%config(noreplace) %{_sysconfdir}/%{name}/hadoop-metrics.properties
-%config(noreplace) %{_sysconfdir}/%{name}/hadoop-metrics2.properties
+%config(noreplace) %{_sysconfdir}/%{name}/%{name}-env.sh
+%config(noreplace) %{_sysconfdir}/%{name}/%{name}-metrics.properties
+%config(noreplace) %{_sysconfdir}/%{name}/%{name}-metrics2.properties
+%config(noreplace) %{_sysconfdir}/%{name}/%{name}-policy.xml
 %config(noreplace) %{_sysconfdir}/%{name}/log4j.properties
 %config(noreplace) %{_sysconfdir}/%{name}/slaves
 %config(noreplace) %{_sysconfdir}/%{name}/ssl-client.xml.example
@@ -690,17 +693,12 @@ getent passwd yarn >/dev/null || /usr/sbin/useradd --comment "Hadoop Yarn" --she
 %{_mavendepmapfragdir}/%{name}-%{name}-annotations*
 %{_mavendepmapfragdir}/%{name}-%{name}-auth*
 %{_mavendepmapfragdir}/%{name}-%{name}-common*
-%{_libexecdir}/hadoop-config.sh
-%{_libexecdir}/hadoop-layout.sh
-%{_bindir}/hadoop
+%{_libexecdir}/%{name}-config.sh
+%{_libexecdir}/%{name}-layout.sh
+%{_bindir}/%{name}
 %{_bindir}/rcc
-%{_sbindir}/hadoop-daemon.sh
-%{_sbindir}/hadoop-daemons.sh
-%{_sbindir}/hadoop-create-user.sh
-%{_sbindir}/hadoop-setup-applications.sh
-%{_sbindir}/hadoop-setup-conf.sh
-%{_sbindir}/hadoop-setup-single-node.sh
-%{_sbindir}/hadoop-validate-setup.sh
+%{_sbindir}/%{name}-daemon.sh
+%{_sbindir}/%{name}-daemons.sh
 %{_sbindir}/start-all.sh
 %{_sbindir}/start-balancer.sh
 %{_sbindir}/start-dfs.sh
@@ -710,15 +708,14 @@ getent passwd yarn >/dev/null || /usr/sbin/useradd --comment "Hadoop Yarn" --she
 %{_sbindir}/stop-dfs.sh
 %{_sbindir}/stop-secure-dns.sh
 %{_sbindir}/slaves.sh
-%{_sbindir}/update-hadoop-env.sh
 %{_libdir}/libhadoop.*
 
 %files devel
-%doc hadoop-dist/target/hadoop-%{hadoop_base_version}/share/doc/hadoop/common/*
+%doc hadoop-dist/target/hadoop-%{hadoop_version}/share/doc/hadoop/common/*
 %{_includedir}/%{name}
 
 %files hdfs
-%doc hadoop-dist/target/hadoop-%{hadoop_base_version}/share/doc/hadoop/hdfs/*
+%doc hadoop-dist/target/hadoop-%{hadoop_version}/share/doc/hadoop/hdfs/*
 %defattr(-,root,root)
 %config(noreplace) %{_sysconfdir}/%{name}/hdfs-site.xml
 %config(noreplace) %{_sysconfdir}/security/limits.d/hdfs.conf
@@ -735,24 +732,22 @@ getent passwd yarn >/dev/null || /usr/sbin/useradd --comment "Hadoop Yarn" --she
 %{_bindir}/hdfs
 %{_sbindir}/distribute-exclude.sh
 %{_sbindir}/refresh-namenodes.sh
-%{_sbindir}/hadoop-setup-hdfs.sh
 %{_sbindir}/hdfs-config.sh
 %{_sbindir}/hdfs-create-dirs
-%{_sbindir}/update-hdfs-env.sh
-%{_tmpfilesdir}/hadoop-hdfs.conf
+%{_tmpfilesdir}/%{name}-hdfs.conf
 %config(noreplace) %attr(644, root, root) %{_sysconfdir}/logrotate.d/%{name}-hdfs
 %attr(0755,hdfs,hadoop) %dir %{_var}/run/%{name}-hdfs
 %attr(0755,hdfs,hadoop) %dir %{_var}/log/%{name}-hdfs
 %attr(0755,hdfs,hadoop) %dir %{_var}/cache/%{name}-hdfs
 
 %files hdfs-fuse
-%doc hadoop-dist/target/hadoop-%{hadoop_base_version}/share/doc/hadoop/hdfs/*
+%doc hadoop-dist/target/hadoop-%{hadoop_version}/share/doc/hadoop/hdfs/*
 %defattr(-,root,root)
 %{_bindir}/fuse_dfs
 
 %if %{package_httpfs}
 %files httpfs
-%doc hadoop-dist/target/hadoop-%{hadoop_base_version}/share/doc/hadoop/common/*
+%doc hadoop-dist/target/hadoop-%{hadoop_version}/share/doc/hadoop/common/*
 %defattr(-,root,root)
 %config(noreplace) %{_sysconfdir}/%{name}/httpfs-env.sh
 %config(noreplace) %{_sysconfdir}/%{name}/httpfs-log4j.properties
@@ -763,25 +758,25 @@ getent passwd yarn >/dev/null || /usr/sbin/useradd --comment "Hadoop Yarn" --she
 %{_libexecdir}/%{name}-httpfs
 %{_unitdir}/%{name}-httpfs.service
 %{_sbindir}/httpfs.sh
-%{_datadir}/hadoop/httpfs
-%{_sharedstatedir}/hadoop-httpfs
-%{_tmpfilesdir}/hadoop-httpfs.conf
+%{_datadir}/%{name}/httpfs
+%{_sharedstatedir}/%{name}-httpfs
+%{_tmpfilesdir}/%{name}-httpfs.conf
 %config(noreplace) %attr(644, root, root) %{_sysconfdir}/logrotate.d/%{name}-httpfs
 %attr(0755,httpfs,httpfs) %dir %{_var}/run/%{name}-httpfs
 %attr(0755,httpfs,httpfs) %dir %{_var}/log/%{name}-httpfs
 %endif
 
 %files javadoc
-%doc hadoop-dist/target/hadoop-%{hadoop_base_version}/share/doc/hadoop/common/*
+%doc hadoop-dist/target/hadoop-%{hadoop_version}/share/doc/hadoop/common/*
 %doc %{_javadocdir}/%{name}
 
 %files libhdfs
-%doc hadoop-dist/target/hadoop-%{hadoop_base_version}/share/doc/hadoop/hdfs/*
+%doc hadoop-dist/target/hadoop-%{hadoop_version}/share/doc/hadoop/hdfs/*
 %defattr(-,root,root)
 %{_libdir}/libhdfs*
 
 %files mapreduce
-%doc hadoop-dist/target/hadoop-%{hadoop_base_version}/share/doc/hadoop/mapreduce/*
+%doc hadoop-dist/target/hadoop-%{hadoop_version}/share/doc/hadoop/mapreduce/*
 %defattr(-,root,root)
 %config(noreplace) %{_sysconfdir}/%{name}/mapred-env.sh
 #%config(noreplace) %{_sysconfdir}/%{name}/mapred-queues.xml
@@ -818,21 +813,22 @@ getent passwd yarn >/dev/null || /usr/sbin/useradd --comment "Hadoop Yarn" --she
 %{_unitdir}/%{name}-historyserver.service
 %{_bindir}/mapred
 %{_sbindir}/mr-jobhistory-daemon.sh
-%{_tmpfilesdir}/hadoop-mapreduce.conf
+%{_tmpfilesdir}/%{name}-mapreduce.conf
 %config(noreplace) %attr(644, root, root) %{_sysconfdir}/logrotate.d/%{name}-mapreduce
 %attr(0755,mapred,hadoop) %dir %{_var}/run/%{name}-mapreduce
 %attr(0755,mapred,hadoop) %dir %{_var}/log/%{name}-mapreduce
 %attr(0755,mapred,hadoop) %dir %{_var}/cache/%{name}-mapreduce
 
 %files mapreduce-examples
-%doc hadoop-dist/target/hadoop-%{hadoop_base_version}/share/doc/hadoop/mapreduce/*
+%doc hadoop-dist/target/hadoop-%{hadoop_version}/share/doc/hadoop/mapreduce/*
 %{_javadir}/%{name}/%{name}-mapreduce-examples*.jar
 %{_mavenpomdir}/JPP.%{name}-%{name}-mapreduce-examples*.pom
 %{_mavendepmapfragdir}/%{name}-%{name}-mapreduce-examples*
 
 %files yarn
-%doc hadoop-dist/target/hadoop-%{hadoop_base_version}/share/doc/hadoop/yarn/*
+%doc hadoop-dist/target/hadoop-%{hadoop_version}/share/doc/hadoop/yarn/*
 %defattr(-,root,root)
+%config(noreplace) %{_sysconfdir}/%{name}/capacity-scheduler.xml
 %config(noreplace) %{_sysconfdir}/%{name}/container-executor.cfg
 %config(noreplace) %{_sysconfdir}/%{name}/yarn-env.sh
 %config(noreplace) %{_sysconfdir}/%{name}/yarn-site.xml
@@ -851,7 +847,7 @@ getent passwd yarn >/dev/null || /usr/sbin/useradd --comment "Hadoop Yarn" --she
 %{_sbindir}/yarn-daemons.sh
 %{_sbindir}/start-yarn.sh
 %{_sbindir}/stop-yarn.sh
-%{_tmpfilesdir}/hadoop-yarn.conf
+%{_tmpfilesdir}/%{name}-yarn.conf
 %config(noreplace) %attr(644, root, root) %{_sysconfdir}/logrotate.d/%{name}-yarn
 %attr(0755,yarn,hadoop) %dir %{_var}/run/%{name}-yarn
 %attr(0755,yarn,hadoop) %dir %{_var}/log/%{name}-yarn
