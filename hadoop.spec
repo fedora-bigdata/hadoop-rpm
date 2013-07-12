@@ -67,6 +67,8 @@ BuildRequires: commons-httpclient
 BuildRequires: ecj >= 1:4.2.1-6
 BuildRequires: fuse-devel
 BuildRequires: fusesource-pom
+BuildRequires: glassfish-jsp
+BuildRequires: glassfish-jsp-api
 BuildRequires: gmaven
 BuildRequires: grizzly
 BuildRequires: guava
@@ -81,9 +83,11 @@ BuildRequires: javapackages-tools
 BuildRequires: jdiff
 BuildRequires: jersey
 BuildRequires: jersey-contribs
+BuildRequires: jersey-test-framework
 BuildRequires: jets3t
 # May need to break down into specific jetty rpms
 BuildRequires: jetty
+BuildRequires: jetty-util-ajax
 BuildRequires: jsch
 BuildRequires: json_simple
 BuildRequires: jspc
@@ -118,6 +122,7 @@ BuildRequires: protobuf-compiler
 BuildRequires: protobuf-java
 BuildRequires: servlet3
 BuildRequires: slf4j
+BuildRequires: snappy-devel
 BuildRequires: systemd
 BuildRequires: tomcat-lib
 BuildRequires: xmlenc
@@ -344,6 +349,10 @@ a general purpose data-computation framework.
 %pom_remove_dep org.apache.zookeeper:zookeeper hadoop-hdfs-project/hadoop-hdfs
 %pom_add_dep org.apache.zookeeper:zookeeper hadoop-hdfs-project/hadoop-hdfs
 %pom_add_dep org.apache.zookeeper:zookeeper-test hadoop-hdfs-project/hadoop-hdfs
+
+# Resolve issues finding tools.jar
+%pom_remove_dep :jdk.tools hadoop-common-project/hadoop-annotations
+%pom_add_dep com.sun:tools hadoop-common-project/hadoop-annotations
 
 %build
 mvn-rpmbuild -Drequire.snappy=true -Pdist,native -DskipTests package javadoc:aggregate
