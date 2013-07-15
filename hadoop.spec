@@ -49,7 +49,9 @@ Patch0: hadoop-fedora-integration.patch
 Patch1: hadoop-8886.patch
 Buildroot: %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id} -u -n)
 BuildRequires: ant
+BuildRequires: aopalliance
 BuildRequires: apache-commons-cli
+BuildRequires: apache-commons-collections
 BuildRequires: apache-commons-configuration
 BuildRequires: apache-commons-daemon
 BuildRequires: apache-commons-el
@@ -59,32 +61,44 @@ BuildRequires: apache-commons-logging
 BuildRequires: apache-commons-math
 BuildRequires: apache-commons-net
 BuildRequires: apache-rat-plugin
+BuildRequires: atinject
+BuildRequires: avalon-framework
+BuildRequires: avalon-logkit
 BuildRequires: avro
 BuildRequires: bookkeeper-java
 BuildRequires: cmake
 BuildRequires: commons-codec
 BuildRequires: commons-httpclient
+%if package_httpfs
 BuildRequires: ecj >= 1:4.2.1-6
+%endif
 BuildRequires: fuse-devel
 BuildRequires: fusesource-pom
+BuildRequires: geronimo-jms
+BuildRequires: glassfish-jaxb
 BuildRequires: glassfish-jsp
 BuildRequires: glassfish-jsp-api
 BuildRequires: gmaven
+BuildRequires: google-guice
 BuildRequires: grizzly
 BuildRequires: guava
 BuildRequires: guice-servlet
-BuildRequires: guice-extensions
+BuildRequires: hamcrest
 BuildRequires: hsqldb
+BuildRequires: httpcomponents-client
+BuildRequires: httpcomponents-core
+BuildRequires: istack-commons
 BuildRequires: jackson
-BuildRequires: jansi
-BuildRequires: jansi-native
+BuildRequires: java-base64
 BuildRequires: java-devel
+BuildRequires: java-xmlbuilder
+BuildRequires: javamail
 BuildRequires: javapackages-tools
 BuildRequires: jdiff
 BuildRequires: jersey
 BuildRequires: jersey-contribs
-BuildRequires: jersey-test-framework
 BuildRequires: jets3t
+BuildRequires: jettison
 # May need to break down into specific jetty rpms
 BuildRequires: jetty
 BuildRequires: jetty-util-ajax
@@ -93,7 +107,10 @@ BuildRequires: json_simple
 BuildRequires: jspc
 BuildRequires: jspc-compilers
 BuildRequires: jspc-maven-plugin
+BuildRequires: jsr-305
+BuildRequires: jsr-311
 BuildRequires: junit
+BuildRequires: jzlib
 BuildRequires: log4j
 BuildRequires: maven
 BuildRequires: maven-antrun-plugin
@@ -117,14 +134,21 @@ BuildRequires: maven-war-plugin
 BuildRequires: mockito
 BuildRequires: native-maven-plugin
 BuildRequires: netty
+BuildRequires: objectweb-asm
 BuildRequires: openssl-devel
+BuildRequires: paranamer
 BuildRequires: protobuf-compiler
 BuildRequires: protobuf-java
+BuildRequires: relaxngDatatype
 BuildRequires: servlet3
 BuildRequires: slf4j
 BuildRequires: snappy-devel
+BuildRequires: snappy-java
 BuildRequires: systemd
+BuildRequires: tomcat-el-2.2-api
 BuildRequires: tomcat-lib
+BuildRequires: tomcat-servlet-3.0-api
+BuildRequires: txw2
 BuildRequires: xmlenc
 BuildRequires: znerd-oss-parent
 BuildRequires: zookeeper-java
@@ -145,6 +169,7 @@ Group: Applications/System
 Requires: /usr/sbin/useradd
 Requires: apache-commons-cli
 Requires: apache-commons-codec
+Requires: apache-commons-collections
 Requires: apache-commons-configuration
 Requires: apache-commons-el
 Requires: apache-commons-io
@@ -152,42 +177,41 @@ Requires: apache-commons-lang
 Requires: apache-commons-logging
 Requires: apache-commons-math
 Requires: apache-commons-net
+Requires: avalon-framework
+Requires: avalon-logkit
 Requires: avro
 Requires: commons-httpclient
 Requires: coreutils
-Requires: ecj >= 1:4.2.1-6
+Requires: geronimo-jms
 Requires: glassfish-jaxb
 Requires: glassfish-jsp
 Requires: glassfish-jsp-api
 Requires: guava
-Requires: hawtjni
 Requires: httpcomponents-client
 Requires: httpcomponents-core
 Requires: istack-commons
 Requires: jackson
-Requires: jansi
-Requires: jansi-native
 Requires: java
 Requires: java-base64
 Requires: java-xmlbuilder
 Requires: jersey
 Requires: jets3t
 Requires: jettison
-Requires: jetty-continuation
 Requires: jetty-http
 Requires: jetty-io
 Requires: jetty-security
 Requires: jetty-server
 Requires: jetty-servlet
 Requires: jetty-util
+Requires: jetty-util-ajax
 Requires: jetty-webapp
 Requires: jetty-xml
-Requires: jline
 Requires: jsch
+Requires: jsr-305
 Requires: jsr-311
 Requires: log4j
 Requires: nc6
-Requires: netty
+Requires: javamail
 Requires: objectweb-asm
 Requires: paranamer
 Requires: protobuf-java
@@ -195,6 +219,7 @@ Requires: relaxngDatatype
 Requires: servlet3
 Requires: slf4j
 Requires: snappy-java
+Requires: tomcat-servlet-3.0-api
 Requires: tomcat-el-2.2-api
 Requires: txw2
 Requires: xmlenc
@@ -222,7 +247,9 @@ Requires: %{name}-common = %{version}-%{release}
 Requires(pre): %{name}-common = %{version}-%{release}
 Requires: apache-commons-daemon
 Requires: apache-commons-daemon-jsvc
-%systemd_requires
+Requires(post): systemd
+Requires(preun): systemd
+Requires(postun): systemd
 
 %description hdfs
 Hadoop is a framework that allows for the distributed processing of large data
@@ -254,9 +281,12 @@ Summary: Provides web access to HDFS
 Group: Applications/System
 Requires: %{name}-hdfs = %{version}-%{release}
 Requires: apache-commons-dbcp
+Requires: ecj >= 1:4.2.1-6
 Requires: tomcat
 Requires: tomcat-lib
-%systemd_requires
+Requires(post): systemd
+Requires(preun): systemd
+Requires(postun): systemd
 
 %description httpfs
 Hadoop is a framework that allows for the distributed processing of large data
@@ -294,7 +324,9 @@ Summary: Hadoop MapReduce (MRv2)
 Group: Applications/System
 Requires: %{name}-yarn = %{version}-%{release}
 Requires(pre): %{name}-common = %{version}-%{release}
-%systemd_requires
+Requires(post): systemd
+Requires(preun): systemd
+Requires(postun): systemd
 
 %description mapreduce
 Hadoop is a framework that allows for the distributed processing of large data
@@ -326,7 +358,11 @@ Requires: guice-servlet
 Requires: hamcrest
 Requires: jersey-contribs
 Requires: junit
-%systemd_requires
+Requires: jzlib
+Requires: netty
+Requires(post): systemd
+Requires(preun): systemd
+Requires(postun): systemd
 
 %description yarn
 Hadoop is a framework that allows for the distributed processing of large data
@@ -336,7 +372,6 @@ offering local computation and storage.  YARN (Hadoop NextGen MapReduce) is
 a general purpose data-computation framework.
 
 %prep
-#%%setup -qn %{name}-%{hadoop_version}
 %setup -qn %{name}-common-%{commit}
 %patch0 -p1
 %patch1 -p0
@@ -349,10 +384,6 @@ a general purpose data-computation framework.
 %pom_remove_dep org.apache.zookeeper:zookeeper hadoop-hdfs-project/hadoop-hdfs
 %pom_add_dep org.apache.zookeeper:zookeeper hadoop-hdfs-project/hadoop-hdfs
 %pom_add_dep org.apache.zookeeper:zookeeper-test hadoop-hdfs-project/hadoop-hdfs
-
-# Resolve issues finding tools.jar
-%pom_remove_dep :jdk.tools hadoop-common-project/hadoop-annotations
-%pom_add_dep com.sun:tools hadoop-common-project/hadoop-annotations
 
 %build
 mvn-rpmbuild -Drequire.snappy=true -Pdist,native -DskipTests package javadoc:aggregate
@@ -449,11 +480,11 @@ done
 pushd %{buildroot}/%{_datadir}/%{name}/common/lib
   %{__ln_s} %{_javadir}/%{name}/%{name}-annotations-%{hadoop_version}.jar .
   %{__ln_s} %{_javadir}/%{name}/%{name}-auth-%{hadoop_version}.jar .
-  %{_bindir}/build-jar-repository -s . objectweb-asm/asm avro/avro base64 commons-cli commons-codec commons-configuration commons-el commons-httpclient commons-io commons-lang commons-logging commons-math3 commons-net ecj guava hawtjni-runtime httpcomponents/httpclient httpcomponents/httpcore istack-commons-runtime jackson/jackson-core-asl jackson/jackson-jaxrs jackson/jackson-mapper-asl jackson/jackson-xc jansi jansi-native java-xmlbuilder tomcat-servlet-api glassfish-jsp glassfish-jsp-api glassfish-jaxb/jaxb-impl jersey/jersey-core jersey/jersey-json jersey/jersey-server jersey/jersey-servlet jets3t/jets3t jettison jetty/jetty-continuation jetty/jetty-http jetty/jetty-io jetty/jetty-security jetty/jetty-server jetty/jetty-servlet jetty/jetty-util jetty/jetty-webapp jetty/jetty-xml jline jsch jsr-311 log4j netty paranamer/paranamer protobuf relaxngDatatype slf4j/api slf4j/log4j12 snappy-java tomcat/tomcat-el-2.2-api txw2 xmlenc zookeeper
+  %{_bindir}/build-jar-repository -s . objectweb-asm/asm avalon-framework-api avalon-logkit avro/avro base64 commons-cli commons-codec commons-collections commons-configuration commons-el commons-httpclient commons-io commons-lang commons-logging commons-math3 commons-net guava httpcomponents/httpclient httpcomponents/httpcore istack-commons-runtime jackson/jackson-core-asl jackson/jackson-jaxrs jackson/jackson-mapper-asl jackson/jackson-xc java-xmlbuilder tomcat-servlet-api glassfish-jsp glassfish-jsp-api glassfish-jaxb/jaxb-impl jersey/jersey-core jersey/jersey-json jersey/jersey-server jersey/jersey-servlet jets3t/jets3t jettison jetty/jetty-http jetty/jetty-io jetty/jetty-security jetty/jetty-server jetty/jetty-servlet jetty/jetty-util jetty/jetty-util-ajax jetty/jetty-webapp jetty/jetty-xml jms jsch jsr-305 jsr-311 log4j javamail/mail paranamer/paranamer protobuf relaxngDatatype slf4j/api slf4j/log4j12 snappy-java tomcat/tomcat-el-2.2-api txw2 xmlenc zookeeper
 popd
 
 pushd %{buildroot}/%{_datadir}/%{name}/hdfs/lib
-  %{_bindir}/build-jar-repository -s . objectweb-asm/asm commons-cli commons-codec commons-daemon apache-commons-io commons-lang commons-logging guava hawtjni-runtime jackson/jackson-core-asl jackson/jackson-mapper-asl jansi jansi-native tomcat-servlet-api jersey/jersey-core jersey/jersey-server jetty/jetty-continuation jetty/jetty-http jetty/jetty-io jetty/jetty-server jetty/jetty-util jline jsr-311 log4j netty protobuf slf4j/api xmlenc zookeeper
+  %{_bindir}/build-jar-repository -s . objectweb-asm/asm avalon-framework-api avalon-logkit commons-cli commons-codec commons-daemon commons-io commons-lang commons-logging guava jackson/jackson-core-asl jackson/jackson-mapper-asl tomcat-servlet-api jersey/jersey-core jersey/jersey-server jetty/jetty-http jetty/jetty-io jetty/jetty-server jetty/jetty-util jsr-311 log4j javamail/mail protobuf xmlenc
 popd
 
 %if %{package_httpfs}
@@ -490,12 +521,12 @@ popd
 
 pushd %{buildroot}/%{_datadir}/%{name}/mapreduce/lib
   %{__ln_s} %{_javadir}/%{name}/%{name}-annotations-%{hadoop_version}.jar .
-  %{_bindir}/build-jar-repository -s . aopalliance atinject objectweb-asm/asm avro/avro apache-commons-io guava google-guice guice/guice-servlet hamcrest/core jackson/jackson-core-asl jackson/jackson-mapper-asl jersey/jersey-core jersey/jersey-guice jersey/jersey-server jersey/jersey-servlet jsr-311 junit log4j netty paranamer/paranamer protobuf snappy-java
+  %{_bindir}/build-jar-repository -s . aopalliance atinject objectweb-asm/asm avro/avro commons-io guava google-guice guice/guice-servlet hamcrest/core jackson/jackson-core-asl jackson/jackson-mapper-asl jersey/jersey-core jersey/jersey-guice jersey/jersey-server jersey/jersey-servlet jsr-311 junit jzlib log4j netty paranamer/paranamer protobuf snappy-java
 popd
 
 pushd %{buildroot}/%{_datadir}/%{name}/yarn/lib
   %{__ln_s} %{_javadir}/%{name}/%{name}-annotations-%{hadoop_version}.jar .
-  %{_bindir}/build-jar-repository -s . aopalliance atinject objectweb-asm/asm avro/avro cglib apache-commons-io guava google-guice guice/guice-servlet hamcrest/core jackson/jackson-core-asl jackson/jackson-mapper-asl jersey/jersey-core jersey/jersey-guice jersey/jersey-server jersey/jersey-servlet jsr-311 junit log4j netty paranamer/paranamer protobuf snappy-java
+  %{_bindir}/build-jar-repository -s . aopalliance atinject objectweb-asm/asm avro/avro cglib commons-io guava google-guice guice/guice-servlet hamcrest/core jackson/jackson-core-asl jackson/jackson-mapper-asl jersey/jersey-core jersey/jersey-guice jersey/jersey-server jersey/jersey-servlet jsr-311 junit jzlib log4j netty paranamer/paranamer protobuf snappy-java
 popd
 
 # Install hdfs webapp bits
