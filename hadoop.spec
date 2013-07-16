@@ -902,4 +902,5 @@ getent passwd yarn >/dev/null || /usr/sbin/useradd --comment "Hadoop Yarn" --she
 %attr(0755,yarn,hadoop) %dir %{_var}/cache/%{name}-yarn
 
 %changelog
-
+* Tue Jul 16 2013 Robert Rati <rrati@redhat> - 2.0.5-1
+- Initial packaging
