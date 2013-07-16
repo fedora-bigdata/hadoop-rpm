@@ -395,8 +395,9 @@ a general purpose data-computation framework.
 %build
 mvn-rpmbuild -Drequire.snappy=true -Pdist,native -DskipTests package javadoc:aggregate
 
-%check
-mvn-rpmbuild -Pdist,native test -Dmaven.test.failure.ignore=true
+# This takes a long time to run, so comment out for now
+#%check
+#mvn-rpmbuild -Pdist,native test -Dmaven.test.failure.ignore=true
 
 %clean
 rm -rf %{buildroot}
