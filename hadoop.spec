@@ -19,7 +19,6 @@ Summary: A software platform for processing vast amounts of data
 License: ASL 2.0
 Group:  Development/Libraries
 URL: https://github.com/apache/hadoop-common.git
-#Source0: %{name}-%{hadoop_version}.tar.gz
 Source0: https://github.com/apache/hadoop-common/archive/%{commit}/%{name}-%{version}-%{shortcommit}.tar.gz
 Source1: hadoop-layout.sh
 Source2: hadoop-hdfs.service.template
@@ -396,7 +395,7 @@ a general purpose data-computation framework.
 mvn-rpmbuild -Drequire.snappy=true -Pdist,native -DskipTests package javadoc:aggregate
 
 # This takes a long time to run, so comment out for now
-#%check
+#%%check
 #mvn-rpmbuild -Pdist,native test -Dmaven.test.failure.ignore=true
 
 %clean
@@ -827,7 +826,6 @@ getent passwd yarn >/dev/null || /usr/sbin/useradd --comment "Hadoop Yarn" --she
 %doc hadoop-dist/target/hadoop-%{hadoop_version}/share/doc/hadoop/mapreduce/*
 %defattr(-,root,root)
 %config(noreplace) %{_sysconfdir}/%{name}/mapred-env.sh
-#%config(noreplace) %{_sysconfdir}/%{name}/mapred-queues.xml
 %config(noreplace) %{_sysconfdir}/%{name}/mapred-queues.xml.template
 %config(noreplace) %{_sysconfdir}/%{name}/mapred-site.xml
 %config(noreplace) %{_sysconfdir}/%{name}/mapred-site.xml.template
