@@ -123,6 +123,7 @@ BuildRequires: maven-install-plugin
 BuildRequires: maven-invoker-plugin
 BuildRequires: maven-javadoc-plugin
 BuildRequires: maven-local
+BuildRequires: maven-plugin-build-helper
 BuildRequires: maven-plugin-cobertura
 BuildRequires: maven-plugin-exec
 BuildRequires: maven-plugin-plugin
@@ -384,6 +385,12 @@ a general purpose data-computation framework.
 %pom_remove_dep org.apache.zookeeper:zookeeper hadoop-hdfs-project/hadoop-hdfs
 %pom_add_dep org.apache.zookeeper:zookeeper hadoop-hdfs-project/hadoop-hdfs
 %pom_add_dep org.apache.zookeeper:zookeeper-test hadoop-hdfs-project/hadoop-hdfs
+
+# Temporary fix for F20 xmlenc
+%pom_remove_dep xmlenc:xmlenc hadoop-common-project/hadoop-common
+%pom_add_dep org.znerd:xmlenc hadoop-common-project/hadoop-common
+%pom_remove_dep xmlenc:xmlenc hadoop-hdfs-project/hadoop-hdfs
+%pom_add_dep org.znerd:xmlenc hadoop-hdfs-project/hadoop-hdfs
 
 %build
 mvn-rpmbuild -Drequire.snappy=true -Pdist,native -DskipTests package javadoc:aggregate
