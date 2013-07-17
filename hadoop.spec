@@ -74,6 +74,7 @@ BuildRequires: ecj >= 1:4.2.1-6
 BuildRequires: fuse-devel
 BuildRequires: fusesource-pom
 BuildRequires: geronimo-jms
+BuildRequires: gcc-c++
 BuildRequires: glassfish-jaxb
 BuildRequires: glassfish-jsp
 BuildRequires: glassfish-jsp-api
