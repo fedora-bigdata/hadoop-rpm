@@ -5,15 +5,14 @@
 %global commit b92d9bcf559cc2e62fc166e09bd2852766b27bec
 %global shortcommit %(c=%{commit}; echo ${c:0:7})
 
-%global hadoop_base_version 2.0.5
-%global hadoop_version %{hadoop_base_version}-alpha
+%global hadoop_version %{version}-alpha
 %global hdfs_services hadoop-zkfc.service hadoop-datanode.service hadoop-secondarynamenode.service hadoop-namenode.service
 %global mapreduce_services hadoop-historyserver.service
 %global yarn_services hadoop-proxyserver.service hadoop-resourcemanager.service hadoop-nodemanager.service
 %global httpfs_services hadoop-httpfs.service
 
 Name:   hadoop
-Version: %{hadoop_base_version}
+Version: 2.0.5
 Release: 1%{?dist}
 Summary: A software platform for processing vast amounts of data
 License: ASL 2.0
@@ -46,7 +45,6 @@ Source13: hdfs-create-dirs
 Patch0: hadoop-fedora-integration.patch
 # Remove the kfs dependency (https://issues.apache.org/jira/browse/HADOOP-8886)
 Patch1: hadoop-8886.patch
-Buildroot: %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id} -u -n)
 BuildRequires: ant
 BuildRequires: aopalliance
 BuildRequires: apache-commons-cli
@@ -399,9 +397,6 @@ mvn-rpmbuild -Drequire.snappy=true -Pdist,native -DskipTests package javadoc:agg
 #%%check
 #mvn-rpmbuild -Pdist,native test -Dmaven.test.failure.ignore=true
 
-%clean
-rm -rf %{buildroot}
-
 %install
 install -d -m 0755 %{buildroot}/%{_libdir}
 install -d -m 0755 %{buildroot}/%{_includedir}/%{name}
@@ -720,7 +715,6 @@ getent passwd yarn >/dev/null || /usr/sbin/useradd --comment "Hadoop Yarn" --she
 
 %files common
 %doc hadoop-dist/target/hadoop-%{hadoop_version}/share/doc/hadoop/common/*
-%defattr(-,root,root)
 %config(noreplace) %{_sysconfdir}/%{name}/configuration.xsl
 %config(noreplace) %{_sysconfdir}/%{name}/core-site.xml
 %config(noreplace) %{_sysconfdir}/%{name}/%{name}-env.sh
@@ -764,7 +758,6 @@ getent passwd yarn >/dev/null || /usr/sbin/useradd --comment "Hadoop Yarn" --she
 
 %files hdfs
 %doc hadoop-dist/target/hadoop-%{hadoop_version}/share/doc/hadoop/hdfs/*
-%defattr(-,root,root)
 %config(noreplace) %{_sysconfdir}/%{name}/hdfs-site.xml
 %config(noreplace) %{_sysconfdir}/security/limits.d/hdfs.conf
 %{_javadir}/%{name}/%{name}-hdfs*.jar
@@ -790,13 +783,11 @@ getent passwd yarn >/dev/null || /usr/sbin/useradd --comment "Hadoop Yarn" --she
 
 %files hdfs-fuse
 %doc hadoop-dist/target/hadoop-%{hadoop_version}/share/doc/hadoop/hdfs/*
-%defattr(-,root,root)
 %{_bindir}/fuse_dfs
 
 %if %{package_httpfs}
 %files httpfs
 %doc hadoop-dist/target/hadoop-%{hadoop_version}/share/doc/hadoop/common/*
-%defattr(-,root,root)
 %config(noreplace) %{_sysconfdir}/%{name}/httpfs-env.sh
 %config(noreplace) %{_sysconfdir}/%{name}/httpfs-log4j.properties
 %config(noreplace) %{_sysconfdir}/%{name}/httpfs-signature.secret
@@ -820,12 +811,10 @@ getent passwd yarn >/dev/null || /usr/sbin/useradd --comment "Hadoop Yarn" --she
 
 %files libhdfs
 %doc hadoop-dist/target/hadoop-%{hadoop_version}/share/doc/hadoop/hdfs/*
-%defattr(-,root,root)
 %{_libdir}/libhdfs*
 
 %files mapreduce
 %doc hadoop-dist/target/hadoop-%{hadoop_version}/share/doc/hadoop/mapreduce/*
-%defattr(-,root,root)
 %config(noreplace) %{_sysconfdir}/%{name}/mapred-env.sh
 %config(noreplace) %{_sysconfdir}/%{name}/mapred-queues.xml.template
 %config(noreplace) %{_sysconfdir}/%{name}/mapred-site.xml
@@ -874,7 +863,6 @@ getent passwd yarn >/dev/null || /usr/sbin/useradd --comment "Hadoop Yarn" --she
 
 %files yarn
 %doc hadoop-dist/target/hadoop-%{hadoop_version}/share/doc/hadoop/yarn/*
-%defattr(-,root,root)
 %config(noreplace) %{_sysconfdir}/%{name}/capacity-scheduler.xml
 %config(noreplace) %{_sysconfdir}/%{name}/container-executor.cfg
 %config(noreplace) %{_sysconfdir}/%{name}/yarn-env.sh
