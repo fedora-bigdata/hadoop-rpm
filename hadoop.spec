@@ -11,6 +11,16 @@
 %global yarn_services hadoop-proxyserver.service hadoop-resourcemanager.service hadoop-nodemanager.service
 %global httpfs_services hadoop-httpfs.service
 
+%global link_jars()\
+for jar in %* \
+do \
+  for file in `ls %{buildroot}/%{_javadir}/%{name}/$jar*` \
+  do \
+    %{__ln_s} %{_javadir}/%{name}/$(basename $file) . \
+  done \
+done \
+%{nil}
+
 Name:   hadoop
 Version: 2.0.5
 Release: 1%{?dist}
@@ -390,14 +400,43 @@ a general purpose data-computation framework.
 %pom_remove_dep xmlenc:xmlenc hadoop-hdfs-project/hadoop-hdfs
 %pom_add_dep org.znerd:xmlenc hadoop-hdfs-project/hadoop-hdfs
 
+# War files we don't want
+%mvn_package org.apache.hadoop:hadoop-auth-examples __noinstall
+%mvn_package org.apache.hadoop:hadoop-hdfs-httpfs __noinstall
+
+# We don't want these jars either
+%mvn_package org.apache.hadoop:hadoop-assemblies __noinstall
+%mvn_package org.apache.hadoop:hadoop-client __noinstall
+%mvn_package org.apache.hadoop:hadoop-dist __noinstall
+%mvn_package org.apache.hadoop:hadoop-maven-plugins __noinstall
+%mvn_package org.apache.hadoop:hadoop-minicluster __noinstall
+%mvn_package org.apache.hadoop:hadoop-tools-dist __noinstall
+%mvn_package org.apache.hadoop:hadoop-yarn-server-tests __noinstall
+
+# Create separate file lists for packaging
+%mvn_package ":%{name}-hdfs*" hadoop-hdfs
+%mvn_package ":%{name}-mapreduce-client*" hadoop-mapreduce
+%mvn_package ":%{name}-archives*" hadoop-mapreduce
+%mvn_package ":%{name}-datajoin*" hadoop-mapreduce
+%mvn_package ":%{name}-distcp*" hadoop-mapreduce
+%mvn_package ":%{name}-extras*" hadoop-mapreduce
+%mvn_package ":%{name}-gridmix*" hadoop-mapreduce
+%mvn_package ":%{name}-rumen*" hadoop-mapreduce
+%mvn_package ":%{name}-streaming*" hadoop-mapreduce
+%mvn_package ":%{name}-mapreduce-examples*" hadoop-mapreduce-examples
+%mvn_package ":%{name}-yarn*" hadoop-yarn
+
 %build
-mvn-rpmbuild -Drequire.snappy=true -Pdist,native -DskipTests package javadoc:aggregate
+%mvn_build -- -Drequire.snappy=true -Pdist,native -DskipTests -DskipTest -DskipIT
+#mvn-rpmbuild -Drequire.snappy=true -Pdist,native -DskipTests package javadoc:aggregate
 
 # This takes a long time to run, so comment out for now
 #%%check
 #mvn-rpmbuild -Pdist,native test -Dmaven.test.failure.ignore=true
 
 %install
+%mvn_install
+
 install -d -m 0755 %{buildroot}/%{_libdir}
 install -d -m 0755 %{buildroot}/%{_includedir}/%{name}
 install -d -m 0755 %{buildroot}/%{_sharedstatedir}/%{name}-hdfs/webapps
@@ -405,8 +444,6 @@ install -d -m 0755 %{buildroot}/%{_datadir}/%{name}/common/lib
 install -d -m 0755 %{buildroot}/%{_datadir}/%{name}/hdfs/lib
 install -d -m 0755 %{buildroot}/%{_datadir}/%{name}/mapreduce/lib
 install -d -m 0755 %{buildroot}/%{_datadir}/%{name}/yarn/lib
-install -d -m 0755 %{buildroot}/%{_javadir}/%{name}
-install -d -m 0755 %{buildroot}/%{_javadocdir}/%{name}
 install -d -m 0755 %{buildroot}/%{_sysconfdir}/%{name}/tomcat
 install -d -m 0755 %{buildroot}/%{_sysconfdir}/logrotate.d
 install -d -m 0755 %{buildroot}/%{_tmpfilesdir}
@@ -443,17 +480,6 @@ cp -arf $basedir/include/* %{buildroot}/%{_includedir}/%{name}
 cp -arf $basedir/lib/native/*.so* %{buildroot}/%{_libdir}
 cp -af hadoop-hdfs-project/hadoop-hdfs/target/native/main/native/fuse-dfs/fuse_dfs %{buildroot}/%{_bindir}
 
-for dir in `ls $basedir/share/hadoop`
-do
-  if [ $dir == "httpfs" ]
-  then
-    # We need to handle httpfs differently.  We don't want the jar files
-    # (they are copies or incorrect versions), but do want other bits
-    continue
-  fi
-  find $basedir/share/hadoop/$dir -name *-%{hadoop_version}.jar | xargs cp -af -t %{buildroot}/%{_javadir}/%{name}
-done
-
 %if 0%{package_httpfs} == 0
 rm -f %{buildroot}/%{_sbindir}/httpfs.sh
 rm -f %{buildroot}/%{_libexecdir}/httpfs-config.sh
@@ -473,16 +499,12 @@ echo "export YARN_OPTS=\"\$YARN_OPTS -Djavax.xml.parsers.DocumentBuilderFactory=
 for dir in common hdfs mapreduce yarn
 do
   pushd %{buildroot}/%{_datadir}/%{name}/$dir
-    for file in `ls %{buildroot}/%{_javadir}/%{name}/%{name}-$dir-*`
-    do
-      %{__ln_s} %{_javadir}/%{name}/$(basename $file) .
-    done
+    %link_jars %{name}-$dir
   popd
 done
 
 pushd %{buildroot}/%{_datadir}/%{name}/common/lib
-  %{__ln_s} %{_javadir}/%{name}/%{name}-annotations-%{hadoop_version}.jar .
-  %{__ln_s} %{_javadir}/%{name}/%{name}-auth-%{hadoop_version}.jar .
+  %link_jars %{name}-annotations %{name}-auth
   %{_bindir}/build-jar-repository -s . objectweb-asm/asm avalon-framework-api avalon-logkit avro/avro base64 commons-cli commons-codec commons-collections commons-configuration commons-el commons-httpclient commons-io commons-lang commons-logging commons-math3 commons-net guava httpcomponents/httpclient httpcomponents/httpcore istack-commons-runtime jackson/jackson-core-asl jackson/jackson-jaxrs jackson/jackson-mapper-asl jackson/jackson-xc java-xmlbuilder tomcat-servlet-api glassfish-jsp glassfish-jsp-api glassfish-jaxb/jaxb-impl jersey/jersey-core jersey/jersey-json jersey/jersey-server jersey/jersey-servlet jets3t/jets3t jettison jetty/jetty-http jetty/jetty-io jetty/jetty-security jetty/jetty-server jetty/jetty-servlet jetty/jetty-util jetty/jetty-util-ajax jetty/jetty-webapp jetty/jetty-xml jms jsch jsr-305 jsr-311 log4j javamail/mail paranamer/paranamer protobuf relaxngDatatype slf4j/api slf4j/log4j12 snappy-java tomcat/tomcat-el-2.2-api txw2 xmlenc zookeeper
 popd
 
@@ -513,22 +535,16 @@ popd
 %endif
 
 pushd %{buildroot}/%{_datadir}/%{name}/mapreduce
-  %{__ln_s} %{_javadir}/%{name}/%{name}-archives-%{hadoop_version}.jar .
-  %{__ln_s} %{_javadir}/%{name}/%{name}-datajoin-%{hadoop_version}.jar .
-  %{__ln_s} %{_javadir}/%{name}/%{name}-distcp-%{hadoop_version}.jar .
-  %{__ln_s} %{_javadir}/%{name}/%{name}-extras-%{hadoop_version}.jar .
-  %{__ln_s} %{_javadir}/%{name}/%{name}-gridmix-%{hadoop_version}.jar .
-  %{__ln_s} %{_javadir}/%{name}/%{name}-rumen-%{hadoop_version}.jar .
-  %{__ln_s} %{_javadir}/%{name}/%{name}-streaming-%{hadoop_version}.jar .
+  %link_jars %{name}-archives %{name}-datajoin %{name}-distcp %{name}-extras %{name}-gridmix %{name}-rumen %{name}-streaming
 popd
 
 pushd %{buildroot}/%{_datadir}/%{name}/mapreduce/lib
-  %{__ln_s} %{_javadir}/%{name}/%{name}-annotations-%{hadoop_version}.jar .
+  %link_jars %{name}-annotations
   %{_bindir}/build-jar-repository -s . aopalliance atinject objectweb-asm/asm avro/avro commons-io guava google-guice guice/guice-servlet hamcrest/core jackson/jackson-core-asl jackson/jackson-mapper-asl jersey/jersey-core jersey/jersey-guice jersey/jersey-server jersey/jersey-servlet jsr-311 junit jzlib log4j netty paranamer/paranamer protobuf snappy-java
 popd
 
 pushd %{buildroot}/%{_datadir}/%{name}/yarn/lib
-  %{__ln_s} %{_javadir}/%{name}/%{name}-annotations-%{hadoop_version}.jar .
+  %link_jars %{name}-annotations
   %{_bindir}/build-jar-repository -s . aopalliance atinject objectweb-asm/asm avro/avro cglib commons-io guava google-guice guice/guice-servlet hamcrest/core jackson/jackson-core-asl jackson/jackson-mapper-asl jersey/jersey-core jersey/jersey-guice jersey/jersey-server jersey/jersey-servlet jsr-311 junit jzlib log4j netty paranamer/paranamer protobuf snappy-java
 popd
 
@@ -537,9 +553,6 @@ cp -arf $basedir/share/hadoop/hdfs/webapps %{buildroot}/%{_sharedstatedir}/%{nam
 pushd %{buildroot}/%{_datadir}/%{name}/hdfs
   %{__ln_s} %{_sharedstatedir}/%{name}-hdfs/webapps webapps
 popd
-
-# javadocs
-cp -arf target/site/apidocs/* %{buildroot}/%{_javadocdir}/%{name}
 
 # hadoop layout. Convert to appropriate lib location for 32 and 64 bit archs
 lib=$(echo %{?_libdir} | sed -e 's:/usr/\(.*\):\1:')
@@ -609,38 +622,6 @@ sed -i "s|{|%{_var}/log/hadoop-hdfs/*.audit\n{|" %{buildroot}/%{_sysconfdir}/log
 
 # hdfs init script
 install -m 755 %{SOURCE13} %{buildroot}/%{_sbindir}
-
-install -dm 0775 %{buildroot}%{_mavenpomdir}
-for module in hadoop-yarn-project/hadoop-yarn/hadoop-yarn-common \
-            hadoop-yarn-project/hadoop-yarn/hadoop-yarn-client \
-            hadoop-yarn-project/hadoop-yarn/hadoop-yarn-applications/hadoop-yarn-applications-unmanaged-am-launcher \
-            hadoop-yarn-project/hadoop-yarn/hadoop-yarn-applications/hadoop-yarn-applications-distributedshell \
-            hadoop-yarn-project/hadoop-yarn/hadoop-yarn-site \
-            hadoop-yarn-project/hadoop-yarn/hadoop-yarn-api \
-            hadoop-yarn-project/hadoop-yarn/hadoop-yarn-server/hadoop-yarn-server-resourcemanager \
-            hadoop-yarn-project/hadoop-yarn/hadoop-yarn-server/hadoop-yarn-server-nodemanager \
-            hadoop-yarn-project/hadoop-yarn/hadoop-yarn-server/hadoop-yarn-server-tests \
-            hadoop-yarn-project/hadoop-yarn/hadoop-yarn-server/hadoop-yarn-server-web-proxy \
-            hadoop-yarn-project/hadoop-yarn/hadoop-yarn-server/hadoop-yarn-server-common \
-            hadoop-common-project/hadoop-common \
-            hadoop-common-project/hadoop-annotations \
-            hadoop-common-project/hadoop-auth \
-            hadoop-tools/hadoop-rumen hadoop-tools/hadoop-archives \
-            hadoop-tools/hadoop-streaming hadoop-tools/hadoop-distcp \
-            hadoop-tools/hadoop-extras hadoop-tools/hadoop-datajoin\
-            hadoop-tools/hadoop-gridmix \
-            hadoop-mapreduce-project/hadoop-mapreduce-client/hadoop-mapreduce-client-core \
-            hadoop-mapreduce-project/hadoop-mapreduce-client/hadoop-mapreduce-client-app \
-            hadoop-mapreduce-project/hadoop-mapreduce-client/hadoop-mapreduce-client-jobclient \
-            hadoop-mapreduce-project/hadoop-mapreduce-client/hadoop-mapreduce-client-hs \
-            hadoop-mapreduce-project/hadoop-mapreduce-client/hadoop-mapreduce-client-shuffle \
-            hadoop-mapreduce-project/hadoop-mapreduce-client/hadoop-mapreduce-client-common \
-            hadoop-mapreduce-project/hadoop-mapreduce-examples \
-            hadoop-hdfs-project/hadoop-hdfs; do
-  base=`basename $module`
-  install -pm 644 $module/pom.xml %{buildroot}%{_mavenpomdir}/JPP.%{name}-$base-%{hadoop_version}.pom
-  %add_maven_depmap JPP.%{name}-$base-%{hadoop_version}.pom %{name}/$base-%{hadoop_version}.jar -f $base
-done
 
 %pre common
 getent group hadoop >/dev/null || groupadd -r hadoop
@@ -713,7 +694,7 @@ getent passwd yarn >/dev/null || /usr/sbin/useradd --comment "Hadoop Yarn" --she
 %postun yarn
 %systemd_postun_with_restart %{yarn_services}
 
-%files common
+%files -f .mfiles common
 %doc hadoop-dist/target/hadoop-%{hadoop_version}/share/doc/hadoop/common/*
 %config(noreplace) %{_sysconfdir}/%{name}/configuration.xsl
 %config(noreplace) %{_sysconfdir}/%{name}/core-site.xml
@@ -725,16 +706,8 @@ getent passwd yarn >/dev/null || /usr/sbin/useradd --comment "Hadoop Yarn" --she
 %config(noreplace) %{_sysconfdir}/%{name}/slaves
 %config(noreplace) %{_sysconfdir}/%{name}/ssl-client.xml.example
 %config(noreplace) %{_sysconfdir}/%{name}/ssl-server.xml.example
-%{_javadir}/%{name}/%{name}-annotations*.jar
-%{_javadir}/%{name}/%{name}-auth*.jar
-%{_javadir}/%{name}/%{name}-common*.jar
+%dir %{_datadir}/%{name}
 %{_datadir}/%{name}/common
-%{_mavenpomdir}/JPP.%{name}-%{name}-annotations*.pom
-%{_mavenpomdir}/JPP.%{name}-%{name}-auth*.pom
-%{_mavenpomdir}/JPP.%{name}-%{name}-common*.pom
-%{_mavendepmapfragdir}/%{name}-%{name}-annotations*
-%{_mavendepmapfragdir}/%{name}-%{name}-auth*
-%{_mavendepmapfragdir}/%{name}-%{name}-common*
 %{_libexecdir}/%{name}-config.sh
 %{_libexecdir}/%{name}-layout.sh
 %{_bindir}/%{name}
@@ -756,13 +729,10 @@ getent passwd yarn >/dev/null || /usr/sbin/useradd --comment "Hadoop Yarn" --she
 %doc hadoop-dist/target/hadoop-%{hadoop_version}/share/doc/hadoop/common/*
 %{_includedir}/%{name}
 
-%files hdfs
+%files -f .mfiles-hadoop-hdfs hdfs
 %doc hadoop-dist/target/hadoop-%{hadoop_version}/share/doc/hadoop/hdfs/*
 %config(noreplace) %{_sysconfdir}/%{name}/hdfs-site.xml
 %config(noreplace) %{_sysconfdir}/security/limits.d/hdfs.conf
-%{_javadir}/%{name}/%{name}-hdfs*.jar
-%{_mavenpomdir}/JPP.%{name}-%{name}-hdfs*.pom
-%{_mavendepmapfragdir}/%{name}-%{name}-hdfs*
 %{_datadir}/%{name}/hdfs
 %{_sharedstatedir}/%{name}-hdfs
 %{_unitdir}/%{name}-datanode.service
@@ -805,46 +775,29 @@ getent passwd yarn >/dev/null || /usr/sbin/useradd --comment "Hadoop Yarn" --she
 %attr(0755,httpfs,httpfs) %dir %{_var}/log/%{name}-httpfs
 %endif
 
-%files javadoc
-%doc hadoop-dist/target/hadoop-%{hadoop_version}/share/doc/hadoop/common/*
-%doc %{_javadocdir}/%{name}
+%files -f .mfiles-javadoc javadoc
 
 %files libhdfs
 %doc hadoop-dist/target/hadoop-%{hadoop_version}/share/doc/hadoop/hdfs/*
 %{_libdir}/libhdfs*
 
-%files mapreduce
+%files -f .mfiles-hadoop-mapreduce mapreduce
 %doc hadoop-dist/target/hadoop-%{hadoop_version}/share/doc/hadoop/mapreduce/*
 %config(noreplace) %{_sysconfdir}/%{name}/mapred-env.sh
 %config(noreplace) %{_sysconfdir}/%{name}/mapred-queues.xml.template
 %config(noreplace) %{_sysconfdir}/%{name}/mapred-site.xml
 %config(noreplace) %{_sysconfdir}/%{name}/mapred-site.xml.template
 %config(noreplace) %{_sysconfdir}/security/limits.d/mapreduce.conf
-%{_datadir}/%{name}/mapreduce
-%{_javadir}/%{name}/%{name}-mapreduce-client*.jar
-%{_javadir}/%{name}/%{name}-archives*.jar
-%{_javadir}/%{name}/%{name}-datajoin*.jar
-%{_javadir}/%{name}/%{name}-distcp*.jar
-%{_javadir}/%{name}/%{name}-extras*.jar
-%{_javadir}/%{name}/%{name}-gridmix*.jar
-%{_javadir}/%{name}/%{name}-rumen*.jar
-%{_javadir}/%{name}/%{name}-streaming*.jar
-%{_mavenpomdir}/JPP.%{name}-%{name}-mapreduce-client*.pom
-%{_mavenpomdir}/JPP.%{name}-%{name}-archives*.pom
-%{_mavenpomdir}/JPP.%{name}-%{name}-datajoin*.pom
-%{_mavenpomdir}/JPP.%{name}-%{name}-distcp*.pom
-%{_mavenpomdir}/JPP.%{name}-%{name}-extras*.pom
-%{_mavenpomdir}/JPP.%{name}-%{name}-gridmix*.pom
-%{_mavenpomdir}/JPP.%{name}-%{name}-rumen*.pom
-%{_mavenpomdir}/JPP.%{name}-%{name}-streaming*.pom
-%{_mavendepmapfragdir}/%{name}-%{name}-mapreduce-client*
-%{_mavendepmapfragdir}/%{name}-%{name}-archives*
-%{_mavendepmapfragdir}/%{name}-%{name}-datajoin*
-%{_mavendepmapfragdir}/%{name}-%{name}-distcp*
-%{_mavendepmapfragdir}/%{name}-%{name}-extras*
-%{_mavendepmapfragdir}/%{name}-%{name}-gridmix*
-%{_mavendepmapfragdir}/%{name}-%{name}-rumen*
-%{_mavendepmapfragdir}/%{name}-%{name}-streaming*
+%dir %{_datadir}/%{name}/mapreduce
+%{_datadir}/%{name}/mapreduce/%{name}-archives*
+%{_datadir}/%{name}/mapreduce/%{name}-datajoin*
+%{_datadir}/%{name}/mapreduce/%{name}-distcp*
+%{_datadir}/%{name}/mapreduce/%{name}-extras*
+%{_datadir}/%{name}/mapreduce/%{name}-gridmix*
+%{_datadir}/%{name}/mapreduce/%{name}-mapreduce-client*
+%{_datadir}/%{name}/mapreduce/%{name}-rumen*
+%{_datadir}/%{name}/mapreduce/%{name}-streaming*
+%{_datadir}/%{name}/mapreduce/lib
 %{_libexecdir}/mapred-config.sh
 %{_unitdir}/%{name}-historyserver.service
 %{_bindir}/mapred
@@ -855,13 +808,11 @@ getent passwd yarn >/dev/null || /usr/sbin/useradd --comment "Hadoop Yarn" --she
 %attr(0755,mapred,hadoop) %dir %{_var}/log/%{name}-mapreduce
 %attr(0755,mapred,hadoop) %dir %{_var}/cache/%{name}-mapreduce
 
-%files mapreduce-examples
+%files -f .mfiles-hadoop-mapreduce-examples mapreduce-examples
 %doc hadoop-dist/target/hadoop-%{hadoop_version}/share/doc/hadoop/mapreduce/*
-%{_javadir}/%{name}/%{name}-mapreduce-examples*.jar
-%{_mavenpomdir}/JPP.%{name}-%{name}-mapreduce-examples*.pom
-%{_mavendepmapfragdir}/%{name}-%{name}-mapreduce-examples*
+%{_datadir}/%{name}/mapreduce/%{name}-mapreduce-examples*
 
-%files yarn
+%files -f .mfiles-hadoop-yarn yarn
 %doc hadoop-dist/target/hadoop-%{hadoop_version}/share/doc/hadoop/yarn/*
 %config(noreplace) %{_sysconfdir}/%{name}/capacity-scheduler.xml
 %config(noreplace) %{_sysconfdir}/%{name}/container-executor.cfg
@@ -872,10 +823,7 @@ getent passwd yarn >/dev/null || /usr/sbin/useradd --comment "Hadoop Yarn" --she
 %{_unitdir}/%{name}-proxyserver.service
 %{_unitdir}/%{name}-resourcemanager.service
 %{_libexecdir}/yarn-config.sh
-%{_javadir}/%{name}/%{name}-yarn*.jar
 %{_datadir}/%{name}/yarn
-%{_mavenpomdir}/JPP.%{name}-%{name}-yarn*.pom
-%{_mavendepmapfragdir}/%{name}-%{name}-yarn*
 %attr(6050,root,yarn) %{_bindir}/container-executor
 %{_bindir}/yarn
 %{_sbindir}/yarn-daemon.sh
