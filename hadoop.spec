@@ -56,7 +56,9 @@ Patch0: hadoop-fedora-integration.patch
 # Remove the kfs dependency (https://issues.apache.org/jira/browse/HADOOP-8886)
 Patch1: hadoop-8886.patch
 BuildRequires: ant
+BuildRequires: antlr-tool
 BuildRequires: aopalliance
+BuildRequires: apache-commons-beanutils
 BuildRequires: apache-commons-cli
 BuildRequires: apache-commons-collections
 BuildRequires: apache-commons-configuration
@@ -73,6 +75,7 @@ BuildRequires: avalon-framework
 BuildRequires: avalon-logkit
 BuildRequires: avro
 BuildRequires: bookkeeper-java
+BuildRequires: checkstyle
 BuildRequires: cmake
 BuildRequires: commons-codec
 BuildRequires: commons-httpclient
@@ -110,6 +113,7 @@ BuildRequires: jettison
 # May need to break down into specific jetty rpms
 BuildRequires: jetty
 BuildRequires: jetty-util-ajax
+BuildRequires: jline
 BuildRequires: jsch
 BuildRequires: json_simple
 BuildRequires: jspc
@@ -144,6 +148,7 @@ BuildRequires: mockito
 BuildRequires: native-maven-plugin
 BuildRequires: netty
 BuildRequires: objectweb-asm
+BuildRequires: objenesis
 BuildRequires: openssl-devel
 BuildRequires: paranamer
 BuildRequires: protobuf-compiler
@@ -176,6 +181,8 @@ offering local computation and storage.
 Summary: Common files needed by hadoop daemons
 Group: Applications/System
 Requires: /usr/sbin/useradd
+Requires: antlr-tool
+Requires: apache-commons-beanutils
 Requires: apache-commons-cli
 Requires: apache-commons-codec
 Requires: apache-commons-collections
@@ -189,6 +196,8 @@ Requires: apache-commons-net
 Requires: avalon-framework
 Requires: avalon-logkit
 Requires: avro
+Requires: cglib
+Requires: checkstyle
 Requires: commons-httpclient
 Requires: coreutils
 Requires: geronimo-jms
@@ -203,6 +212,7 @@ Requires: jackson
 Requires: java
 Requires: java-base64
 Requires: java-xmlbuilder
+Requires: javamail
 Requires: jersey
 Requires: jets3t
 Requires: jettison
@@ -215,13 +225,17 @@ Requires: jetty-util
 Requires: jetty-util-ajax
 Requires: jetty-webapp
 Requires: jetty-xml
+Requires: jline
 Requires: jsch
 Requires: jsr-305
 Requires: jsr-311
+Requires: jzlib
 Requires: log4j
+Requires: mockito
 Requires: nc6
-Requires: javamail
+Requires: netty
 Requires: objectweb-asm
+Requires: objenesis
 Requires: paranamer
 Requires: protobuf-java
 Requires: relaxngDatatype
@@ -361,14 +375,11 @@ Requires: %{name}-common = %{version}-%{release}
 Requires(pre): %{name}-common = %{version}-%{release}
 Requires: aopalliance
 Requires: atinject
-Requires: cglib
 Requires: google-guice
 Requires: guice-servlet
 Requires: hamcrest
 Requires: jersey-contribs
 Requires: junit
-Requires: jzlib
-Requires: netty
 Requires(post): systemd
 Requires(preun): systemd
 Requires(postun): systemd
@@ -505,11 +516,11 @@ done
 
 pushd %{buildroot}/%{_datadir}/%{name}/common/lib
   %link_jars %{name}-annotations %{name}-auth
-  %{_bindir}/build-jar-repository -s . objectweb-asm/asm avalon-framework-api avalon-logkit avro/avro base64 commons-cli commons-codec commons-collections commons-configuration commons-el commons-httpclient commons-io commons-lang commons-logging commons-math3 commons-net guava httpcomponents/httpclient httpcomponents/httpcore istack-commons-runtime jackson/jackson-core-asl jackson/jackson-jaxrs jackson/jackson-mapper-asl jackson/jackson-xc java-xmlbuilder tomcat-servlet-api glassfish-jsp glassfish-jsp-api glassfish-jaxb/jaxb-impl jersey/jersey-core jersey/jersey-json jersey/jersey-server jersey/jersey-servlet jets3t/jets3t jettison jetty/jetty-http jetty/jetty-io jetty/jetty-security jetty/jetty-server jetty/jetty-servlet jetty/jetty-util jetty/jetty-util-ajax jetty/jetty-webapp jetty/jetty-xml jms jsch jsr-305 jsr-311 log4j javamail/mail paranamer/paranamer protobuf relaxngDatatype slf4j/api slf4j/log4j12 snappy-java tomcat/tomcat-el-2.2-api txw2 xmlenc zookeeper
+  %{_bindir}/build-jar-repository -s . antlr objectweb-asm/asm avalon-framework-api avalon-logkit avro/avro base64 cglib checkstyle commons-beanutils-core commons-cli commons-codec commons-collections commons-configuration commons-el commons-httpclient commons-io commons-lang commons-logging commons-math3 commons-net guava httpcomponents/httpclient httpcomponents/httpcore istack-commons-runtime jackson/jackson-core-asl jackson/jackson-jaxrs jackson/jackson-mapper-asl jackson/jackson-xc java-xmlbuilder tomcat-servlet-api glassfish-jsp glassfish-jsp-api glassfish-jaxb/jaxb-impl jersey/jersey-core jersey/jersey-json jersey/jersey-server jersey/jersey-servlet jets3t/jets3t jettison jetty/jetty-http jetty/jetty-io jetty/jetty-security jetty/jetty-server jetty/jetty-servlet jetty/jetty-util jetty/jetty-util-ajax jetty/jetty-webapp jetty/jetty-xml jline jms jsch jsr-305 jsr-311 jzlib log4j javamail/mail mockito netty objenesis paranamer/paranamer protobuf relaxngDatatype slf4j/api slf4j/log4j12 snappy-java tomcat/tomcat-el-2.2-api txw2 xmlenc zookeeper/zookeeper
 popd
 
 pushd %{buildroot}/%{_datadir}/%{name}/hdfs/lib
-  %{_bindir}/build-jar-repository -s . objectweb-asm/asm avalon-framework-api avalon-logkit commons-cli commons-codec commons-daemon commons-io commons-lang commons-logging guava jackson/jackson-core-asl jackson/jackson-mapper-asl tomcat-servlet-api jersey/jersey-core jersey/jersey-server jetty/jetty-http jetty/jetty-io jetty/jetty-server jetty/jetty-util jsr-311 log4j javamail/mail protobuf xmlenc
+  %{_bindir}/build-jar-repository -s . antlr objectweb-asm/asm avalon-framework-api avalon-logkit cglib checkstyle commons-beanutils-core commons-cli commons-codec commons-daemon commons-io commons-lang commons-logging guava jackson/jackson-core-asl jackson/jackson-mapper-asl tomcat-servlet-api jersey/jersey-core jersey/jersey-server jetty/jetty-http jetty/jetty-io jetty/jetty-server jetty/jetty-util jline jms jsr-311 jzlib log4j javamail/mail mockito netty objenesis protobuf slf4j/api xmlenc zookeeper/zookeeper
 popd
 
 %if %{package_httpfs}
