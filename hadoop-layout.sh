@@ -2,7 +2,7 @@ export HADOOP_PREFIX=/usr
 export HADOOP_COMMON_HOME=/usr
 export HADOOP_COMMON_DIR=share/hadoop/common
 export HADOOP_COMMON_LIB_JARS_DIR=share/hadoop/common/lib
-export HADOOP_COMMON_LIB_NATIVE_DIR=lib
+export HADOOP_COMMON_LIB_NATIVE_DIR=lib/hadoop
 export HADOOP_CONF_DIR=/etc/hadoop
 export HADOOP_LIBEXEC_DIR=/usr/libexec
 

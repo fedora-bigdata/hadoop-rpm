@@ -1,3 +1,5 @@
+%global _hardened_build 1
+
 # Currently disabled because httpfs doesn't play well with the directory
 # layout and isn't flexible enough to allow customization.
 %global package_httpfs 0
@@ -11,12 +13,14 @@
 %global yarn_services hadoop-proxyserver.service hadoop-resourcemanager.service hadoop-nodemanager.service
 %global httpfs_services hadoop-httpfs.service
 
-%global link_jars()\
-for jar in %* \
+%define link_jars(d:f:)\
+for pattern in %* \
 do \
-  for file in `ls %{buildroot}/%{_javadir}/%{name}/$jar*` \
+  for file in `%{_bindir}/build-classpath $pattern | tr ":" "\\n"` \
   do \
-    %{__ln_s} %{_javadir}/%{name}/$(basename $file) . \
+    %{__ln_s} $file %{buildroot}/%{-d*} \
+    f=$(basename $file) \
+    echo "%{-d*}/$(basename $file)" >> %{-f*} \
   done \
 done \
 %{nil}
@@ -55,6 +59,7 @@ Source13: hdfs-create-dirs
 Patch0: hadoop-fedora-integration.patch
 # Remove the kfs dependency (https://issues.apache.org/jira/browse/HADOOP-8886)
 Patch1: hadoop-8886.patch
+Patch2: hadoop-jni-library-loading.patch
 BuildRequires: ant
 BuildRequires: antlr-tool
 BuildRequires: aopalliance
@@ -75,6 +80,7 @@ BuildRequires: avalon-framework
 BuildRequires: avalon-logkit
 BuildRequires: avro
 BuildRequires: bookkeeper-java
+BuildRequires: cglib
 BuildRequires: checkstyle
 BuildRequires: cmake
 BuildRequires: commons-codec
@@ -180,6 +186,7 @@ offering local computation and storage.
 %package common
 Summary: Common files needed by hadoop daemons
 Group: Applications/System
+BuildArch: noarch
 Requires: /usr/sbin/useradd
 Requires: antlr-tool
 Requires: apache-commons-beanutils
@@ -196,7 +203,6 @@ Requires: apache-commons-net
 Requires: avalon-framework
 Requires: avalon-logkit
 Requires: avro
-Requires: cglib
 Requires: checkstyle
 Requires: commons-httpclient
 Requires: coreutils
@@ -229,7 +235,6 @@ Requires: jline
 Requires: jsch
 Requires: jsr-305
 Requires: jsr-311
-Requires: jzlib
 Requires: log4j
 Requires: mockito
 Requires: nc6
@@ -252,12 +257,27 @@ Requires: zookeeper-java
 Hadoop is a framework that allows for the distributed processing of large data
 sets across clusters of computers using simple programming models.  It is
 designed to scale up from single servers to thousands of machines, each
-offering local computation and storage.  The hadoop-common package contains
-common files and utilities needed by other Hadoop modules.
+offering local computation and storage.
+
+This package contains common files and utilities needed by other Hadoop modules.
+
+%package common-native
+Summary: The native Hadoop library file
+Group: Applications/System
+Requires: %{name}-common = %{version}-%{release}
+
+%description common-native
+Hadoop is a framework that allows for the distributed processing of large data
+sets across clusters of computers using simple programming models.  It is
+designed to scale up from single servers to thousands of machines, each
+offering local computation and storage.
+
+This package contains the native-hadoop library
 
 %package devel
 Summary: Headers for Hadoop
 Group: Development/System
+BuildArch: noarch
 Requires: %{name}-libhdfs = %{version}-%{release}
 
 %description devel
@@ -266,6 +286,7 @@ Header files for Hadoop's libhdfs library and other utilities
 %package hdfs
 Summary: The Hadoop Distributed File System
 Group: Applications/System
+BuildArch: noarch
 Requires: %{name}-common = %{version}-%{release}
 Requires(pre): %{name}-common = %{version}-%{release}
 Requires: apache-commons-daemon
@@ -278,8 +299,10 @@ Requires(postun): systemd
 Hadoop is a framework that allows for the distributed processing of large data
 sets across clusters of computers using simple programming models.  It is
 designed to scale up from single servers to thousands of machines, each
-offering local computation and storage.  The Hadoop Distributed File System
-(HDFS) is the primary storage system used by Hadoop applications.
+offering local computation and storage.
+
+The Hadoop Distributed File System (HDFS) is the primary storage system
+used by Hadoop applications.
 
 %package hdfs-fuse
 Summary: Allows mounting of Hadoop HDFS
@@ -295,13 +318,16 @@ Requires: fuse
 Hadoop is a framework that allows for the distributed processing of large data
 sets across clusters of computers using simple programming models.  It is
 designed to scale up from single servers to thousands of machines, each
-offering local computation and storage.  This package provides tools that
-allow HDFS to be mounted as a standard file system through fuse.
+offering local computation and storage.
+
+This package provides tools that allow HDFS to be mounted as a standard
+file system through fuse.
 
 %if %{package_httpfs}
 %package httpfs
 Summary: Provides web access to HDFS
 Group: Applications/System
+BuildArch: noarch
 Requires: %{name}-hdfs = %{version}-%{release}
 Requires: apache-commons-dbcp
 Requires: ecj >= 1:4.2.1-6
@@ -315,15 +341,16 @@ Requires(postun): systemd
 Hadoop is a framework that allows for the distributed processing of large data
 sets across clusters of computers using simple programming models.  It is
 designed to scale up from single servers to thousands of machines, each
-offering local computation and storage.  This package provides a server
-that provides HTTP REST API support for the complete FileSystem/FileContext
-interface in HDFS.
+offering local computation and storage.
+
+This package provides a server that provides HTTP REST API support for
+the complete FileSystem/FileContext interface in HDFS.
 %endif
 
 %package javadoc
 Summary: Javadoc for Hadoop
 Group: Documentation
-Requires: jpackage-utils
+BuildArch: noarch
 
 %description javadoc
 This package contains the API documentation for %{name}
@@ -333,18 +360,19 @@ Summary: The Hadoop Filesystem Library
 Group: Development/Libraries
 Requires: %{name}-hdfs = %{version}-%{release}
 Requires: lzo
-Requires: zlib
 
 %description libhdfs
 Hadoop is a framework that allows for the distributed processing of large data
 sets across clusters of computers using simple programming models.  It is
 designed to scale up from single servers to thousands of machines, each
-offering local computation and storage.  This package provides the Hadoop
-Filesystem Library
+offering local computation and storage.
+
+This package provides the Hadoop Filesystem Library.
 
 %package mapreduce
 Summary: Hadoop MapReduce (MRv2)
 Group: Applications/System
+BuildArch: noarch
 Requires: %{name}-yarn = %{version}-%{release}
 Requires(pre): %{name}-common = %{version}-%{release}
 Requires(post): systemd
@@ -355,22 +383,34 @@ Requires(postun): systemd
 Hadoop is a framework that allows for the distributed processing of large data
 sets across clusters of computers using simple programming models.  It is
 designed to scale up from single servers to thousands of machines, each
-offering local computation and storage.  Hadoop MapReduce is a programming
-model and software framework for writing applications that rapidly process vast
-amounts of data in parallel on large clusters of compute nodes.
+offering local computation and storage.
+
+This package provides Hadoop MapReduce (MRv2).
 
 %package mapreduce-examples
 Summary: Hadoop MapReduce (MRv2) examples
 Group: Applications/System
+BuildArch: noarch
 Requires: %{name}-mapreduce = %{version}-%{release}
 Requires: hsqldb
 
 %description mapreduce-examples
 This package contains mapreduce examples.
 
+%package -n maven-plugin-hadoop
+Summary: Apache Hadoop maven plugin
+Group: Development/Libraries
+BuildArch: noarch
+Requires: maven
+Requires: java
+
+%description -n maven-plugin-hadoop
+The Hadoop maven plugin
+
 %package yarn
 Summary: Hadoop YARN
 Group: Applications/System
+BuildArch: noarch
 Requires: %{name}-common = %{version}-%{release}
 Requires(pre): %{name}-common = %{version}-%{release}
 Requires: aopalliance
@@ -388,13 +428,29 @@ Requires(postun): systemd
 Hadoop is a framework that allows for the distributed processing of large data
 sets across clusters of computers using simple programming models.  It is
 designed to scale up from single servers to thousands of machines, each
+offering local computation and storage.
+
+This package contains Hadoop YARN.
+
+%package yarn-security
+Summary: The ability to run Hadoop YARN in secure mode
+Group: Applications/System
+Requires: %{name}-yarn = %{version}-%{release}
+
+%description yarn-security
+Hadoop is a framework that allows for the distributed processing of large data
+sets across clusters of computers using simple programming models.  It is
+designed to scale up from single servers to thousands of machines, each
 offering local computation and storage.  YARN (Hadoop NextGen MapReduce) is
 a general purpose data-computation framework.
+
+This package contains files needed to run Hadoop YARN in secure mode.
 
 %prep
 %setup -qn %{name}-common-%{commit}
 %patch0 -p1
 %patch1 -p0
+%patch2 -p1
 
 # The hadoop test suite needs classes from the zookeeper test suite.
 # We need to modify the deps to use the pom for the zookeeper-test jar
@@ -415,14 +471,16 @@ a general purpose data-computation framework.
 %mvn_package org.apache.hadoop:hadoop-auth-examples __noinstall
 %mvn_package org.apache.hadoop:hadoop-hdfs-httpfs __noinstall
 
-# We don't want these jars either
+# We don't want these jars either because they are empty
 %mvn_package org.apache.hadoop:hadoop-assemblies __noinstall
 %mvn_package org.apache.hadoop:hadoop-client __noinstall
 %mvn_package org.apache.hadoop:hadoop-dist __noinstall
-%mvn_package org.apache.hadoop:hadoop-maven-plugins __noinstall
 %mvn_package org.apache.hadoop:hadoop-minicluster __noinstall
 %mvn_package org.apache.hadoop:hadoop-tools-dist __noinstall
 %mvn_package org.apache.hadoop:hadoop-yarn-server-tests __noinstall
+
+# Parts we don't want to distribute
+%mvn_package :hadoop-hdfs-bkjournal __noinstall
 
 # Create separate file lists for packaging
 %mvn_package ":%{name}-hdfs*" hadoop-hdfs
@@ -435,11 +493,32 @@ a general purpose data-computation framework.
 %mvn_package ":%{name}-rumen*" hadoop-mapreduce
 %mvn_package ":%{name}-streaming*" hadoop-mapreduce
 %mvn_package ":%{name}-mapreduce-examples*" hadoop-mapreduce-examples
+%mvn_package ":%{name}-maven-plugins" maven-plugin-hadoop
 %mvn_package ":%{name}-yarn*" hadoop-yarn
 
+# Workaround for BZ986909
+%mvn_package :%{name}-common __noinstall
+
+# Jar files for common
+# Workaround for BZ986909
+#%%mvn_file ":%{name}-common" %{_jnidir}/%{name}-common %{_datadir}/%{name}/common/%{name}-common
+%mvn_file ":{%{name}-{annotations,auth}}" %{name}/@1 %{_datadir}/%{name}/common/lib/@1
+
+# Jar files for hdfs
+%mvn_file ":%{name}-hdfs" %{name}/%{name}-hdfs %{_datadir}/%{name}/hdfs/%{name}-hdfs
+
+# Jar files for mapreduce
+%mvn_file ":{%{name}-mapreduce-client-*}" %{name}/@1 %{_datadir}/%{name}/mapreduce/@1
+%mvn_file ":{%{name}-{archives,datajoin,distcp,extras,gridmix,rumen,streaming}}" %{name}/@1 %{_datadir}/%{name}/mapreduce/@1
+
+# Jar files for mapreduce-examples
+%mvn_file ":%{name}-mapreduce-examples" %{name}/%{name}-mapreduce-examples %{_datadir}/%{name}/mapreduce/%{name}-mapreduce-examples
+
+# Jar files for yarn
+%mvn_file ":{%{name}-yarn-*}" %{name}/@1 %{_datadir}/%{name}/yarn/@1
+
 %build
-%mvn_build -- -Drequire.snappy=true -Pdist,native -DskipTests -DskipTest -DskipIT
-#mvn-rpmbuild -Drequire.snappy=true -Pdist,native -DskipTests package javadoc:aggregate
+%mvn_build -- -Drequire.snappy=true -Dcontainer-executor.conf.dir=%{_sysconfdir}/hadoop -Pdist,native -DskipTests -DskipTest -DskipIT
 
 # This takes a long time to run, so comment out for now
 #%%check
@@ -448,8 +527,9 @@ a general purpose data-computation framework.
 %install
 %mvn_install
 
-install -d -m 0755 %{buildroot}/%{_libdir}
+install -d -m 0755 %{buildroot}/%{_libdir}/%{name}
 install -d -m 0755 %{buildroot}/%{_includedir}/%{name}
+install -d -m 0755 %{buildroot}/%{_jnidir}/
 install -d -m 0755 %{buildroot}/%{_sharedstatedir}/%{name}-hdfs/webapps
 install -d -m 0755 %{buildroot}/%{_datadir}/%{name}/common/lib
 install -d -m 0755 %{buildroot}/%{_datadir}/%{name}/hdfs/lib
@@ -486,9 +566,12 @@ done
 # We don't care about this
 rm -f %{buildroot}/%{_bindir}/test-container-executor
 
+# Duplicate files
+rm -f %{buildroot}/%{_sbindir}/hdfs-config.sh
+
 cp -arf $basedir/etc %{buildroot}
 cp -arf $basedir/include/* %{buildroot}/%{_includedir}/%{name}
-cp -arf $basedir/lib/native/*.so* %{buildroot}/%{_libdir}
+cp -arf $basedir/lib/native/*.so* %{buildroot}/%{_libdir}/%{name}
 cp -af hadoop-hdfs-project/hadoop-hdfs/target/native/main/native/fuse-dfs/fuse_dfs %{buildroot}/%{_bindir}
 
 %if 0%{package_httpfs} == 0
@@ -506,22 +589,20 @@ sed -i "s|\${JSVC_HOME}|/usr/bin|" %{buildroot}/%{_sysconfdir}/%{name}/hadoop-en
 sed -i "s|\(HADOOP_OPTS.*=.*\)\$HADOOP_CLIENT_OPTS|\1 -Djavax.xml.parsers.DocumentBuilderFactory=com.sun.org.apache.xerces.internal.jaxp.DocumentBuilderFactoryImpl \$HADOOP_CLIENT_OPTS|" %{buildroot}/%{_sysconfdir}/%{name}/hadoop-env.sh
 echo "export YARN_OPTS=\"\$YARN_OPTS -Djavax.xml.parsers.DocumentBuilderFactory=com.sun.org.apache.xerces.internal.jaxp.DocumentBuilderFactoryImpl\"" >> %{buildroot}/%{_sysconfdir}/%{name}/yarn-env.sh
 
-# /usr/share file structure
-for dir in common hdfs mapreduce yarn
-do
-  pushd %{buildroot}/%{_datadir}/%{name}/$dir
-    %link_jars %{name}-$dir
-  popd
-done
-
-pushd %{buildroot}/%{_datadir}/%{name}/common/lib
-  %link_jars %{name}-annotations %{name}-auth
-  %{_bindir}/build-jar-repository -s . antlr objectweb-asm/asm avalon-framework-api avalon-logkit avro/avro base64 cglib checkstyle commons-beanutils-core commons-cli commons-codec commons-collections commons-configuration commons-el commons-httpclient commons-io commons-lang commons-logging commons-math3 commons-net guava httpcomponents/httpclient httpcomponents/httpcore istack-commons-runtime jackson/jackson-core-asl jackson/jackson-jaxrs jackson/jackson-mapper-asl jackson/jackson-xc java-xmlbuilder tomcat-servlet-api glassfish-jsp glassfish-jsp-api glassfish-jaxb/jaxb-impl jersey/jersey-core jersey/jersey-json jersey/jersey-server jersey/jersey-servlet jets3t/jets3t jettison jetty/jetty-http jetty/jetty-io jetty/jetty-security jetty/jetty-server jetty/jetty-servlet jetty/jetty-util jetty/jetty-util-ajax jetty/jetty-webapp jetty/jetty-xml jline jms jsch jsr-305 jsr-311 jzlib log4j javamail/mail mockito netty objenesis paranamer/paranamer protobuf relaxngDatatype slf4j/api slf4j/log4j12 snappy-java tomcat/tomcat-el-2.2-api txw2 xmlenc zookeeper/zookeeper
+# Workaround for BZ986909
+# hadoop-common uses JNI so needs to be handled separately
+cp -arf $basedir/share/hadoop/common/%{name}-common-%{hadoop_version}.jar %{buildroot}/%{_jnidir}/%{name}-common.jar
+pushd %{buildroot}/%{_datadir}/%{name}/common
+  %{__ln_s} %{_jnidir}/%{name}-common.jar .
 popd
+install -pm 664 hadoop-common-project/hadoop-common/pom.xml %{buildroot}%{_mavenpomdir}/JPP-%{name}-common.pom
+%add_maven_depmap JPP-%{name}-common.pom %{name}-common.jar -f hadoop-common
 
-pushd %{buildroot}/%{_datadir}/%{name}/hdfs/lib
-  %{_bindir}/build-jar-repository -s . antlr objectweb-asm/asm avalon-framework-api avalon-logkit cglib checkstyle commons-beanutils-core commons-cli commons-codec commons-daemon commons-io commons-lang commons-logging guava jackson/jackson-core-asl jackson/jackson-mapper-asl tomcat-servlet-api jersey/jersey-core jersey/jersey-server jetty/jetty-http jetty/jetty-io jetty/jetty-server jetty/jetty-util jline jms jsr-311 jzlib log4j javamail/mail mockito netty objenesis protobuf slf4j/api xmlenc zookeeper/zookeeper
-popd
+# common jar depenencies
+%link_jars -d %{_datadir}/%{name}/common/lib -f .mfiles antlr objectweb-asm/asm avalon-framework-api avalon-logkit avro/avro base64 cglib checkstyle commons-beanutils-core commons-cli commons-codec commons-collections commons-configuration commons-el commons-httpclient commons-io commons-lang commons-logging commons-math3 commons-net guava httpcomponents/httpclient httpcomponents/httpcore istack-commons-runtime jackson/jackson-core-asl jackson/jackson-jaxrs jackson/jackson-mapper-asl jackson/jackson-xc java-xmlbuilder tomcat-servlet-api glassfish-jsp glassfish-jsp-api glassfish-jaxb/jaxb-impl jersey/jersey-core jersey/jersey-json jersey/jersey-server jersey/jersey-servlet jets3t/jets3t jettison jetty/jetty-http jetty/jetty-io jetty/jetty-security jetty/jetty-server jetty/jetty-servlet jetty/jetty-util jetty/jetty-util-ajax jetty/jetty-webapp jetty/jetty-xml jline jms jsch jsr-305 jsr-311 jzlib log4j javamail/mail mockito netty objenesis paranamer/paranamer protobuf relaxngDatatype slf4j/api slf4j/log4j12 snappy-java tomcat/tomcat-el-2.2-api txw2 xmlenc zookeeper/zookeeper
+
+# hdfs jar dependencies
+%link_jars -d %{_datadir}/%{name}/hdfs/lib -f .mfiles-hadoop-hdfs antlr objectweb-asm/asm avalon-framework-api avalon-logkit cglib checkstyle commons-beanutils-core commons-cli commons-codec commons-daemon commons-io commons-lang commons-logging guava jackson/jackson-core-asl jackson/jackson-mapper-asl tomcat-servlet-api jersey/jersey-core jersey/jersey-server jetty/jetty-http jetty/jetty-io jetty/jetty-server jetty/jetty-util jline jms jsr-311 jzlib log4j javamail/mail mockito netty objenesis protobuf slf4j/api xmlenc zookeeper/zookeeper
 
 %if %{package_httpfs}
 # httpfs
@@ -545,19 +626,11 @@ pushd %{buildroot}/%{_datadir}/%{name}/httpfs/tomcat
 popd
 %endif
 
-pushd %{buildroot}/%{_datadir}/%{name}/mapreduce
-  %link_jars %{name}-archives %{name}-datajoin %{name}-distcp %{name}-extras %{name}-gridmix %{name}-rumen %{name}-streaming
-popd
+# mapreduce jar dependencies
+%link_jars -d %{_datadir}/%{name}/mapreduce/lib -f .mfiles-hadoop-mapreduce aopalliance atinject objectweb-asm/asm avro/avro commons-io guava google-guice guice/guice-servlet %{name}/%{name}-annotations hamcrest/core jackson/jackson-core-asl jackson/jackson-mapper-asl jersey/jersey-core jersey/jersey-guice jersey/jersey-server jersey/jersey-servlet jsr-311 junit jzlib log4j netty paranamer/paranamer protobuf snappy-java
 
-pushd %{buildroot}/%{_datadir}/%{name}/mapreduce/lib
-  %link_jars %{name}-annotations
-  %{_bindir}/build-jar-repository -s . aopalliance atinject objectweb-asm/asm avro/avro commons-io guava google-guice guice/guice-servlet hamcrest/core jackson/jackson-core-asl jackson/jackson-mapper-asl jersey/jersey-core jersey/jersey-guice jersey/jersey-server jersey/jersey-servlet jsr-311 junit jzlib log4j netty paranamer/paranamer protobuf snappy-java
-popd
-
-pushd %{buildroot}/%{_datadir}/%{name}/yarn/lib
-  %link_jars %{name}-annotations
-  %{_bindir}/build-jar-repository -s . aopalliance atinject objectweb-asm/asm avro/avro cglib commons-io guava google-guice guice/guice-servlet hamcrest/core jackson/jackson-core-asl jackson/jackson-mapper-asl jersey/jersey-core jersey/jersey-guice jersey/jersey-server jersey/jersey-servlet jsr-311 junit jzlib log4j netty paranamer/paranamer protobuf snappy-java
-popd
+# yarn jar dependencies
+%link_jars -d %{_datadir}/%{name}/yarn/lib -f .mfiles-hadoop-yarn aopalliance atinject objectweb-asm/asm avro/avro cglib commons-io guava google-guice guice/guice-servlet %{name}/%{name}-annotations hamcrest/core jackson/jackson-core-asl jackson/jackson-mapper-asl jersey/jersey-core jersey/jersey-guice jersey/jersey-server jersey/jersey-servlet jsr-311 junit jzlib log4j netty paranamer/paranamer protobuf snappy-java
 
 # Install hdfs webapp bits
 cp -arf $basedir/share/hadoop/hdfs/webapps %{buildroot}/%{_sharedstatedir}/%{name}-hdfs
@@ -571,7 +644,7 @@ if [ "$lib" = "%_libdir" ]; then
   echo "_libdir is not located in /usr.  Lib location is wrong"
   exit 1
 fi
-sed -e "s|HADOOP_COMMON_LIB_NATIVE_DIR\s*=.*|HADOOP_COMMON_LIB_NATIVE_DIR=$lib|" %{SOURCE1} > %{buildroot}/%{_libexecdir}/hadoop-layout.sh
+sed -e "s|HADOOP_COMMON_LIB_NATIVE_DIR\s*=.*|HADOOP_COMMON_LIB_NATIVE_DIR=$lib/%{name}|" %{SOURCE1} > %{buildroot}/%{_libexecdir}/hadoop-layout.sh
 
 # Default config
 cp -f %{SOURCE8} %{buildroot}/%{_sysconfdir}/%{name}/core-site.xml
@@ -606,7 +679,7 @@ cp -f %{SOURCE12} %{buildroot}/%{_sysconfdir}/%{name}/httpfs-env.sh
 %endif
 
 # Install security limits
-install -d -m 0755 $RPM_BUILD_ROOT/%{_sysconfdir}/security/limits.d
+install -d -m 0755 %{buildroot}/%{_sysconfdir}/security/limits.d
 for limit in hdfs yarn mapreduce
 do
   sed -e "s|name|${limit:0:6}|" %{SOURCE7} > %{buildroot}/%{_sysconfdir}/security/limits.d/${limit}.conf
@@ -706,7 +779,7 @@ getent passwd yarn >/dev/null || /usr/sbin/useradd --comment "Hadoop Yarn" --she
 %systemd_postun_with_restart %{yarn_services}
 
 %files -f .mfiles common
-%doc hadoop-dist/target/hadoop-%{hadoop_version}/share/doc/hadoop/common/*
+%doc hadoop-dist/target/hadoop-%{hadoop_version}/share/doc/hadoop/common/LICENSE.txt
 %config(noreplace) %{_sysconfdir}/%{name}/configuration.xsl
 %config(noreplace) %{_sysconfdir}/%{name}/core-site.xml
 %config(noreplace) %{_sysconfdir}/%{name}/%{name}-env.sh
@@ -718,9 +791,13 @@ getent passwd yarn >/dev/null || /usr/sbin/useradd --comment "Hadoop Yarn" --she
 %config(noreplace) %{_sysconfdir}/%{name}/ssl-client.xml.example
 %config(noreplace) %{_sysconfdir}/%{name}/ssl-server.xml.example
 %dir %{_datadir}/%{name}
-%{_datadir}/%{name}/common
+%{_datadir}/%{name}/common/%{name}-common.jar
+# Workaround for BZ986909
+%{_jnidir}/%{name}-common.jar
 %{_libexecdir}/%{name}-config.sh
 %{_libexecdir}/%{name}-layout.sh
+%{_mavenpomdir}/JPP-%{name}-common.pom
+%{_mavendepmapfragdir}/%{name}-%{name}-common
 %{_bindir}/%{name}
 %{_bindir}/rcc
 %{_sbindir}/%{name}-daemon.sh
@@ -734,17 +811,18 @@ getent passwd yarn >/dev/null || /usr/sbin/useradd --comment "Hadoop Yarn" --she
 %{_sbindir}/stop-dfs.sh
 %{_sbindir}/stop-secure-dns.sh
 %{_sbindir}/slaves.sh
-%{_libdir}/libhadoop.*
+
+%files common-native
+%{_libdir}/%{name}/libhadoop.*
 
 %files devel
-%doc hadoop-dist/target/hadoop-%{hadoop_version}/share/doc/hadoop/common/*
 %{_includedir}/%{name}
 
 %files -f .mfiles-hadoop-hdfs hdfs
-%doc hadoop-dist/target/hadoop-%{hadoop_version}/share/doc/hadoop/hdfs/*
 %config(noreplace) %{_sysconfdir}/%{name}/hdfs-site.xml
 %config(noreplace) %{_sysconfdir}/security/limits.d/hdfs.conf
-%{_datadir}/%{name}/hdfs
+%dir %{_datadir}/%{name}/hdfs
+%{_datadir}/%{name}/hdfs/webapps
 %{_sharedstatedir}/%{name}-hdfs
 %{_unitdir}/%{name}-datanode.service
 %{_unitdir}/%{name}-namenode.service
@@ -754,7 +832,6 @@ getent passwd yarn >/dev/null || /usr/sbin/useradd --comment "Hadoop Yarn" --she
 %{_bindir}/hdfs
 %{_sbindir}/distribute-exclude.sh
 %{_sbindir}/refresh-namenodes.sh
-%{_sbindir}/hdfs-config.sh
 %{_sbindir}/hdfs-create-dirs
 %{_tmpfilesdir}/%{name}-hdfs.conf
 %config(noreplace) %attr(644, root, root) %{_sysconfdir}/logrotate.d/%{name}-hdfs
@@ -763,12 +840,10 @@ getent passwd yarn >/dev/null || /usr/sbin/useradd --comment "Hadoop Yarn" --she
 %attr(0755,hdfs,hadoop) %dir %{_var}/cache/%{name}-hdfs
 
 %files hdfs-fuse
-%doc hadoop-dist/target/hadoop-%{hadoop_version}/share/doc/hadoop/hdfs/*
 %{_bindir}/fuse_dfs
 
 %if %{package_httpfs}
 %files httpfs
-%doc hadoop-dist/target/hadoop-%{hadoop_version}/share/doc/hadoop/common/*
 %config(noreplace) %{_sysconfdir}/%{name}/httpfs-env.sh
 %config(noreplace) %{_sysconfdir}/%{name}/httpfs-log4j.properties
 %config(noreplace) %{_sysconfdir}/%{name}/httpfs-signature.secret
@@ -787,28 +862,19 @@ getent passwd yarn >/dev/null || /usr/sbin/useradd --comment "Hadoop Yarn" --she
 %endif
 
 %files -f .mfiles-javadoc javadoc
+%doc hadoop-dist/target/hadoop-%{hadoop_version}/share/doc/hadoop/common/*
 
 %files libhdfs
-%doc hadoop-dist/target/hadoop-%{hadoop_version}/share/doc/hadoop/hdfs/*
-%{_libdir}/libhdfs*
+%doc hadoop-dist/target/hadoop-%{hadoop_version}/share/doc/hadoop/hdfs/LICENSE.txt
+%{_libdir}/%{name}/libhdfs*
 
 %files -f .mfiles-hadoop-mapreduce mapreduce
-%doc hadoop-dist/target/hadoop-%{hadoop_version}/share/doc/hadoop/mapreduce/*
 %config(noreplace) %{_sysconfdir}/%{name}/mapred-env.sh
 %config(noreplace) %{_sysconfdir}/%{name}/mapred-queues.xml.template
 %config(noreplace) %{_sysconfdir}/%{name}/mapred-site.xml
 %config(noreplace) %{_sysconfdir}/%{name}/mapred-site.xml.template
 %config(noreplace) %{_sysconfdir}/security/limits.d/mapreduce.conf
 %dir %{_datadir}/%{name}/mapreduce
-%{_datadir}/%{name}/mapreduce/%{name}-archives*
-%{_datadir}/%{name}/mapreduce/%{name}-datajoin*
-%{_datadir}/%{name}/mapreduce/%{name}-distcp*
-%{_datadir}/%{name}/mapreduce/%{name}-extras*
-%{_datadir}/%{name}/mapreduce/%{name}-gridmix*
-%{_datadir}/%{name}/mapreduce/%{name}-mapreduce-client*
-%{_datadir}/%{name}/mapreduce/%{name}-rumen*
-%{_datadir}/%{name}/mapreduce/%{name}-streaming*
-%{_datadir}/%{name}/mapreduce/lib
 %{_libexecdir}/mapred-config.sh
 %{_unitdir}/%{name}-historyserver.service
 %{_bindir}/mapred
@@ -820,13 +886,12 @@ getent passwd yarn >/dev/null || /usr/sbin/useradd --comment "Hadoop Yarn" --she
 %attr(0755,mapred,hadoop) %dir %{_var}/cache/%{name}-mapreduce
 
 %files -f .mfiles-hadoop-mapreduce-examples mapreduce-examples
-%doc hadoop-dist/target/hadoop-%{hadoop_version}/share/doc/hadoop/mapreduce/*
-%{_datadir}/%{name}/mapreduce/%{name}-mapreduce-examples*
+
+%files -f .mfiles-maven-plugin-hadoop -n maven-plugin-hadoop
+%doc hadoop-dist/target/hadoop-%{hadoop_version}/share/doc/hadoop/common/LICENSE.txt
 
 %files -f .mfiles-hadoop-yarn yarn
-%doc hadoop-dist/target/hadoop-%{hadoop_version}/share/doc/hadoop/yarn/*
 %config(noreplace) %{_sysconfdir}/%{name}/capacity-scheduler.xml
-%config(noreplace) %{_sysconfdir}/%{name}/container-executor.cfg
 %config(noreplace) %{_sysconfdir}/%{name}/yarn-env.sh
 %config(noreplace) %{_sysconfdir}/%{name}/yarn-site.xml
 %config(noreplace) %{_sysconfdir}/security/limits.d/yarn.conf
@@ -834,8 +899,7 @@ getent passwd yarn >/dev/null || /usr/sbin/useradd --comment "Hadoop Yarn" --she
 %{_unitdir}/%{name}-proxyserver.service
 %{_unitdir}/%{name}-resourcemanager.service
 %{_libexecdir}/yarn-config.sh
-%{_datadir}/%{name}/yarn
-%attr(6050,root,yarn) %{_bindir}/container-executor
+%dir %{_datadir}/%{name}/yarn
 %{_bindir}/yarn
 %{_sbindir}/yarn-daemon.sh
 %{_sbindir}/yarn-daemons.sh
@@ -846,6 +910,11 @@ getent passwd yarn >/dev/null || /usr/sbin/useradd --comment "Hadoop Yarn" --she
 %attr(0755,yarn,hadoop) %dir %{_var}/run/%{name}-yarn
 %attr(0755,yarn,hadoop) %dir %{_var}/log/%{name}-yarn
 %attr(0755,yarn,hadoop) %dir %{_var}/cache/%{name}-yarn
+
+%files yarn-security
+%config(noreplace) %{_sysconfdir}/%{name}/container-executor.cfg
+# Permissions set per upstream guidelines: http://hadoop.apache.org/docs/current/hadoop-project-dist/hadoop-common/ClusterSetup.html#Configuration_in_Secure_Mode
+%attr(6050,root,yarn) %{_bindir}/container-executor
 
 %changelog
 * Tue Jul 16 2013 Robert Rati <rrati@redhat> - 2.0.5-1
