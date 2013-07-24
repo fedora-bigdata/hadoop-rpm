@@ -55,11 +55,16 @@ Source13: hdfs-create-dirs
 # https://issues.apache.org/jira/browse/HADOOP-9613
 # https://issues.apache.org/jira/browse/HADOOP-9623
 # https://issues.apache.org/jira/browse/HADOOP-9650
-# As well as still baking changes for tomcat/jspc
 Patch0: hadoop-fedora-integration.patch
 # Remove the kfs dependency (https://issues.apache.org/jira/browse/HADOOP-8886)
 Patch1: hadoop-8886.patch
+# Fedora packaging guidelines for JNI library loading
 Patch2: hadoop-jni-library-loading.patch
+# Clean up warnings with maven 3.0.5
+Patch3: hadoop-maven.patch
+# This is not a real BR, but is here because of rawhide shift to eclipse
+# aether packages.
+BuildRequires: aether
 BuildRequires: ant
 BuildRequires: antlr-tool
 BuildRequires: aopalliance
@@ -118,13 +123,11 @@ BuildRequires: jets3t
 BuildRequires: jettison
 # May need to break down into specific jetty rpms
 BuildRequires: jetty
+BuildRequires: jetty-jspc-maven-plugin
 BuildRequires: jetty-util-ajax
 BuildRequires: jline
 BuildRequires: jsch
 BuildRequires: json_simple
-BuildRequires: jspc
-BuildRequires: jspc-compilers
-BuildRequires: jspc-maven-plugin
 BuildRequires: jsr-305
 BuildRequires: jsr-311
 BuildRequires: junit
@@ -397,14 +400,14 @@ Requires: hsqldb
 %description mapreduce-examples
 This package contains mapreduce examples.
 
-%package -n maven-plugin-hadoop
+%package maven-plugin
 Summary: Apache Hadoop maven plugin
 Group: Development/Libraries
 BuildArch: noarch
 Requires: maven
 Requires: java
 
-%description -n maven-plugin-hadoop
+%description maven-plugin
 The Hadoop maven plugin
 
 %package yarn
@@ -451,6 +454,7 @@ This package contains files needed to run Hadoop YARN in secure mode.
 %patch0 -p1
 %patch1 -p0
 %patch2 -p1
+%patch3 -p1
 
 # The hadoop test suite needs classes from the zookeeper test suite.
 # We need to modify the deps to use the pom for the zookeeper-test jar
@@ -460,12 +464,6 @@ This package contains files needed to run Hadoop YARN in secure mode.
 %pom_remove_dep org.apache.zookeeper:zookeeper hadoop-hdfs-project/hadoop-hdfs
 %pom_add_dep org.apache.zookeeper:zookeeper hadoop-hdfs-project/hadoop-hdfs
 %pom_add_dep org.apache.zookeeper:zookeeper-test hadoop-hdfs-project/hadoop-hdfs
-
-# Temporary fix for F20 xmlenc
-%pom_remove_dep xmlenc:xmlenc hadoop-common-project/hadoop-common
-%pom_add_dep org.znerd:xmlenc hadoop-common-project/hadoop-common
-%pom_remove_dep xmlenc:xmlenc hadoop-hdfs-project/hadoop-hdfs
-%pom_add_dep org.znerd:xmlenc hadoop-hdfs-project/hadoop-hdfs
 
 # War files we don't want
 %mvn_package org.apache.hadoop:hadoop-auth-examples __noinstall
@@ -493,7 +491,7 @@ This package contains files needed to run Hadoop YARN in secure mode.
 %mvn_package ":%{name}-rumen*" hadoop-mapreduce
 %mvn_package ":%{name}-streaming*" hadoop-mapreduce
 %mvn_package ":%{name}-mapreduce-examples*" hadoop-mapreduce-examples
-%mvn_package ":%{name}-maven-plugins" maven-plugin-hadoop
+%mvn_package ":%{name}-maven-plugins" hadoop-maven-plugin
 %mvn_package ":%{name}-yarn*" hadoop-yarn
 
 # Workaround for BZ986909
@@ -887,7 +885,7 @@ getent passwd yarn >/dev/null || /usr/sbin/useradd --comment "Hadoop Yarn" --she
 
 %files -f .mfiles-hadoop-mapreduce-examples mapreduce-examples
 
-%files -f .mfiles-maven-plugin-hadoop -n maven-plugin-hadoop
+%files -f .mfiles-hadoop-maven-plugin maven-plugin
 %doc hadoop-dist/target/hadoop-%{hadoop_version}/share/doc/hadoop/common/LICENSE.txt
 
 %files -f .mfiles-hadoop-yarn yarn
