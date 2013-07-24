@@ -99,7 +99,6 @@ BuildRequires: gcc-c++
 BuildRequires: glassfish-jaxb
 BuildRequires: glassfish-jsp
 BuildRequires: glassfish-jsp-api
-BuildRequires: gmaven
 BuildRequires: google-guice
 BuildRequires: grizzly
 BuildRequires: guava
