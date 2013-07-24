@@ -26,7 +26,7 @@ done \
 
 Name:   hadoop
 Version: 2.0.5
-Release: 2%{?dist}
+Release: 3%{?dist}
 Summary: A software platform for processing vast amounts of data
 License: ASL 2.0
 Group:  Development/Libraries
@@ -913,6 +913,9 @@ getent passwd yarn >/dev/null || /usr/sbin/useradd --comment "Hadoop Yarn" --she
 %attr(6050,root,yarn) %{_bindir}/container-executor
 
 %changelog
+* Wed Jul 24 2013 Robert Rati <rrati@redhat> - 2.0.5-3
+- Removed gmaven as BR
+
 * Wed Jul 24 2013 Robert Rati <rrati@redhat> - 2.0.5-2
 - Fixed packaging for JNI jar/libraries
 - Made packages noarch that are architecture independent
