@@ -914,7 +914,7 @@ getent passwd yarn >/dev/null || /usr/sbin/useradd --comment "Hadoop Yarn" --she
 %attr(6050,root,yarn) %{_bindir}/container-executor
 
 %changelog
-* Tue Jul 23 2013 Robert Rati <rrati@redhat> - 2.0.5-2
+* Wed Jul 24 2013 Robert Rati <rrati@redhat> - 2.0.5-2
 - Fixed packaging for JNI jar/libraries
 - Made packages noarch that are architecture independent
 - Added cglib as a BuildRequires
