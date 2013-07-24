@@ -19,7 +19,6 @@ do \
   for file in `%{_bindir}/build-classpath $pattern | tr ":" "\\n"` \
   do \
     %{__ln_s} $file %{buildroot}/%{-d*} \
-    f=$(basename $file) \
     echo "%{-d*}/$(basename $file)" >> %{-f*} \
   done \
 done \
