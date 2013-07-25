@@ -30,7 +30,7 @@ Release: 3%{?dist}
 Summary: A software platform for processing vast amounts of data
 License: ASL 2.0
 Group:  Development/Libraries
-URL: https://github.com/apache/hadoop-common.git
+URL: http://hadoop.apache.org
 Source0: https://github.com/apache/hadoop-common/archive/%{commit}/%{name}-%{version}-%{shortcommit}.tar.gz
 Source1: hadoop-layout.sh
 Source2: hadoop-hdfs.service.template
