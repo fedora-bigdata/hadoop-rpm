@@ -1,7 +1,8 @@
 %global _hardened_build 1
 
-# Currently disabled because httpfs doesn't play well with the directory
-# layout and isn't flexible enough to allow customization.
+# Currently disabled because httpfs wants to download a copy of tomcat
+# for the start scripts and config files.  The scripts aren't packaged
+# so there's no means to substitute from rpms
 %global package_httpfs 0
 
 %global commit b92d9bcf559cc2e62fc166e09bd2852766b27bec
@@ -19,7 +20,7 @@ do \
   for file in `%{_bindir}/build-classpath $pattern | tr ":" "\\n"` \
   do \
     %{__ln_s} $file %{buildroot}/%{-d*} \
-    echo "%{-d*}/$(basename $file)" >> %{-f*} \
+    %{-f:echo "%{-d*}/$(basename $file)" >> %{-f*}} \
   done \
 done \
 %{nil}
@@ -61,9 +62,14 @@ Patch1: hadoop-8886.patch
 Patch2: hadoop-jni-library-loading.patch
 # Clean up warnings with maven 3.0.5
 Patch3: hadoop-maven.patch
+# Don't download tomcat.  This is incompatible with building httpfs
+Patch4: hadoop-no-download-tomcat.patch
+
 # This is not a real BR, but is here because of rawhide shift to eclipse
-# aether packages.
+# aether packages which caused a dependency of a dependency to not get
+# pulled in.
 BuildRequires: aether
+
 BuildRequires: ant
 BuildRequires: antlr-tool
 BuildRequires: aopalliance
@@ -334,6 +340,7 @@ Requires: apache-commons-dbcp
 Requires: ecj >= 1:4.2.1-6
 Requires: tomcat
 Requires: tomcat-lib
+Requires: tomcat-native
 Requires(post): systemd
 Requires(preun): systemd
 Requires(postun): systemd
@@ -453,6 +460,9 @@ This package contains files needed to run Hadoop YARN in secure mode.
 %patch1 -p0
 %patch2 -p1
 %patch3 -p1
+%if 0%{package_httpfs} == 0
+%patch4 -p1
+%endif
 
 # The hadoop test suite needs classes from the zookeeper test suite.
 # We need to modify the deps to use the pom for the zookeeper-test jar
@@ -526,30 +536,33 @@ This package contains files needed to run Hadoop YARN in secure mode.
 install -d -m 0755 %{buildroot}/%{_libdir}/%{name}
 install -d -m 0755 %{buildroot}/%{_includedir}/%{name}
 install -d -m 0755 %{buildroot}/%{_jnidir}/
-install -d -m 0755 %{buildroot}/%{_sharedstatedir}/%{name}-hdfs/webapps
+
 install -d -m 0755 %{buildroot}/%{_datadir}/%{name}/common/lib
 install -d -m 0755 %{buildroot}/%{_datadir}/%{name}/hdfs/lib
 install -d -m 0755 %{buildroot}/%{_datadir}/%{name}/mapreduce/lib
 install -d -m 0755 %{buildroot}/%{_datadir}/%{name}/yarn/lib
-install -d -m 0755 %{buildroot}/%{_sysconfdir}/%{name}/tomcat
+install -d -m 0755 %{buildroot}/%{_sharedstatedir}/%{name}-hdfs/webapps
 install -d -m 0755 %{buildroot}/%{_sysconfdir}/logrotate.d
 install -d -m 0755 %{buildroot}/%{_tmpfilesdir}
-install -d -m 1777 %{buildroot}/%{_var}/cache/%{name}-yarn
-install -d -m 1777 %{buildroot}/%{_var}/cache/%{name}-hdfs
-install -d -m 1777 %{buildroot}/%{_var}/cache/%{name}-mapreduce
-install -d -m 0775 %{buildroot}/%{_var}/log/%{name}-yarn
-install -d -m 0775 %{buildroot}/%{_var}/log/%{name}-hdfs
-install -d -m 0775 %{buildroot}/%{_var}/log/%{name}-mapreduce
-install -d -m 0775 %{buildroot}/%{_var}/run/%{name}-yarn
-install -d -m 0775 %{buildroot}/%{_var}/run/%{name}-hdfs
-install -d -m 0775 %{buildroot}/%{_var}/run/%{name}-mapreduce
+install -d -m 0755 %{buildroot}/%{_var}/cache/%{name}-yarn
+install -d -m 0755 %{buildroot}/%{_var}/cache/%{name}-hdfs
+install -d -m 0755 %{buildroot}/%{_var}/cache/%{name}-mapreduce
+install -d -m 0755 %{buildroot}/%{_var}/log/%{name}-yarn
+install -d -m 0755 %{buildroot}/%{_var}/log/%{name}-hdfs
+install -d -m 0755 %{buildroot}/%{_var}/log/%{name}-mapreduce
+install -d -m 0755 %{buildroot}/%{_var}/run/%{name}-yarn
+install -d -m 0755 %{buildroot}/%{_var}/run/%{name}-hdfs
+install -d -m 0755 %{buildroot}/%{_var}/run/%{name}-mapreduce
 %if %{package_httpfs}
 install -d -m 0755 %{buildroot}/%{_datadir}/%{name}/httpfs/tomcat/bin
 install -d -m 0755 %{buildroot}/%{_datadir}/%{name}/httpfs/tomcat/lib
 install -d -m 0755 %{buildroot}/%{_libexecdir}/%{name}-httpfs
 install -d -m 0755 %{buildroot}/%{_sharedstatedir}/%{name}-httpfs/webapps
-install -d -m 0775 %{buildroot}/%{_var}/log/%{name}-httpfs
-install -d -m 0775 %{buildroot}/%{_var}/run/%{name}-httpfs
+install -d -m 0755 %{buildroot}/%{_sysconfdir}/%{name}/httpfs-tomcat/Catalina/localhost
+install -d -m 0755 %{buildroot}/%{_var}/cache/%{name}-httpfs/work
+install -d -m 0755 %{buildroot}/%{_var}/cache/%{name}-httpfs/temp
+install -d -m 0755 %{buildroot}/%{_var}/log/%{name}-httpfs
+install -d -m 0755 %{buildroot}/%{_var}/run/%{name}-httpfs
 %endif
 
 basedir='hadoop-dist/target/hadoop-%{hadoop_version}'
@@ -600,21 +613,35 @@ install -pm 664 hadoop-common-project/hadoop-common/pom.xml %{buildroot}%{_maven
 # hdfs jar dependencies
 %link_jars -d %{_datadir}/%{name}/hdfs/lib -f .mfiles-hadoop-hdfs antlr objectweb-asm/asm avalon-framework-api avalon-logkit cglib checkstyle commons-beanutils-core commons-cli commons-codec commons-daemon commons-io commons-lang commons-logging guava jackson/jackson-core-asl jackson/jackson-mapper-asl tomcat-servlet-api jersey/jersey-core jersey/jersey-server jetty/jetty-http jetty/jetty-io jetty/jetty-server jetty/jetty-util jline jms jsr-311 jzlib log4j javamail/mail mockito netty objenesis protobuf slf4j/api xmlenc zookeeper/zookeeper
 
-%if %{package_httpfs}
 # httpfs
+%if %{package_httpfs}
+# Remove and replace with symlinks once tomcat scripts are packaged
 cp -arf $basedir/share/hadoop/httpfs/tomcat/bin/*.sh %{buildroot}/%{_libexecdir}/%{name}-httpfs
 cp -arf $basedir/share/hadoop/httpfs/tomcat/bin/catalina-tasks.xml %{buildroot}/%{_datadir}/%{name}/httpfs/tomcat/bin
-cp -arf $basedir/share/hadoop/httpfs/tomcat/conf/* %{buildroot}/%{_sysconfdir}/%{name}/tomcat
+
+install -m 644 $basedir/share/hadoop/httpfs/tomcat/conf/* %{buildroot}/%{_sysconfdir}/%{name}/httpfs-tomcat
 cp -arf $basedir/share/hadoop/httpfs/tomcat/webapps %{buildroot}/%{_sharedstatedir}/%{name}-httpfs
+
+# Tell tomcat to follow symlinks
+cat > %{buildroot}/%{_sharedstatedir}/%{name}-httpfs/webapps/webhdfs/META-INF/context.xml <<EOF
+<?xml version="1.0" encoding="UTF-8"?>
+<Context allowLinking="true">
+</Context>
+EOF
+
+# Remove the jars included in the webapp and create symlinks
+rm -rf %{buildroot}/%{_sharedstatedir}/%{name}-httpfs/webapps/webhdfs/WEB-INF/lib/*
+%link_jars -d %{_sharedstatedir}/%{name}-httpfs/webapps/webhdfs/WEB-INF/lib antlr objectweb-asm/asm avalon-framework-api avalon-logkit avro/avro cglib checkstyle commons-beanutils-core commons-cli commons-codec commons-collections commons-configuration commons-daemon commons-io commons-lang commons-logging commons-math3 commons-net guava hadoop/hadoop-annotations hadoop/hadoop-auth hadoop-common hadoop/hadoop-hdfs hamcrest/core istack-commons-runtime jackson/jackson-core-asl jackson/jackson-jaxrs jackson/jackson-mapper-asl jackson/jackson-xc glassfish-jsp glassfish-jsp-api glassfish-jaxb/jaxb-impl jersey/jersey-core jersey/jersey-json jersey/jersey-server jersey/jersey-servlet jettison jetty/jetty-util jetty/jetty-util-ajax jline jms jsch json_simple jsr-305 jsr-311 jzlib log4j javamail/mail mockito netty objenesis paranamer/paranamer protobuf slf4j/api slf4j/log4j12 snappy-java txw2 xmlenc zookeeper/zookeeper
+
+%link_jars -d %{_datadir}/%{name}/httpfs/tomcat/bin tomcat/tomcat-juli commons-daemon
+%link_jars -d %{_datadir}/%{name}/httpfs/tomcat/lib tomcat/annotations-api tomcat/catalina-ant tomcat/catalina-ha tomcat/catalina tomcat/catalina-tribes ecj tomcat/tomcat-el-2.2-api tomcat/jasper-el tomcat/jasper glassfish-jsp-api tomcat/tomcat-api tomcat/tomcat-jsp-2.2-api tomcat-servlet-api tomcat/tomcat-coyote tomcat/tomcat-util commons-dbcp tomcat/tomcat-i18n-es tomcat/tomcat-i18n-fr tomcat/tomcat-i18n-ja
 pushd %{buildroot}/%{_datadir}/%{name}/httpfs/tomcat
-  %{_bindir}/build-jar-repository -s bin tomcat/tomcat-juli commons-daemon
-  %{_bindir}/build-jar-repository -s lib tomcat/annotations-api tomcat/catalina-ant tomcat/catalina-ha tomcat/catalina tomcat/catalina-tribes ecj tomcat/tomcat-el-2.2-api tomcat/jasper-el tomcat/jasper glassfish-jsp-api tomcat-servlet-api tomcat/tomcat-coyote commons-dbcp tomcat/tomcat-i18n-es tomcat/tomcat-i18n-fr tomcat/tomcat-i18n-ja
   %{__ln_s} %{_datadir}/tomcat/bin/bootstrap.jar bin
   for f in `ls %{buildroot}/%{_libexecdir}/%{name}-httpfs`
   do
     %{__ln_s} %{_libexecdir}/%{name}-httpfs/$f bin
   done
-  %{__ln_s} %{_sysconfdir}/%{name}/tomcat conf 
+  %{__ln_s} %{_sysconfdir}/%{name}/httpfs-tomcat conf 
   %{__ln_s} %{_var}/log/%{name}-httpfs logs
   %{__ln_s} %{_sharedstatedir}/%{name}-httpfs/webapps webapps
   %{__ln_s} %{_var}/cache/%{name}-httpfs/temp temp
@@ -672,6 +699,7 @@ done
 %if %{package_httpfs}
 cp -f %{SOURCE5} %{buildroot}/%{_unitdir}
 cp -f %{SOURCE12} %{buildroot}/%{_sysconfdir}/%{name}/httpfs-env.sh
+%{__ln_s} %{_sysconfdir}/%{name}/httpfs-env.sh %{buildroot}/%{_bindir}
 %endif
 
 # Install security limits
@@ -819,7 +847,7 @@ getent passwd yarn >/dev/null || /usr/sbin/useradd --comment "Hadoop Yarn" --she
 %config(noreplace) %{_sysconfdir}/security/limits.d/hdfs.conf
 %dir %{_datadir}/%{name}/hdfs
 %{_datadir}/%{name}/hdfs/webapps
-%{_sharedstatedir}/%{name}-hdfs
+%attr(644,hdfs,hadoop) %{_sharedstatedir}/%{name}-hdfs
 %{_unitdir}/%{name}-datanode.service
 %{_unitdir}/%{name}-namenode.service
 %{_unitdir}/%{name}-secondarynamenode.service
@@ -844,17 +872,26 @@ getent passwd yarn >/dev/null || /usr/sbin/useradd --comment "Hadoop Yarn" --she
 %config(noreplace) %{_sysconfdir}/%{name}/httpfs-log4j.properties
 %config(noreplace) %{_sysconfdir}/%{name}/httpfs-signature.secret
 %config(noreplace) %{_sysconfdir}/%{name}/httpfs-site.xml
-%config(noreplace) %{_sysconfdir}/%{name}/tomcat
+%config(noreplace) %{_sysconfdir}/%{name}/httpfs-tomcat/catalina.policy
+%config(noreplace) %{_sysconfdir}/%{name}/httpfs-tomcat/catalina.properties
+%config(noreplace) %{_sysconfdir}/%{name}/httpfs-tomcat/context.xml
+%config(noreplace) %{_sysconfdir}/%{name}/httpfs-tomcat/logging.properties
+%config(noreplace) %{_sysconfdir}/%{name}/httpfs-tomcat/server.xml
+%config(noreplace) %{_sysconfdir}/%{name}/httpfs-tomcat/tomcat-users.xml
+%config(noreplace) %{_sysconfdir}/%{name}/httpfs-tomcat/web.xml
+%attr(0755,root,httpfs) %{_sysconfdir}/%{name}/httpfs-tomcat/Catalina
+%{_bindir}/httpfs-env.sh
 %{_libexecdir}/httpfs-config.sh
 %{_libexecdir}/%{name}-httpfs
 %{_unitdir}/%{name}-httpfs.service
 %{_sbindir}/httpfs.sh
 %{_datadir}/%{name}/httpfs
-%{_sharedstatedir}/%{name}-httpfs
+%attr(-,httpfs,httpfs) %{_sharedstatedir}/%{name}-httpfs
 %{_tmpfilesdir}/%{name}-httpfs.conf
 %config(noreplace) %attr(644, root, root) %{_sysconfdir}/logrotate.d/%{name}-httpfs
 %attr(0755,httpfs,httpfs) %dir %{_var}/run/%{name}-httpfs
 %attr(0755,httpfs,httpfs) %dir %{_var}/log/%{name}-httpfs
+%attr(0755,httpfs,httpfs) %{_var}/cache/%{name}-httpfs
 %endif
 
 %files -f .mfiles-javadoc javadoc
