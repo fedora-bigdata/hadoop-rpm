@@ -148,7 +148,9 @@ BuildRequires: maven-dependency-plugin
 BuildRequires: maven-enforcer-plugin
 BuildRequires: maven-install-plugin
 BuildRequires: maven-invoker-plugin
+%ifarch x86_64
 BuildRequires: maven-javadoc-plugin
+%endif
 BuildRequires: maven-local
 BuildRequires: maven-plugin-build-helper
 BuildRequires: maven-plugin-cobertura
@@ -363,6 +365,9 @@ This package provides a server that provides HTTP REST API support for
 the complete FileSystem/FileContext interface in HDFS.
 %endif
 
+# Creation of javadocs takes too many resources and results in failures  on
+# most architectures so only generate on intel 64-bit
+%ifarch x86_64
 %package javadoc
 Summary: Javadoc for Hadoop
 Group: Documentation
@@ -370,6 +375,7 @@ BuildArch: noarch
 
 %description javadoc
 This package contains the API documentation for %{name}
+%endif
 
 %ifarch x86_64 %{ix86}
 %package libhdfs
@@ -483,6 +489,10 @@ This package contains files needed to run Hadoop YARN in secure mode.
 %pom_add_dep org.apache.zookeeper:zookeeper hadoop-hdfs-project/hadoop-hdfs
 %pom_add_dep org.apache.zookeeper:zookeeper-test hadoop-hdfs-project/hadoop-hdfs
 
+# Increase memory build for x86
+#%%pom_xpath_replace "pom:reporting/pom:plugins/pom:plugin[pom:artifactId ='maven-javadoc-plugin']/pom:reportSets/pom:reportSet/pom:configuration/pom:maxmemory" '<maxmemory>3072m</maxmemory>'
+#%%pom_xpath_replace "pom:build/pom:plugins/pom:plugin[pom:artifactId ='maven-javadoc-plugin']/pom:configuration/pom:maxmemory" '<maxmemory>3072m</maxmemory>' hadoop-project-dist
+
 # War files we don't want
 %mvn_package org.apache.hadoop:hadoop-auth-examples __noinstall
 %mvn_package org.apache.hadoop:hadoop-hdfs-httpfs __noinstall
@@ -538,7 +548,10 @@ dists="dist"
 %ifarch x86_64 %{ix86}
 dists="$dists,native"
 %endif
-%mvn_build -- -Drequire.snappy=true -Dcontainer-executor.conf.dir=%{_sysconfdir}/hadoop -P$dists -DskipTests -DskipTest -DskipIT
+%ifnarch x86_64
+opts="-j"
+%endif
+%mvn_build $opts -- -Drequire.snappy=true -Dcontainer-executor.conf.dir=%{_sysconfdir}/hadoop -P$dists -DskipTests -DskipTest -DskipIT
 
 # This takes a long time to run, so comment out for now
 #%%check
@@ -922,8 +935,10 @@ getent passwd yarn >/dev/null || /usr/sbin/useradd --comment "Hadoop Yarn" --she
 %attr(0755,httpfs,httpfs) %{_var}/cache/%{name}-httpfs
 %endif
 
+%ifarch x86_64
 %files -f .mfiles-javadoc javadoc
 %doc hadoop-dist/target/hadoop-%{hadoop_version}/share/doc/hadoop/common/*
+%endif
 
 %ifarch x86_64 %{ix86}
 %files libhdfs
