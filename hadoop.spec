@@ -287,16 +287,16 @@ offering local computation and storage.
 This package contains the native-hadoop library
 %endif
 
+%ifarch x86_64 %{ix86}
 %package devel
 Summary: Headers for Hadoop
 Group: Development/System
 BuildArch: noarch
-%ifarch x86_64 %{ix86}
 Requires: %{name}-libhdfs = %{version}-%{release}
-%endif
 
 %description devel
 Header files for Hadoop's libhdfs library and other utilities
+%endif
 
 %package hdfs
 Summary: The Hadoop Distributed File System
@@ -608,8 +608,8 @@ rm -f %{buildroot}/%{_bindir}/test-container-executor
 rm -f %{buildroot}/%{_sbindir}/hdfs-config.sh
 
 cp -arf $basedir/etc/* %{buildroot}/%{_sysconfdir}
-cp -arf $basedir/include/* %{buildroot}/%{_includedir}/%{name}
 %ifarch x86_64 %{ix86}
+cp -arf $basedir/include/* %{buildroot}/%{_includedir}/%{name}
 cp -arf $basedir/lib/native/*.so* %{buildroot}/%{_libdir}/%{name}
 cp -af hadoop-hdfs-project/hadoop-hdfs/target/native/main/native/fuse-dfs/fuse_dfs %{buildroot}/%{_bindir}
 %else
@@ -878,8 +878,10 @@ getent passwd yarn >/dev/null || /usr/sbin/useradd --comment "Hadoop Yarn" --she
 %{_libdir}/%{name}/libhadoop.*
 %endif
 
+%ifarch x86_64 %{ix86}
 %files devel
 %{_includedir}/%{name}
+%endif
 
 %files -f .mfiles-hadoop-hdfs hdfs
 %config(noreplace) %{_sysconfdir}/%{name}/hdfs-site.xml
