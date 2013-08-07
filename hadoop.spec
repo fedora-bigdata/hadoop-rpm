@@ -14,22 +14,13 @@
 %global yarn_services hadoop-proxyserver.service hadoop-resourcemanager.service hadoop-nodemanager.service
 %global httpfs_services hadoop-httpfs.service
 
-%define link_jars(d:f:)\
-for pattern in %* \
-do \
-  for file in `%{_bindir}/build-classpath $pattern | tr ":" "\\n"` \
-  do \
-    %{__ln_s} $file %{buildroot}/%{-d*} \
-    %{-f:echo "%{-d*}/$(basename $file)" >> %{-f*}} \
-  done \
-done \
-%{nil}
-
 Name:   hadoop
 Version: 2.0.5
 Release: 4%{?dist}
 Summary: A software platform for processing vast amounts of data
-License: ASL 2.0
+# The BSD license file is missing
+# https://issues.apache.org/jira/browse/HADOOP-9849
+License: ASL 2.0 and BSD
 Group:  Development/Libraries
 URL: http://hadoop.apache.org
 Source0: https://github.com/apache/hadoop-common/archive/%{commit}/%{name}-%{version}-%{shortcommit}.tar.gz
@@ -92,6 +83,7 @@ BuildRequires: avro
 BuildRequires: bookkeeper-java
 BuildRequires: cglib
 BuildRequires: checkstyle
+BuildRequires: chrpath
 BuildRequires: cmake
 BuildRequires: commons-codec
 BuildRequires: commons-httpclient
@@ -103,7 +95,6 @@ BuildRequires: fuse-devel
 BuildRequires: fusesource-pom
 %endif
 BuildRequires: geronimo-jms
-BuildRequires: gcc-c++
 BuildRequires: glassfish-jaxb
 BuildRequires: glassfish-jsp
 BuildRequires: glassfish-jsp-api
@@ -177,7 +168,6 @@ BuildRequires: snappy-devel
 BuildRequires: snappy-java
 BuildRequires: systemd
 BuildRequires: tomcat-el-2.2-api
-BuildRequires: tomcat-lib
 BuildRequires: tomcat-servlet-3.0-api
 BuildRequires: txw2
 BuildRequires: xmlenc
@@ -199,21 +189,20 @@ Summary: Common files needed by hadoop daemons
 Group: Applications/System
 BuildArch: noarch
 Requires: /usr/sbin/useradd
+
+# These are required to meet the symlinks for the classpath
 Requires: antlr-tool
 Requires: apache-commons-beanutils
 Requires: apache-commons-cli
-Requires: apache-commons-codec
 Requires: apache-commons-collections
 Requires: apache-commons-configuration
 Requires: apache-commons-el
-Requires: apache-commons-io
 Requires: apache-commons-lang
 Requires: apache-commons-logging
 Requires: apache-commons-math
 Requires: apache-commons-net
 Requires: avalon-framework
 Requires: avalon-logkit
-Requires: avro
 Requires: checkstyle
 Requires: commons-httpclient
 Requires: coreutils
@@ -226,11 +215,9 @@ Requires: httpcomponents-client
 Requires: httpcomponents-core
 Requires: istack-commons
 Requires: jackson
-Requires: java
 Requires: java-base64
 Requires: java-xmlbuilder
 Requires: javamail
-Requires: jersey
 Requires: jets3t
 Requires: jettison
 Requires: jetty-http
@@ -246,17 +233,13 @@ Requires: jline
 Requires: jsch
 Requires: jsr-305
 Requires: jsr-311
-Requires: log4j
 Requires: mockito
 Requires: nc6
-Requires: netty
 Requires: objectweb-asm
 Requires: objenesis
 Requires: paranamer
-Requires: protobuf-java
 Requires: relaxngDatatype
 Requires: servlet3
-Requires: slf4j
 Requires: snappy-java
 Requires: tomcat-servlet-3.0-api
 Requires: tomcat-el-2.2-api
@@ -304,7 +287,6 @@ Group: Applications/System
 BuildArch: noarch
 Requires: %{name}-common = %{version}-%{release}
 Requires(pre): %{name}-common = %{version}-%{release}
-Requires: apache-commons-daemon
 Requires: apache-commons-daemon-jsvc
 Requires(post): systemd
 Requires(preun): systemd
@@ -345,7 +327,6 @@ file system through fuse.
 Summary: Provides web access to HDFS
 Group: Applications/System
 BuildArch: noarch
-Requires: %{name}-hdfs = %{version}-%{release}
 Requires: apache-commons-dbcp
 Requires: ecj >= 1:4.2.1-6
 Requires: tomcat
@@ -381,7 +362,6 @@ This package contains the API documentation for %{name}
 %package libhdfs
 Summary: The Hadoop Filesystem Library
 Group: Development/Libraries
-Requires: %{name}-hdfs = %{version}-%{release}
 Requires: lzo
 
 %description libhdfs
@@ -397,7 +377,6 @@ This package provides the Hadoop Filesystem Library.
 Summary: Hadoop MapReduce (MRv2)
 Group: Applications/System
 BuildArch: noarch
-Requires: %{name}-yarn = %{version}-%{release}
 Requires(pre): %{name}-common = %{version}-%{release}
 Requires(post): systemd
 Requires(preun): systemd
@@ -426,7 +405,6 @@ Summary: Apache Hadoop maven plugin
 Group: Development/Libraries
 BuildArch: noarch
 Requires: maven
-Requires: java
 
 %description maven-plugin
 The Hadoop maven plugin
@@ -435,15 +413,10 @@ The Hadoop maven plugin
 Summary: Hadoop YARN
 Group: Applications/System
 BuildArch: noarch
-Requires: %{name}-common = %{version}-%{release}
 Requires(pre): %{name}-common = %{version}-%{release}
 Requires: aopalliance
 Requires: atinject
-Requires: google-guice
-Requires: guice-servlet
 Requires: hamcrest
-Requires: jersey-contribs
-Requires: junit
 Requires(post): systemd
 Requires(preun): systemd
 Requires(postun): systemd
@@ -558,6 +531,30 @@ opts="-j"
 #mvn-rpmbuild -Pdist,native test -Dmaven.test.failure.ignore=true
 
 %install
+# Creates symlinks from %{_javadir} into a specificed directory and will
+# append the files to the filelist
+# $1 the directory to create the smlinks
+# $2 the filelist to append to
+link_jars()
+{
+  dir=$1
+  list=$2
+  shift 2
+  files=$*
+
+  for pattern in $files
+  do 
+    for file in `%{_bindir}/build-classpath $pattern | tr ":" "\\n"` 
+    do 
+      %{__ln_s} $file %{buildroot}/$dir
+      if [[ ! -z "$list" ]]
+      then
+        echo "$dir/$(basename $file)" >> $list
+      fi
+    done 
+  done 
+}
+
 %mvn_install
 
 %ifarch x86_64 %{ix86}
@@ -570,7 +567,7 @@ install -d -m 0755 %{buildroot}/%{_datadir}/%{name}/common/lib
 install -d -m 0755 %{buildroot}/%{_datadir}/%{name}/hdfs/lib
 install -d -m 0755 %{buildroot}/%{_datadir}/%{name}/mapreduce/lib
 install -d -m 0755 %{buildroot}/%{_datadir}/%{name}/yarn/lib
-install -d -m 0755 %{buildroot}/%{_sharedstatedir}/%{name}-hdfs/webapps
+install -d -m 0755 %{buildroot}/%{_sharedstatedir}/%{name}-hdfs/webapps/hdfs
 install -d -m 0755 %{buildroot}/%{_sysconfdir}/logrotate.d
 install -d -m 0755 %{buildroot}/%{_tmpfilesdir}
 install -d -m 0755 %{buildroot}/%{_var}/cache/%{name}-yarn
@@ -611,7 +608,9 @@ cp -arf $basedir/etc/* %{buildroot}/%{_sysconfdir}
 %ifarch x86_64 %{ix86}
 cp -arf $basedir/include/* %{buildroot}/%{_includedir}/%{name}
 cp -arf $basedir/lib/native/*.so* %{buildroot}/%{_libdir}/%{name}
+chrpath --delete %{buildroot}/%{_libdir}/%{name}/*
 cp -af hadoop-hdfs-project/hadoop-hdfs/target/native/main/native/fuse-dfs/fuse_dfs %{buildroot}/%{_bindir}
+chrpath --delete %{buildroot}/%{_bindir}/fuse_dfs
 %else
 rm -f %{buildroot}/%{_sysconfdir}/%{name}/container-executor.cfg
 %endif
@@ -641,10 +640,10 @@ install -pm 664 hadoop-common-project/hadoop-common/pom.xml %{buildroot}%{_maven
 %add_maven_depmap JPP-%{name}-common.pom %{name}-common.jar -f hadoop-common
 
 # common jar depenencies
-%link_jars -d %{_datadir}/%{name}/common/lib -f .mfiles antlr objectweb-asm/asm avalon-framework-api avalon-logkit avro/avro base64 cglib checkstyle commons-beanutils-core commons-cli commons-codec commons-collections commons-configuration commons-el commons-httpclient commons-io commons-lang commons-logging commons-math3 commons-net guava httpcomponents/httpclient httpcomponents/httpcore istack-commons-runtime jackson/jackson-core-asl jackson/jackson-jaxrs jackson/jackson-mapper-asl jackson/jackson-xc java-xmlbuilder tomcat-servlet-api glassfish-jsp glassfish-jsp-api glassfish-jaxb/jaxb-impl jersey/jersey-core jersey/jersey-json jersey/jersey-server jersey/jersey-servlet jets3t/jets3t jettison jetty/jetty-http jetty/jetty-io jetty/jetty-security jetty/jetty-server jetty/jetty-servlet jetty/jetty-util jetty/jetty-util-ajax jetty/jetty-webapp jetty/jetty-xml jline jms jsch jsr-305 jsr-311 jzlib log4j javamail/mail mockito netty objenesis paranamer/paranamer protobuf relaxngDatatype slf4j/api slf4j/log4j12 snappy-java tomcat/tomcat-el-2.2-api txw2 xmlenc zookeeper/zookeeper
+link_jars %{_datadir}/%{name}/common/lib .mfiles antlr objectweb-asm/asm avalon-framework-api avalon-logkit avro/avro base64 cglib checkstyle commons-beanutils-core commons-cli commons-codec commons-collections commons-configuration commons-el commons-httpclient commons-io commons-lang commons-logging commons-math3 commons-net guava httpcomponents/httpclient httpcomponents/httpcore istack-commons-runtime jackson/jackson-core-asl jackson/jackson-jaxrs jackson/jackson-mapper-asl jackson/jackson-xc java-xmlbuilder tomcat-servlet-api glassfish-jsp glassfish-jsp-api glassfish-jaxb/jaxb-impl jersey/jersey-core jersey/jersey-json jersey/jersey-server jersey/jersey-servlet jets3t/jets3t jettison jetty/jetty-http jetty/jetty-io jetty/jetty-security jetty/jetty-server jetty/jetty-servlet jetty/jetty-util jetty/jetty-util-ajax jetty/jetty-webapp jetty/jetty-xml jline jms jsch jsr-305 jsr-311 jzlib log4j javamail/mail mockito netty objenesis paranamer/paranamer protobuf relaxngDatatype slf4j/api slf4j/log4j12 snappy-java tomcat/tomcat-el-2.2-api txw2 xmlenc zookeeper/zookeeper
 
 # hdfs jar dependencies
-%link_jars -d %{_datadir}/%{name}/hdfs/lib -f .mfiles-hadoop-hdfs antlr objectweb-asm/asm avalon-framework-api avalon-logkit cglib checkstyle commons-beanutils-core commons-cli commons-codec commons-daemon commons-io commons-lang commons-logging guava jackson/jackson-core-asl jackson/jackson-mapper-asl tomcat-servlet-api jersey/jersey-core jersey/jersey-server jetty/jetty-http jetty/jetty-io jetty/jetty-server jetty/jetty-util jline jms jsr-311 jzlib log4j javamail/mail mockito netty objenesis protobuf slf4j/api xmlenc zookeeper/zookeeper
+link_jars %{_datadir}/%{name}/hdfs/lib .mfiles-hadoop-hdfs antlr objectweb-asm/asm avalon-framework-api avalon-logkit cglib checkstyle commons-beanutils-core commons-cli commons-codec commons-daemon commons-io commons-lang commons-logging guava jackson/jackson-core-asl jackson/jackson-mapper-asl tomcat-servlet-api jersey/jersey-core jersey/jersey-server jetty/jetty-http jetty/jetty-io jetty/jetty-server jetty/jetty-util jline jms jsr-311 jzlib log4j javamail/mail mockito netty objenesis protobuf slf4j/api xmlenc zookeeper/zookeeper
 
 # httpfs
 %if %{package_httpfs}
@@ -664,10 +663,10 @@ EOF
 
 # Remove the jars included in the webapp and create symlinks
 rm -rf %{buildroot}/%{_sharedstatedir}/%{name}-httpfs/webapps/webhdfs/WEB-INF/lib/*
-%link_jars -d %{_sharedstatedir}/%{name}-httpfs/webapps/webhdfs/WEB-INF/lib antlr objectweb-asm/asm avalon-framework-api avalon-logkit avro/avro cglib checkstyle commons-beanutils-core commons-cli commons-codec commons-collections commons-configuration commons-daemon commons-io commons-lang commons-logging commons-math3 commons-net guava hadoop/hadoop-annotations hadoop/hadoop-auth hadoop-common hadoop/hadoop-hdfs hamcrest/core istack-commons-runtime jackson/jackson-core-asl jackson/jackson-jaxrs jackson/jackson-mapper-asl jackson/jackson-xc glassfish-jsp glassfish-jsp-api glassfish-jaxb/jaxb-impl jersey/jersey-core jersey/jersey-json jersey/jersey-server jersey/jersey-servlet jettison jetty/jetty-util jetty/jetty-util-ajax jline jms jsch json_simple jsr-305 jsr-311 jzlib log4j javamail/mail mockito netty objenesis paranamer/paranamer protobuf slf4j/api slf4j/log4j12 snappy-java txw2 xmlenc zookeeper/zookeeper
+link_jars %{_sharedstatedir}/%{name}-httpfs/webapps/webhdfs/WEB-INF/lib nil antlr objectweb-asm/asm avalon-framework-api avalon-logkit avro/avro cglib checkstyle commons-beanutils-core commons-cli commons-codec commons-collections commons-configuration commons-daemon commons-io commons-lang commons-logging commons-math3 commons-net guava hadoop/hadoop-annotations hadoop/hadoop-auth hadoop-common hadoop/hadoop-hdfs hamcrest/core istack-commons-runtime jackson/jackson-core-asl jackson/jackson-jaxrs jackson/jackson-mapper-asl jackson/jackson-xc glassfish-jsp glassfish-jsp-api glassfish-jaxb/jaxb-impl jersey/jersey-core jersey/jersey-json jersey/jersey-server jersey/jersey-servlet jettison jetty/jetty-util jetty/jetty-util-ajax jline jms jsch json_simple jsr-305 jsr-311 jzlib log4j javamail/mail mockito netty objenesis paranamer/paranamer protobuf slf4j/api slf4j/log4j12 snappy-java txw2 xmlenc zookeeper/zookeeper
 
-%link_jars -d %{_datadir}/%{name}/httpfs/tomcat/bin tomcat/tomcat-juli commons-daemon
-%link_jars -d %{_datadir}/%{name}/httpfs/tomcat/lib tomcat/annotations-api tomcat/catalina-ant tomcat/catalina-ha tomcat/catalina tomcat/catalina-tribes ecj tomcat/tomcat-el-2.2-api tomcat/jasper-el tomcat/jasper glassfish-jsp-api tomcat/tomcat-api tomcat/tomcat-jsp-2.2-api tomcat-servlet-api tomcat/tomcat-coyote tomcat/tomcat-util commons-dbcp tomcat/tomcat-i18n-es tomcat/tomcat-i18n-fr tomcat/tomcat-i18n-ja
+link_jars %{_datadir}/%{name}/httpfs/tomcat/bin nil tomcat/tomcat-juli commons-daemon
+link_jars %{_datadir}/%{name}/httpfs/tomcat/lib nil tomcat/annotations-api tomcat/catalina-ant tomcat/catalina-ha tomcat/catalina tomcat/catalina-tribes ecj tomcat/tomcat-el-2.2-api tomcat/jasper-el tomcat/jasper glassfish-jsp-api tomcat/tomcat-api tomcat/tomcat-jsp-2.2-api tomcat-servlet-api tomcat/tomcat-coyote tomcat/tomcat-util commons-dbcp tomcat/tomcat-i18n-es tomcat/tomcat-i18n-fr tomcat/tomcat-i18n-ja
 pushd %{buildroot}/%{_datadir}/%{name}/httpfs/tomcat
   %{__ln_s} %{_datadir}/tomcat/bin/bootstrap.jar bin
   for f in `ls %{buildroot}/%{_libexecdir}/%{name}-httpfs`
@@ -683,13 +682,13 @@ popd
 %endif
 
 # mapreduce jar dependencies
-%link_jars -d %{_datadir}/%{name}/mapreduce/lib -f .mfiles-hadoop-mapreduce aopalliance atinject objectweb-asm/asm avro/avro commons-io guava google-guice guice/guice-servlet %{name}/%{name}-annotations hamcrest/core jackson/jackson-core-asl jackson/jackson-mapper-asl jersey/jersey-core jersey/jersey-guice jersey/jersey-server jersey/jersey-servlet jsr-311 junit jzlib log4j netty paranamer/paranamer protobuf snappy-java
+link_jars %{_datadir}/%{name}/mapreduce/lib .mfiles-hadoop-mapreduce aopalliance atinject objectweb-asm/asm avro/avro commons-io guava google-guice guice/guice-servlet %{name}/%{name}-annotations hamcrest/core jackson/jackson-core-asl jackson/jackson-mapper-asl jersey/jersey-core jersey/jersey-guice jersey/jersey-server jersey/jersey-servlet jsr-311 junit jzlib log4j netty paranamer/paranamer protobuf snappy-java
 
 # yarn jar dependencies
-%link_jars -d %{_datadir}/%{name}/yarn/lib -f .mfiles-hadoop-yarn aopalliance atinject objectweb-asm/asm avro/avro cglib commons-io guava google-guice guice/guice-servlet %{name}/%{name}-annotations hamcrest/core jackson/jackson-core-asl jackson/jackson-mapper-asl jersey/jersey-core jersey/jersey-guice jersey/jersey-server jersey/jersey-servlet jsr-311 junit jzlib log4j netty paranamer/paranamer protobuf snappy-java
+link_jars %{_datadir}/%{name}/yarn/lib .mfiles-hadoop-yarn aopalliance atinject objectweb-asm/asm avro/avro cglib commons-io guava google-guice guice/guice-servlet %{name}/%{name}-annotations hamcrest/core jackson/jackson-core-asl jackson/jackson-mapper-asl jersey/jersey-core jersey/jersey-guice jersey/jersey-server jersey/jersey-servlet jsr-311 junit jzlib log4j netty paranamer/paranamer protobuf snappy-java
 
 # Install hdfs webapp bits
-cp -arf $basedir/share/hadoop/hdfs/webapps %{buildroot}/%{_sharedstatedir}/%{name}-hdfs
+cp -arf $basedir/share/hadoop/hdfs/webapps/* %{buildroot}/%{_sharedstatedir}/%{name}-hdfs/webapps
 pushd %{buildroot}/%{_datadir}/%{name}/hdfs
   %{__ln_s} %{_sharedstatedir}/%{name}-hdfs/webapps webapps
 popd
@@ -888,7 +887,7 @@ getent passwd yarn >/dev/null || /usr/sbin/useradd --comment "Hadoop Yarn" --she
 %config(noreplace) %{_sysconfdir}/security/limits.d/hdfs.conf
 %dir %{_datadir}/%{name}/hdfs
 %{_datadir}/%{name}/hdfs/webapps
-%attr(644,hdfs,hadoop) %{_sharedstatedir}/%{name}-hdfs
+%attr(-,hdfs,hadoop) %{_sharedstatedir}/%{name}-hdfs
 %{_unitdir}/%{name}-datanode.service
 %{_unitdir}/%{name}-namenode.service
 %{_unitdir}/%{name}-secondarynamenode.service
@@ -906,7 +905,7 @@ getent passwd yarn >/dev/null || /usr/sbin/useradd --comment "Hadoop Yarn" --she
 
 %ifarch x86_64 %{ix86}
 %files hdfs-fuse
-%{_bindir}/fuse_dfs
+%attr(755,hdfs,hadoop) %{_bindir}/fuse_dfs
 %endif
 
 %if %{package_httpfs}
