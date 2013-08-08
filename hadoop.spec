@@ -275,7 +275,7 @@ This package contains the native-hadoop library
 Summary: Headers for Hadoop
 Group: Development/System
 BuildArch: noarch
-Requires: %{name}-libhdfs = %{version}-%{release}
+Requires: %{name}-libhdfs%{?_isa} = %{version}-%{release}
 
 %description devel
 Header files for Hadoop's libhdfs library and other utilities
@@ -306,7 +306,7 @@ used by Hadoop applications.
 Summary: Allows mounting of Hadoop HDFS
 Group: Development/Libraries
 Requires: %{name}-common = %{version}-%{release}
-Requires: %{name}-libhdfs = %{version}-%{release}
+Requires: %{name}-libhdfs%{?_isa} = %{version}-%{release}
 Requires: %{name}-hdfs = %{version}-%{release}
 Requires: %{name}-yarn = %{version}-%{release}
 Requires: %{name}-mapreduce = %{version}-%{release}
@@ -839,7 +839,7 @@ getent passwd yarn >/dev/null || /usr/sbin/useradd --comment "Hadoop Yarn" --she
 %systemd_postun_with_restart %{yarn_services}
 
 %files -f .mfiles common
-%doc hadoop-dist/target/hadoop-%{hadoop_version}/share/doc/hadoop/common/LICENSE.txt
+%doc hadoop-dist/target/hadoop-%{hadoop_version}/share/doc/hadoop/common/*
 %config(noreplace) %{_sysconfdir}/%{name}/configuration.xsl
 %config(noreplace) %{_sysconfdir}/%{name}/core-site.xml
 %config(noreplace) %{_sysconfdir}/%{name}/%{name}-env.sh
@@ -938,7 +938,7 @@ getent passwd yarn >/dev/null || /usr/sbin/useradd --comment "Hadoop Yarn" --she
 
 %ifarch x86_64
 %files -f .mfiles-javadoc javadoc
-%doc hadoop-dist/target/hadoop-%{hadoop_version}/share/doc/hadoop/common/*
+%doc hadoop-dist/target/hadoop-%{hadoop_version}/share/doc/hadoop/common/LICENSE.txt hadoop-dist/target/hadoop-%{hadoop_version}/share/doc/hadoop/common/NOTICE.txt
 %endif
 
 %ifarch x86_64 %{ix86}
