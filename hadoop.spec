@@ -16,7 +16,7 @@
 
 Name:   hadoop
 Version: 2.0.5
-Release: 4%{?dist}
+Release: 5%{?dist}
 Summary: A software platform for processing vast amounts of data
 # The BSD license file is missing
 # https://issues.apache.org/jira/browse/HADOOP-9849
@@ -998,6 +998,12 @@ getent passwd yarn >/dev/null || /usr/sbin/useradd --comment "Hadoop Yarn" --she
 %endif
 
 %changelog
+* Wed Aug 07 2013 Robert Rati <rrati@redhat> - 2.0.5-5
+- Corrected license info
+- Removed duplicate Requires
+- Removed rpath references
+- Corrected some permissions
+
 * Tue Aug 06 2013 Robert Rati <rrati@redhat> - 2.0.5-4
 - Native bits only built/packaged for intel architectures
 - javadoc only generated on 64-bit intel
