@@ -55,6 +55,8 @@ Patch2: hadoop-jni-library-loading.patch
 Patch3: hadoop-maven.patch
 # Don't download tomcat.  This is incompatible with building httpfs
 Patch4: hadoop-no-download-tomcat.patch
+# The native bits don't compile on ARM
+ExcludeArch: %{arm}
 
 # This is not a real BR, but is here because of rawhide shift to eclipse
 # aether packages which caused a dependency of a dependency to not get
@@ -90,10 +92,8 @@ BuildRequires: commons-httpclient
 %if package_httpfs
 BuildRequires: ecj >= 1:4.2.1-6
 %endif
-%ifarch x86_64 %{ix86}
 BuildRequires: fuse-devel
 BuildRequires: fusesource-pom
-%endif
 BuildRequires: geronimo-jms
 BuildRequires: glassfish-jaxb
 BuildRequires: glassfish-jsp
@@ -139,9 +139,7 @@ BuildRequires: maven-dependency-plugin
 BuildRequires: maven-enforcer-plugin
 BuildRequires: maven-install-plugin
 BuildRequires: maven-invoker-plugin
-%ifarch x86_64
 BuildRequires: maven-javadoc-plugin
-%endif
 BuildRequires: maven-local
 BuildRequires: maven-plugin-build-helper
 BuildRequires: maven-plugin-cobertura
@@ -255,7 +253,6 @@ offering local computation and storage.
 
 This package contains common files and utilities needed by other Hadoop modules.
 
-%ifarch x86_64 %{ix86}
 %package common-native
 Summary: The native Hadoop library file
 Group: Applications/System
@@ -268,18 +265,14 @@ designed to scale up from single servers to thousands of machines, each
 offering local computation and storage.
 
 This package contains the native-hadoop library
-%endif
 
-%ifarch x86_64 %{ix86}
 %package devel
 Summary: Headers for Hadoop
 Group: Development/System
-BuildArch: noarch
 Requires: %{name}-libhdfs%{?_isa} = %{version}-%{release}
 
 %description devel
 Header files for Hadoop's libhdfs library and other utilities
-%endif
 
 %package hdfs
 Summary: The Hadoop Distributed File System
@@ -301,7 +294,6 @@ offering local computation and storage.
 The Hadoop Distributed File System (HDFS) is the primary storage system
 used by Hadoop applications.
 
-%ifarch x86_64 %{ix86}
 %package hdfs-fuse
 Summary: Allows mounting of Hadoop HDFS
 Group: Development/Libraries
@@ -320,7 +312,6 @@ offering local computation and storage.
 
 This package provides tools that allow HDFS to be mounted as a standard
 file system through fuse.
-%endif
 
 %if %{package_httpfs}
 %package httpfs
@@ -358,7 +349,6 @@ BuildArch: noarch
 This package contains the API documentation for %{name}
 %endif
 
-%ifarch x86_64 %{ix86}
 %package libhdfs
 Summary: The Hadoop Filesystem Library
 Group: Development/Libraries
@@ -371,7 +361,6 @@ designed to scale up from single servers to thousands of machines, each
 offering local computation and storage.
 
 This package provides the Hadoop Filesystem Library.
-%endif
 
 %package mapreduce
 Summary: Hadoop MapReduce (MRv2)
@@ -517,14 +506,10 @@ This package contains files needed to run Hadoop YARN in secure mode.
 %mvn_file ":{%{name}-yarn-*}" %{name}/@1 %{_datadir}/%{name}/yarn/@1
 
 %build
-dists="dist"
-%ifarch x86_64 %{ix86}
-dists="$dists,native"
-%endif
 %ifnarch x86_64
 opts="-j"
 %endif
-%mvn_build $opts -- -Drequire.snappy=true -Dcontainer-executor.conf.dir=%{_sysconfdir}/hadoop -P$dists -DskipTests -DskipTest -DskipIT
+%mvn_build $opts -- -Drequire.snappy=true -Dcontainer-executor.conf.dir=%{_sysconfdir}/hadoop -Pdist,native -DskipTests -DskipTest -DskipIT
 
 # This takes a long time to run, so comment out for now
 #%%check
@@ -557,9 +542,7 @@ link_jars()
 
 %mvn_install
 
-%ifarch x86_64 %{ix86}
 install -d -m 0755 %{buildroot}/%{_libdir}/%{name}
-%endif
 install -d -m 0755 %{buildroot}/%{_includedir}/%{name}
 install -d -m 0755 %{buildroot}/%{_jnidir}/
 
@@ -605,15 +588,11 @@ rm -f %{buildroot}/%{_bindir}/test-container-executor
 rm -f %{buildroot}/%{_sbindir}/hdfs-config.sh
 
 cp -arf $basedir/etc/* %{buildroot}/%{_sysconfdir}
-%ifarch x86_64 %{ix86}
 cp -arf $basedir/include/* %{buildroot}/%{_includedir}/%{name}
 cp -arf $basedir/lib/native/*.so* %{buildroot}/%{_libdir}/%{name}
 chrpath --delete %{buildroot}/%{_libdir}/%{name}/*
 cp -af hadoop-hdfs-project/hadoop-hdfs/target/native/main/native/fuse-dfs/fuse_dfs %{buildroot}/%{_bindir}
 chrpath --delete %{buildroot}/%{_bindir}/fuse_dfs
-%else
-rm -f %{buildroot}/%{_sysconfdir}/%{name}/container-executor.cfg
-%endif
 
 %if 0%{package_httpfs} == 0
 rm -f %{buildroot}/%{_sbindir}/httpfs.sh
@@ -808,9 +787,7 @@ getent passwd yarn >/dev/null || /usr/sbin/useradd --comment "Hadoop Yarn" --she
 %systemd_post %{httpfs_services}
 %endif
 
-%ifarch x86_64 %{ix86}
 %post libhdfs -p /sbin/ldconfig
-%endif
 
 %post mapreduce
 %systemd_post %{mapreduce_services}
@@ -828,9 +805,7 @@ getent passwd yarn >/dev/null || /usr/sbin/useradd --comment "Hadoop Yarn" --she
 %systemd_postun_with_restart %{httpfs_services}
 %endif
 
-%ifarch x86_64 %{ix86}
 %postun libhdfs -p /sbin/ldconfig
-%endif
 
 %postun mapreduce
 %systemd_postun_with_restart %{mapreduce_services}
@@ -872,15 +847,11 @@ getent passwd yarn >/dev/null || /usr/sbin/useradd --comment "Hadoop Yarn" --she
 %{_sbindir}/stop-secure-dns.sh
 %{_sbindir}/slaves.sh
 
-%ifarch x86_64 %{ix86}
 %files common-native
 %{_libdir}/%{name}/libhadoop.*
-%endif
 
-%ifarch x86_64 %{ix86}
 %files devel
 %{_includedir}/%{name}
-%endif
 
 %files -f .mfiles-hadoop-hdfs hdfs
 %config(noreplace) %{_sysconfdir}/%{name}/hdfs-site.xml
@@ -903,10 +874,8 @@ getent passwd yarn >/dev/null || /usr/sbin/useradd --comment "Hadoop Yarn" --she
 %attr(0755,hdfs,hadoop) %dir %{_var}/log/%{name}-hdfs
 %attr(0755,hdfs,hadoop) %dir %{_var}/cache/%{name}-hdfs
 
-%ifarch x86_64 %{ix86}
 %files hdfs-fuse
 %attr(755,hdfs,hadoop) %{_bindir}/fuse_dfs
-%endif
 
 %if %{package_httpfs}
 %files httpfs
@@ -941,11 +910,9 @@ getent passwd yarn >/dev/null || /usr/sbin/useradd --comment "Hadoop Yarn" --she
 %doc hadoop-dist/target/hadoop-%{hadoop_version}/share/doc/hadoop/common/LICENSE.txt hadoop-dist/target/hadoop-%{hadoop_version}/share/doc/hadoop/common/NOTICE.txt
 %endif
 
-%ifarch x86_64 %{ix86}
 %files libhdfs
 %doc hadoop-dist/target/hadoop-%{hadoop_version}/share/doc/hadoop/hdfs/LICENSE.txt
 %{_libdir}/%{name}/libhdfs*
-%endif
 
 %files -f .mfiles-hadoop-mapreduce mapreduce
 %config(noreplace) %{_sysconfdir}/%{name}/mapred-env.sh
@@ -990,12 +957,10 @@ getent passwd yarn >/dev/null || /usr/sbin/useradd --comment "Hadoop Yarn" --she
 %attr(0755,yarn,hadoop) %dir %{_var}/log/%{name}-yarn
 %attr(0755,yarn,hadoop) %dir %{_var}/cache/%{name}-yarn
 
-%ifarch x86_64 %{ix86}
 %files yarn-security
 %config(noreplace) %{_sysconfdir}/%{name}/container-executor.cfg
 # Permissions set per upstream guidelines: http://hadoop.apache.org/docs/current/hadoop-project-dist/hadoop-common/ClusterSetup.html#Configuration_in_Secure_Mode
 %attr(6050,root,yarn) %{_bindir}/container-executor
-%endif
 
 %changelog
 * Thu Aug 08 2013 Robert Rati <rrati@redhat> - 2.0.5-6
