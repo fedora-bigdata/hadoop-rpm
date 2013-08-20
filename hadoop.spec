@@ -269,10 +269,10 @@ This package contains the native-hadoop library
 %package devel
 Summary: Headers for Hadoop
 Group: Development/System
-Requires: %{name}-libhdfs%{?_isa} = %{version}-%{release}
+Requires: libhdfs%{?_isa} = %{version}-%{release}
 
 %description devel
-Header files for Hadoop's libhdfs library and other utilities
+Header files for Hadoop's hdfs library and other utilities
 
 %package hdfs
 Summary: The Hadoop Distributed File System
@@ -298,7 +298,7 @@ used by Hadoop applications.
 Summary: Allows mounting of Hadoop HDFS
 Group: Development/Libraries
 Requires: %{name}-common = %{version}-%{release}
-Requires: %{name}-libhdfs%{?_isa} = %{version}-%{release}
+Requires: libhdfs%{?_isa} = %{version}-%{release}
 Requires: %{name}-hdfs = %{version}-%{release}
 Requires: %{name}-yarn = %{version}-%{release}
 Requires: %{name}-mapreduce = %{version}-%{release}
@@ -349,12 +349,12 @@ BuildArch: noarch
 This package contains the API documentation for %{name}
 %endif
 
-%package libhdfs
+%package -n libhdfs
 Summary: The Hadoop Filesystem Library
 Group: Development/Libraries
 Requires: lzo
 
-%description libhdfs
+%description -n libhdfs
 Hadoop is a framework that allows for the distributed processing of large data
 sets across clusters of computers using simple programming models.  It is
 designed to scale up from single servers to thousands of machines, each
@@ -787,7 +787,7 @@ getent passwd yarn >/dev/null || /usr/sbin/useradd --comment "Hadoop Yarn" --she
 %systemd_post %{httpfs_services}
 %endif
 
-%post libhdfs -p /sbin/ldconfig
+%post -n libhdfs -p /sbin/ldconfig
 
 %post mapreduce
 %systemd_post %{mapreduce_services}
@@ -805,7 +805,7 @@ getent passwd yarn >/dev/null || /usr/sbin/useradd --comment "Hadoop Yarn" --she
 %systemd_postun_with_restart %{httpfs_services}
 %endif
 
-%postun libhdfs -p /sbin/ldconfig
+%postun -n libhdfs -p /sbin/ldconfig
 
 %postun mapreduce
 %systemd_postun_with_restart %{mapreduce_services}
@@ -910,7 +910,7 @@ getent passwd yarn >/dev/null || /usr/sbin/useradd --comment "Hadoop Yarn" --she
 %doc hadoop-dist/target/hadoop-%{hadoop_version}/share/doc/hadoop/common/LICENSE.txt hadoop-dist/target/hadoop-%{hadoop_version}/share/doc/hadoop/common/NOTICE.txt
 %endif
 
-%files libhdfs
+%files -n libhdfs
 %doc hadoop-dist/target/hadoop-%{hadoop_version}/share/doc/hadoop/hdfs/LICENSE.txt
 %{_libdir}/%{name}/libhdfs*
 
