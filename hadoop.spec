@@ -964,7 +964,7 @@ getent passwd yarn >/dev/null || /usr/sbin/useradd --comment "Hadoop Yarn" --she
 
 %changelog
 * Wed Aug 28 2013 Robert Rati <rrati@redhat> - 2.0.5-8
-- Removed systemPath and scope from tools.jar dependency definition
+- Removed systemPath, version, and scope from tools.jar dependency definition
 
 * Tue Aug 20 2013 Robert Rati <rrati@redhat> - 2.0.5-7
 - Changed hdfs subpackage from hadoop-libhdfs to libhdfs
