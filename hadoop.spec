@@ -369,6 +369,7 @@ This package contains the API documentation for %{name}
 %package -n libhdfs
 Summary: The Hadoop Filesystem Library
 Group: Development/Libraries
+Requires: %{name}-hdfs = %{version}-%{release}
 Requires: lzo
 
 %description -n libhdfs
