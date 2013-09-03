@@ -615,7 +615,8 @@ rm -f %{buildroot}/%{_sbindir}/hdfs-config.sh
 
 cp -arf $basedir/etc/* %{buildroot}/%{_sysconfdir}
 cp -arf $basedir/include/* %{buildroot}/%{_includedir}/%{name}
-cp -arf $basedir/lib/native/*.so* %{buildroot}/%{_libdir}/%{name}
+cp -arf $basedir/lib/native/libhadoop.so* %{buildroot}/%{_libdir}/%{name}
+cp -arf $basedir/lib/native/libhdfs.so* %{buildroot}/%{_libdir}
 chrpath --delete %{buildroot}/%{_libdir}/%{name}/*
 cp -af hadoop-hdfs-project/hadoop-hdfs/target/native/main/native/fuse-dfs/fuse_dfs %{buildroot}/%{_bindir}
 chrpath --delete %{buildroot}/%{_bindir}/fuse_dfs
@@ -950,7 +951,7 @@ getent passwd yarn >/dev/null || /usr/sbin/useradd --comment "Hadoop Yarn" --she
 
 %files -n libhdfs
 %doc hadoop-dist/target/hadoop-%{hadoop_version}/share/doc/hadoop/hdfs/LICENSE.txt
-%{_libdir}/%{name}/libhdfs*
+%{_libdir}/libhdfs*
 
 %files -f .mfiles-hadoop-mapreduce mapreduce
 %config(noreplace) %{_sysconfdir}/%{name}/mapred-env.sh
