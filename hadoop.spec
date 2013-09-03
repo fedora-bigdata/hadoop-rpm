@@ -510,20 +510,23 @@ This package contains files needed to run Hadoop YARN in secure mode.
 # Jar files for common
 # Workaround for BZ986909
 #%%mvn_file ":%{name}-common" %{_jnidir}/%{name}-common %{_datadir}/%{name}/common/%{name}-common
-%mvn_file ":{%{name}-{annotations,auth}}" %{name}/@1 %{_datadir}/%{name}/common/lib/@1
+%mvn_file ":%{name}-annotations" %{name}/%{name}-annotations %{_datadir}/%{name}/client/lib/%{name}-annotations %{_datadir}/%{name}/common/lib/%{name}-annotations %{_datadir}/%{name}/mapreduce/lib/%{name}-annotations %{_datadir}/%{name}/yarn/lib/%{name}-annotations
+%mvn_file ":%{name}-auth" %{name}/%{name}-auth %{_datadir}/%{name}/client/lib/%{name}-auth %{_datadir}/%{name}/common/lib/%{name}-auth
 
 # Jar files for hdfs
-%mvn_file ":%{name}-hdfs" %{name}/%{name}-hdfs %{_datadir}/%{name}/hdfs/%{name}-hdfs
+%mvn_file ":%{name}-hdfs" %{name}/%{name}-hdfs %{_datadir}/%{name}/client/lib/%{name}-hdfs %{_datadir}/%{name}/hdfs/%{name}-hdfs
 
 # Jar files for mapreduce
-%mvn_file ":{%{name}-mapreduce-client-*}" %{name}/@1 %{_datadir}/%{name}/mapreduce/@1
+%mvn_file ":{%{name}-mapreduce-client-{app,common,core,jobclient,shuffle}}" %{name}/@1 %{_datadir}/%{name}/client/lib/@1 %{_datadir}/%{name}/mapreduce/@1
+%mvn_file ":{%{name}-mapreduce-client-{hs,hs-plugins}}" %{name}/@1 %{_datadir}/%{name}/mapreduce/@1
 %mvn_file ":{%{name}-{archives,datajoin,distcp,extras,gridmix,rumen,streaming}}" %{name}/@1 %{_datadir}/%{name}/mapreduce/@1
 
 # Jar files for mapreduce-examples
 %mvn_file ":%{name}-mapreduce-examples" %{name}/%{name}-mapreduce-examples %{_datadir}/%{name}/mapreduce/%{name}-mapreduce-examples
 
 # Jar files for yarn
-%mvn_file ":{%{name}-yarn-*}" %{name}/@1 %{_datadir}/%{name}/yarn/@1
+%mvn_file ":{%{name}-yarn-{api,client,common,server-common}}" %{name}/@1 %{_datadir}/%{name}/client/lib/@1 %{_datadir}/%{name}/yarn/@1
+%mvn_file ":{%{name}-yarn-{applications-distributedshell,applications-unmanaged-am-launcher,server-nodemanager,server-resourcemanager,server-web-proxy,site}}" %{name}/@1 %{_datadir}/%{name}/yarn/@1
 
 %build
 %ifnarch x86_64
@@ -536,10 +539,11 @@ opts="-j"
 #mvn-rpmbuild -Pdist,native test -Dmaven.test.failure.ignore=true
 
 %install
-# Creates symlinks from %{_javadir} into a specificed directory and will
+# Creates symlinks for dependency jars into a specificed directory and will
 # append the files to the filelist
 # $1 the directory to create the smlinks
 # $2 the filelist to append to
+# $* the list of jars to link
 link_jars()
 {
   dir=$1
@@ -637,10 +641,11 @@ pushd %{buildroot}/%{_datadir}/%{name}/common
   %{__ln_s} %{_jnidir}/%{name}-common.jar .
 popd
 install -pm 664 hadoop-common-project/hadoop-common/pom.xml %{buildroot}%{_mavenpomdir}/JPP-%{name}-common.pom
-%add_maven_depmap JPP-%{name}-common.pom %{name}-common.jar -f hadoop-common
+%add_maven_depmap JPP-%{name}-common.pom %{name}-common.jar -f %{name}-common
 
 # client jar depenencies
-link_jars %{_datadir}/%{name}/client/lib .mfiles-hadoop-client antlr objectweb-asm/asm avalon-framework-api avalon-logkit avro/avro cglib checkstyle commons-beanutils-core commons-cli commons-codec commons-collections commons-configuration commons-io commons-lang commons-logging commons-math3 commons-net guava %{name}/%{name}-annotations %{name}/%{name}-auth %{name}-common %{name}/%{name}-hdfs %{name}/%{name}-mapreduce-client-app %{name}/%{name}-mapreduce-client-common %{name}/%{name}-mapreduce-client-core %{name}/%{name}-mapreduce-client-jobclient %{name}/%{name}-mapreduce-client-shuffle %{name}/%{name}-yarn-api %{name}/%{name}-yarn-client %{name}/%{name}-yarn-common %{name}/%{name}-yarn-server-common hamcrest/core jackson/jackson-core-asl jackson/jackson-mapper-asl tomcat-servlet-api glassfish-jsp glassfish-jsp-api jersey/jersey-servlet jetty/jetty-http jetty/jetty-io jetty/jetty-server jetty/jetty-util jetty/jetty-util-ajax jline jms jsr-305 junit jzlib log4j javamail/mail mockito netty objenesis paranamer/paranamer protobuf slf4j/api slf4j/log4j12 snappy-java tomcat/tomcat-el-2.2-api xmlenc zookeeper/zookeeper
+%{__ln_s} %{_jnidir}/%{name}-common.jar %{buildroot}/%{_datadir}/%{name}/client/lib
+link_jars %{_datadir}/%{name}/client/lib .mfiles-hadoop-client antlr objectweb-asm/asm avalon-framework-api avalon-logkit avro/avro cglib checkstyle commons-beanutils-core commons-cli commons-codec commons-collections commons-configuration commons-io commons-lang commons-logging commons-math3 commons-net guava hamcrest/core jackson/jackson-core-asl jackson/jackson-mapper-asl tomcat-servlet-api glassfish-jsp glassfish-jsp-api jersey/jersey-servlet jetty/jetty-http jetty/jetty-io jetty/jetty-server jetty/jetty-util jetty/jetty-util-ajax jline jms jsr-305 junit jzlib log4j javamail/mail mockito netty objenesis paranamer/paranamer protobuf slf4j/api slf4j/log4j12 snappy-java tomcat/tomcat-el-2.2-api xmlenc zookeeper/zookeeper
 
 # common jar depenencies
 link_jars %{_datadir}/%{name}/common/lib .mfiles antlr objectweb-asm/asm avalon-framework-api avalon-logkit avro/avro base64 cglib checkstyle commons-beanutils-core commons-cli commons-codec commons-collections commons-configuration commons-el commons-httpclient commons-io commons-lang commons-logging commons-math3 commons-net guava httpcomponents/httpclient httpcomponents/httpcore istack-commons-runtime jackson/jackson-core-asl jackson/jackson-jaxrs jackson/jackson-mapper-asl jackson/jackson-xc java-xmlbuilder tomcat-servlet-api glassfish-jsp glassfish-jsp-api glassfish-jaxb/jaxb-impl jersey/jersey-core jersey/jersey-json jersey/jersey-server jersey/jersey-servlet jets3t/jets3t jettison jetty/jetty-http jetty/jetty-io jetty/jetty-security jetty/jetty-server jetty/jetty-servlet jetty/jetty-util jetty/jetty-util-ajax jetty/jetty-webapp jetty/jetty-xml jline jms jsch jsr-305 jsr-311 jzlib log4j javamail/mail mockito netty objenesis paranamer/paranamer protobuf relaxngDatatype slf4j/api slf4j/log4j12 snappy-java tomcat/tomcat-el-2.2-api txw2 xmlenc zookeeper/zookeeper
@@ -666,7 +671,8 @@ EOF
 
 # Remove the jars included in the webapp and create symlinks
 rm -rf %{buildroot}/%{_sharedstatedir}/%{name}-httpfs/webapps/webhdfs/WEB-INF/lib/*
-link_jars %{_sharedstatedir}/%{name}-httpfs/webapps/webhdfs/WEB-INF/lib nil antlr objectweb-asm/asm avalon-framework-api avalon-logkit avro/avro cglib checkstyle commons-beanutils-core commons-cli commons-codec commons-collections commons-configuration commons-daemon commons-io commons-lang commons-logging commons-math3 commons-net guava %{name}/%{name}-annotations %{name}/%{name}-auth %{name}-common %{name}/%{name}-hdfs hamcrest/core istack-commons-runtime jackson/jackson-core-asl jackson/jackson-jaxrs jackson/jackson-mapper-asl jackson/jackson-xc glassfish-jsp glassfish-jsp-api glassfish-jaxb/jaxb-impl jersey/jersey-core jersey/jersey-json jersey/jersey-server jersey/jersey-servlet jettison jetty/jetty-util jetty/jetty-util-ajax jline jms jsch json_simple jsr-305 jsr-311 jzlib log4j javamail/mail mockito netty objenesis paranamer/paranamer protobuf slf4j/api slf4j/log4j12 snappy-java txw2 xmlenc zookeeper/zookeeper
+%{__ln_s} %{_jnidir}/%{name}-common.jar %{buildroot}%{_sharedstatedir}/%{name}-httpfs/webapps/webhdfs/WEB-INF/lib
+link_jars %{_sharedstatedir}/%{name}-httpfs/webapps/webhdfs/WEB-INF/lib nil antlr objectweb-asm/asm avalon-framework-api avalon-logkit avro/avro cglib checkstyle commons-beanutils-core commons-cli commons-codec commons-collections commons-configuration commons-daemon commons-io commons-lang commons-logging commons-math3 commons-net guava hamcrest/core istack-commons-runtime jackson/jackson-core-asl jackson/jackson-jaxrs jackson/jackson-mapper-asl jackson/jackson-xc glassfish-jsp glassfish-jsp-api glassfish-jaxb/jaxb-impl jersey/jersey-core jersey/jersey-json jersey/jersey-server jersey/jersey-servlet jettison jetty/jetty-util jetty/jetty-util-ajax jline jms jsch json_simple jsr-305 jsr-311 jzlib log4j javamail/mail mockito netty objenesis paranamer/paranamer protobuf slf4j/api slf4j/log4j12 snappy-java txw2 xmlenc zookeeper/zookeeper
 
 link_jars %{_datadir}/%{name}/httpfs/tomcat/bin nil tomcat/tomcat-juli commons-daemon
 link_jars %{_datadir}/%{name}/httpfs/tomcat/lib nil tomcat/annotations-api tomcat/catalina-ant tomcat/catalina-ha tomcat/catalina tomcat/catalina-tribes ecj tomcat/tomcat-el-2.2-api tomcat/jasper-el tomcat/jasper glassfish-jsp-api tomcat/tomcat-api tomcat/tomcat-jsp-2.2-api tomcat-servlet-api tomcat/tomcat-coyote tomcat/tomcat-util commons-dbcp tomcat/tomcat-i18n-es tomcat/tomcat-i18n-fr tomcat/tomcat-i18n-ja
@@ -685,10 +691,10 @@ popd
 %endif
 
 # mapreduce jar dependencies
-link_jars %{_datadir}/%{name}/mapreduce/lib .mfiles-hadoop-mapreduce aopalliance atinject objectweb-asm/asm avro/avro commons-io guava google-guice guice/guice-servlet %{name}/%{name}-annotations hamcrest/core jackson/jackson-core-asl jackson/jackson-mapper-asl jersey/jersey-core jersey/jersey-guice jersey/jersey-server jersey/jersey-servlet jsr-311 junit jzlib log4j netty paranamer/paranamer protobuf snappy-java
+link_jars %{_datadir}/%{name}/mapreduce/lib .mfiles-hadoop-mapreduce aopalliance atinject objectweb-asm/asm avro/avro commons-io guava google-guice guice/guice-servlet hamcrest/core jackson/jackson-core-asl jackson/jackson-mapper-asl jersey/jersey-core jersey/jersey-guice jersey/jersey-server jersey/jersey-servlet jsr-311 junit jzlib log4j netty paranamer/paranamer protobuf snappy-java
 
 # yarn jar dependencies
-link_jars %{_datadir}/%{name}/yarn/lib .mfiles-hadoop-yarn aopalliance atinject objectweb-asm/asm avro/avro cglib commons-io guava google-guice guice/guice-servlet %{name}/%{name}-annotations hamcrest/core jackson/jackson-core-asl jackson/jackson-mapper-asl jersey/jersey-core jersey/jersey-guice jersey/jersey-server jersey/jersey-servlet jsr-311 junit jzlib log4j netty paranamer/paranamer protobuf snappy-java
+link_jars %{_datadir}/%{name}/yarn/lib .mfiles-hadoop-yarn aopalliance atinject objectweb-asm/asm avro/avro cglib commons-io guava google-guice guice/guice-servlet hamcrest/core jackson/jackson-core-asl jackson/jackson-mapper-asl jersey/jersey-core jersey/jersey-guice jersey/jersey-server jersey/jersey-servlet jsr-311 junit jzlib log4j netty paranamer/paranamer protobuf snappy-java
 
 # Install hdfs webapp bits
 cp -arf $basedir/share/hadoop/hdfs/webapps/* %{buildroot}/%{_sharedstatedir}/%{name}-hdfs/webapps
@@ -838,8 +844,13 @@ getent passwd yarn >/dev/null || /usr/sbin/useradd --comment "Hadoop Yarn" --she
 %systemd_postun_with_restart %{yarn_services}
 
 %files -f .mfiles-hadoop-client client
+%{_datadir}/%{name}/client/lib/%{name}-*.jar
 
 %files -f .mfiles common
+%exclude %{_datadir}/%{name}/client
+%exclude %{_datadir}/%{name}/hdfs
+%exclude %{_datadir}/%{name}/mapreduce
+%exclude %{_datadir}/%{name}/yarn
 %doc hadoop-dist/target/hadoop-%{hadoop_version}/share/doc/hadoop/common/*
 %config(noreplace) %{_sysconfdir}/%{name}/configuration.xsl
 %config(noreplace) %{_sysconfdir}/%{name}/core-site.xml
@@ -855,10 +866,10 @@ getent passwd yarn >/dev/null || /usr/sbin/useradd --comment "Hadoop Yarn" --she
 %{_datadir}/%{name}/common/%{name}-common.jar
 # Workaround for BZ986909
 %{_jnidir}/%{name}-common.jar
-%{_libexecdir}/%{name}-config.sh
-%{_libexecdir}/%{name}-layout.sh
 %{_mavenpomdir}/JPP-%{name}-common.pom
 %{_mavendepmapfragdir}/%{name}-%{name}-common
+%{_libexecdir}/%{name}-config.sh
+%{_libexecdir}/%{name}-layout.sh
 %{_bindir}/%{name}
 %{_bindir}/rcc
 %{_sbindir}/%{name}-daemon.sh
@@ -947,6 +958,7 @@ getent passwd yarn >/dev/null || /usr/sbin/useradd --comment "Hadoop Yarn" --she
 %config(noreplace) %{_sysconfdir}/%{name}/mapred-site.xml.template
 %config(noreplace) %{_sysconfdir}/security/limits.d/mapreduce.conf
 %dir %{_datadir}/%{name}/mapreduce
+%{_datadir}/%{name}/mapreduce/lib/%{name}-*.jar
 %{_libexecdir}/mapred-config.sh
 %{_unitdir}/%{name}-historyserver.service
 %{_bindir}/mapred
@@ -972,6 +984,7 @@ getent passwd yarn >/dev/null || /usr/sbin/useradd --comment "Hadoop Yarn" --she
 %{_unitdir}/%{name}-resourcemanager.service
 %{_libexecdir}/yarn-config.sh
 %dir %{_datadir}/%{name}/yarn
+%{_datadir}/%{name}/yarn/lib/%{name}-*.jar
 %{_bindir}/yarn
 %{_sbindir}/yarn-daemon.sh
 %{_sbindir}/yarn-daemons.sh
