@@ -183,7 +183,7 @@ designed to scale up from single servers to thousands of machines, each
 offering local computation and storage.
 
 %package client
-Summary: Libraries for hadoop clients
+Summary: Libraries for Hadoop clients
 Group: Applications/System
 BuildArch: noarch
 Requires: %{name}-common = %{version}-%{release}
@@ -197,10 +197,10 @@ sets across clusters of computers using simple programming models.  It is
 designed to scale up from single servers to thousands of machines, each
 offering local computation and storage.
 
-This package provides libraries for hadoop clients.
+This package provides libraries for Hadoop clients.
 
 %package common
-Summary: Common files needed by hadoop daemons
+Summary: Common files needed by Hadoop daemons
 Group: Applications/System
 BuildArch: noarch
 Requires: /usr/sbin/useradd
@@ -408,13 +408,29 @@ Requires: hsqldb
 This package contains mapreduce examples.
 
 %package maven-plugin
-Summary: Apache Hadoop maven plugin
+Summary: Hadoop maven plugin
 Group: Development/Libraries
 BuildArch: noarch
 Requires: maven
 
 %description maven-plugin
 The Hadoop maven plugin
+
+%package tests
+Summary: Hadoop test resources
+BuildArch: noarch
+Requires: %{name}-common = %{version}-%{release}
+Requires: %{name}-hdfs = %{version}-%{release}
+Requires: %{name}-yarn = %{version}-%{release}
+Requires: %{name}-mapreduce = %{version}-%{release}
+
+%description tests
+Hadoop is a framework that allows for the distributed processing of large data
+sets across clusters of computers using simple programming models.  It is
+designed to scale up from single servers to thousands of machines, each
+offering local computation and storage.
+
+This package contains test related resources for Hadoop.
 
 %package yarn
 Summary: Hadoop YARN
@@ -474,18 +490,11 @@ This package contains files needed to run Hadoop YARN in secure mode.
 #%%pom_xpath_replace "pom:build/pom:plugins/pom:plugin[pom:artifactId ='maven-javadoc-plugin']/pom:configuration/pom:maxmemory" '<maxmemory>3072m</maxmemory>' hadoop-project-dist
 
 # War files we don't want
-%mvn_package org.apache.hadoop:hadoop-auth-examples __noinstall
-%mvn_package org.apache.hadoop:hadoop-hdfs-httpfs __noinstall
-
-# We don't want these jars either because they are empty
-%mvn_package org.apache.hadoop:hadoop-assemblies __noinstall
-%mvn_package org.apache.hadoop:hadoop-dist __noinstall
-%mvn_package org.apache.hadoop:hadoop-minicluster __noinstall
-%mvn_package org.apache.hadoop:hadoop-tools-dist __noinstall
-%mvn_package org.apache.hadoop:hadoop-yarn-server-tests __noinstall
+%mvn_package :%{name}-auth-examples __noinstall
+%mvn_package :%{name}-hdfs-httpfs __noinstall
 
 # Parts we don't want to distribute
-%mvn_package :hadoop-hdfs-bkjournal __noinstall
+%mvn_package :%{name}-assemblies __noinstall
 
 # Create separate file lists for packaging
 %mvn_package ":%{name}-client*" hadoop-client
@@ -498,8 +507,11 @@ This package contains files needed to run Hadoop YARN in secure mode.
 %mvn_package ":%{name}-gridmix*" hadoop-mapreduce
 %mvn_package ":%{name}-rumen*" hadoop-mapreduce
 %mvn_package ":%{name}-streaming*" hadoop-mapreduce
+%mvn_package ":%{name}-tools-dist*" hadoop-mapreduce
 %mvn_package ":%{name}-mapreduce-examples*" hadoop-mapreduce-examples
 %mvn_package ":%{name}-maven-plugins" hadoop-maven-plugin
+%mvn_package ":%{name}-minicluster*" hadoop-tests
+%mvn_package ":%{name}-*-tests*" hadoop-tests
 %mvn_package ":%{name}-yarn*" hadoop-yarn
 
 # Workaround for BZ986909
@@ -516,6 +528,7 @@ This package contains files needed to run Hadoop YARN in secure mode.
 
 # Jar files for hdfs
 %mvn_file ":%{name}-hdfs" %{name}/%{name}-hdfs %{_datadir}/%{name}/client/lib/%{name}-hdfs %{_datadir}/%{name}/hdfs/%{name}-hdfs
+%mvn_file ":%{name}-hdfs-bkjournal" %{name}/%{name}-hdfs-bkjournal %{_datadir}/%{name}/hdfs/lib/%{name}-hdfs-bkjournal
 
 # Jar files for mapreduce
 %mvn_file ":{%{name}-mapreduce-client-{app,common,core,jobclient,shuffle}}" %{name}/@1 %{_datadir}/%{name}/client/lib/@1 %{_datadir}/%{name}/mapreduce/@1
@@ -524,6 +537,9 @@ This package contains files needed to run Hadoop YARN in secure mode.
 
 # Jar files for mapreduce-examples
 %mvn_file ":%{name}-mapreduce-examples" %{name}/%{name}-mapreduce-examples %{_datadir}/%{name}/mapreduce/%{name}-mapreduce-examples
+
+# Some jar files for tests
+%mvn_file ":%{name}-yarn-server-tests" %{name}/%{name}-yarn-server-tests-tests
 
 # Jar files for yarn
 %mvn_file ":{%{name}-yarn-{api,client,common,server-common}}" %{name}/@1 %{_datadir}/%{name}/client/lib/@1 %{_datadir}/%{name}/yarn/@1
@@ -605,6 +621,13 @@ basedir='hadoop-dist/target/hadoop-%{hadoop_version}'
 for dir in bin libexec sbin
 do
   cp -arf $basedir/$dir %{buildroot}/%{_prefix}
+done
+
+# Copy all test jars but strip out the version in the jar name
+for f in `find $basedir ! -name "*yarn-server-tests*" -name "%{name}-*-tests.jar"`
+do
+  name=`echo $(basename $f) | sed "s/-%{hadoop_version}//g"`
+  install -m 0644 $f %{buildroot}/%{_javadir}/%{name}/$name
 done
 
 # We don't care about this
@@ -846,6 +869,7 @@ getent passwd yarn >/dev/null || /usr/sbin/useradd --comment "Hadoop Yarn" --she
 %systemd_postun_with_restart %{yarn_services}
 
 %files -f .mfiles-hadoop-client client
+%dir %{_datadir}/%{name}/client
 %{_datadir}/%{name}/client/lib/%{name}-*.jar
 
 %files -f .mfiles common
@@ -864,7 +888,7 @@ getent passwd yarn >/dev/null || /usr/sbin/useradd --comment "Hadoop Yarn" --she
 %config(noreplace) %{_sysconfdir}/%{name}/slaves
 %config(noreplace) %{_sysconfdir}/%{name}/ssl-client.xml.example
 %config(noreplace) %{_sysconfdir}/%{name}/ssl-server.xml.example
-%dir %{_datadir}/%{name}
+%dir %{_datadir}/%{name}/common
 %{_datadir}/%{name}/common/%{name}-common.jar
 # Workaround for BZ986909
 %{_jnidir}/%{name}-common.jar
@@ -975,6 +999,9 @@ getent passwd yarn >/dev/null || /usr/sbin/useradd --comment "Hadoop Yarn" --she
 
 %files -f .mfiles-hadoop-maven-plugin maven-plugin
 %doc hadoop-dist/target/hadoop-%{hadoop_version}/share/doc/hadoop/common/LICENSE.txt
+
+%files -f .mfiles-hadoop-tests tests
+%{_javadir}/%{name}/%{name}-*-tests.jar
 
 %files -f .mfiles-hadoop-yarn yarn
 %config(noreplace) %{_sysconfdir}/%{name}/capacity-scheduler.xml
