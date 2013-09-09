@@ -571,6 +571,7 @@ link_jars()
 copy_dep_jars()
 {
   find $1 ! -name "hadoop-*.jar" -name "*.jar" | xargs install -m 0644 -t $2
+  rm -f $2/tools-*.jar
 }
 
 %mvn_install
@@ -655,21 +656,16 @@ install -pm 664 hadoop-common-project/hadoop-common/pom.xml %{buildroot}%{_maven
 
 # client jar depenencies
 copy_dep_jars %{name}-client/target/%{name}-client-%{hadoop_version}/share/%{name}/client/lib %{buildroot}/%{_datadir}/%{name}/client/lib
-rm -f %{buildroot}/%{_datadir}/%{name}/client/lib/tools-*.jar
 %{_bindir}/xmvn-subst %{buildroot}/%{_datadir}/%{name}/client/lib
 %{__ln_s} %{_jnidir}/%{name}-common.jar %{buildroot}/%{_datadir}/%{name}/client/lib
-#link_jars %{_datadir}/%{name}/client/lib .mfiles-hadoop-client antlr objectweb-asm/asm avalon-framework-api avalon-logkit avro/avro cglib checkstyle commons-beanutils-core commons-cli commons-codec commons-collections commons-configuration commons-io commons-lang commons-logging commons-math3 commons-net guava hamcrest/core jackson/jackson-core-asl jackson/jackson-mapper-asl tomcat-servlet-api glassfish-jsp glassfish-jsp-api jersey/jersey-servlet jetty/jetty-http jetty/jetty-io jetty/jetty-server jetty/jetty-util jetty/jetty-util-ajax jline jms jsr-305 junit jzlib log4j javamail/mail mockito netty objenesis paranamer/paranamer protobuf slf4j/api slf4j/log4j12 snappy-java tomcat/tomcat-el-2.2-api xmlenc zookeeper/zookeeper
 
 # common jar depenencies
 copy_dep_jars $basedir/share/%{name}/common/lib %{buildroot}/%{_datadir}/%{name}/common/lib
-rm -f %{buildroot}/%{_datadir}/%{name}/common/lib/tools-*.jar
 %{_bindir}/xmvn-subst %{buildroot}/%{_datadir}/%{name}/common/lib
-#link_jars %{_datadir}/%{name}/common/lib .mfiles antlr objectweb-asm/asm avalon-framework-api avalon-logkit avro/avro base64 cglib checkstyle commons-beanutils-core commons-cli commons-codec commons-collections commons-configuration commons-el commons-httpclient commons-io commons-lang commons-logging commons-math3 commons-net guava httpcomponents/httpclient httpcomponents/httpcore istack-commons-runtime jackson/jackson-core-asl jackson/jackson-jaxrs jackson/jackson-mapper-asl jackson/jackson-xc java-xmlbuilder tomcat-servlet-api glassfish-jsp glassfish-jsp-api glassfish-jaxb/jaxb-impl jersey/jersey-core jersey/jersey-json jersey/jersey-server jersey/jersey-servlet jets3t/jets3t jettison jetty/jetty-http jetty/jetty-io jetty/jetty-security jetty/jetty-server jetty/jetty-servlet jetty/jetty-util jetty/jetty-util-ajax jetty/jetty-webapp jetty/jetty-xml jline jms jsch jsr-305 jsr-311 jzlib log4j javamail/mail mockito netty objenesis paranamer/paranamer protobuf relaxngDatatype slf4j/api slf4j/log4j12 snappy-java tomcat/tomcat-el-2.2-api txw2 xmlenc zookeeper/zookeeper
 
 # hdfs jar dependencies
 copy_dep_jars $basedir/share/%{name}/hdfs/lib %{buildroot}/%{_datadir}/%{name}/hdfs/lib
 %{_bindir}/xmvn-subst %{buildroot}/%{_datadir}/%{name}/hdfs/lib
-#link_jars %{_datadir}/%{name}/hdfs/lib .mfiles-hadoop-hdfs antlr objectweb-asm/asm avalon-framework-api avalon-logkit cglib checkstyle commons-beanutils-core commons-cli commons-codec commons-daemon commons-io commons-lang commons-logging guava jackson/jackson-core-asl jackson/jackson-mapper-asl tomcat-servlet-api jersey/jersey-core jersey/jersey-server jetty/jetty-http jetty/jetty-io jetty/jetty-server jetty/jetty-util jline jms jsr-311 jzlib log4j javamail/mail mockito netty objenesis protobuf slf4j/api xmlenc zookeeper/zookeeper
 
 # httpfs
 %if %{package_httpfs}
@@ -694,16 +690,18 @@ rm -f %{buildroot}%{_sharedstatedir}/%{name}-httpfs/webapps/webhdfs/WEB-INF/lib/
 %{__ln_s} %{_jnidir}/%{name}-common.jar %{buildroot}%{_sharedstatedir}/%{name}-httpfs/webapps/webhdfs/WEB-INF/lib
 #link_jars %{_sharedstatedir}/%{name}-httpfs/webapps/webhdfs/WEB-INF/lib nil antlr objectweb-asm/asm avalon-framework-api avalon-logkit avro/avro cglib checkstyle commons-beanutils-core commons-cli commons-codec commons-collections commons-configuration commons-daemon commons-io commons-lang commons-logging commons-math3 commons-net guava hamcrest/core istack-commons-runtime jackson/jackson-core-asl jackson/jackson-jaxrs jackson/jackson-mapper-asl jackson/jackson-xc glassfish-jsp glassfish-jsp-api glassfish-jaxb/jaxb-impl jersey/jersey-core jersey/jersey-json jersey/jersey-server jersey/jersey-servlet jettison jetty/jetty-util jetty/jetty-util-ajax jline jms jsch json_simple jsr-305 jsr-311 jzlib log4j javamail/mail mockito netty objenesis paranamer/paranamer protobuf slf4j/api slf4j/log4j12 snappy-java txw2 xmlenc zookeeper/zookeeper
 
-copy_dep_jars $basedir/share/hadoop/httpfs/tomcat/bin %{buildroot}/%{_datadir}/%{name}/httpfs/tomcat/bin
-%{_bindir}/xmvn-subst %{buildroot}/%{_datadir}/%{name}/httpfs/tomcat/bin
-#link_jars %{_datadir}/%{name}/httpfs/tomcat/bin nil tomcat/tomcat-juli commons-daemon
+# xmvn-subst won't work with d/led jars
+#copy_dep_jars $basedir/share/hadoop/httpfs/tomcat/bin %{buildroot}/%{_datadir}/%{name}/httpfs/tomcat/bin
+#%%{_bindir}/xmvn-subst %{buildroot}/%{_datadir}/%{name}/httpfs/tomcat/bin
+link_jars %{_datadir}/%{name}/httpfs/tomcat/bin nil tomcat/tomcat-juli commons-daemon
 
-copy_dep_jars $basedir/share/hadoop/httpfs/tomcat/lib %{buildroot}/%{_datadir}/%{name}/httpfs/tomcat/lib
-%{_bindir}/xmvn-subst %{buildroot}/%{_datadir}/%{name}/httpfs/tomcat/lib
-#link_jars %{_datadir}/%{name}/httpfs/tomcat/lib nil tomcat/annotations-api tomcat/catalina-ant tomcat/catalina-ha tomcat/catalina tomcat/catalina-tribes ecj tomcat/tomcat-el-2.2-api tomcat/jasper-el tomcat/jasper glassfish-jsp-api tomcat/tomcat-api tomcat/tomcat-jsp-2.2-api tomcat-servlet-api tomcat/tomcat-coyote tomcat/tomcat-util commons-dbcp tomcat/tomcat-i18n-es tomcat/tomcat-i18n-fr tomcat/tomcat-i18n-ja
+# xmvn-subst won't work with d/led jars
+#copy_dep_jars $basedir/share/hadoop/httpfs/tomcat/lib %{buildroot}/%{_datadir}/%{name}/httpfs/tomcat/lib
+#%%{_bindir}/xmvn-subst %{buildroot}/%{_datadir}/%{name}/httpfs/tomcat/lib
+link_jars %{_datadir}/%{name}/httpfs/tomcat/lib nil tomcat/annotations-api tomcat/catalina-ant tomcat/catalina-ha tomcat/catalina tomcat/catalina-tribes ecj tomcat/tomcat-el-2.2-api tomcat/jasper-el tomcat/jasper glassfish-jsp-api tomcat/tomcat-api tomcat/tomcat-jsp-2.2-api tomcat-servlet-api tomcat/tomcat-coyote tomcat/tomcat-util commons-dbcp tomcat/tomcat-i18n-es tomcat/tomcat-i18n-fr tomcat/tomcat-i18n-ja
 
 pushd %{buildroot}/%{_datadir}/%{name}/httpfs/tomcat
-#%%{__ln_s} %{_datadir}/tomcat/bin/bootstrap.jar bin
+  %{__ln_s} %{_datadir}/tomcat/bin/bootstrap.jar bin
   for f in `ls %{buildroot}/%{_libexecdir}/%{name}-httpfs`
   do
     %{__ln_s} %{_libexecdir}/%{name}-httpfs/$f bin
@@ -718,15 +716,11 @@ popd
 
 # mapreduce jar dependencies
 copy_dep_jars $basedir/share/%{name}/mapreduce/lib %{buildroot}/%{_datadir}/%{name}/mapreduce/lib
-rm -f %{buildroot}/%{_datadir}/%{name}/mapreduce/lib/tools-*.jar
 %{_bindir}/xmvn-subst %{buildroot}/%{_datadir}/%{name}/mapreduce/lib
-#link_jars %{_datadir}/%{name}/mapreduce/lib .mfiles-hadoop-mapreduce aopalliance atinject objectweb-asm/asm avro/avro commons-io guava google-guice guice/guice-servlet hamcrest/core jackson/jackson-core-asl jackson/jackson-mapper-asl jersey/jersey-core jersey/jersey-guice jersey/jersey-server jersey/jersey-servlet jsr-311 junit jzlib log4j netty paranamer/paranamer protobuf snappy-java
 
 # yarn jar dependencies
 copy_dep_jars $basedir/share/%{name}/yarn/lib %{buildroot}/%{_datadir}/%{name}/yarn/lib
-rm -f %{buildroot}/%{_datadir}/%{name}/yarn/lib/tools-*.jar
 %{_bindir}/xmvn-subst %{buildroot}/%{_datadir}/%{name}/yarn/lib
-#link_jars %{_datadir}/%{name}/yarn/lib .mfiles-hadoop-yarn aopalliance atinject objectweb-asm/asm avro/avro cglib commons-io guava google-guice guice/guice-servlet hamcrest/core jackson/jackson-core-asl jackson/jackson-mapper-asl jersey/jersey-core jersey/jersey-guice jersey/jersey-server jersey/jersey-servlet jsr-311 junit jzlib log4j netty paranamer/paranamer protobuf snappy-java
 
 # Install hdfs webapp bits
 cp -arf $basedir/share/hadoop/hdfs/webapps/* %{buildroot}/%{_sharedstatedir}/%{name}-hdfs/webapps
