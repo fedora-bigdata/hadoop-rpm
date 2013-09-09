@@ -632,6 +632,9 @@ do
   cp -arf $basedir/$dir %{buildroot}/%{_prefix}
 done
 
+# This binary is obsoleted and causes a conflict with qt-devel
+rm -rf %{buildroot}/%{_bindir}/rcc
+
 # Copy all test jars but strip out the version in the jar name
 for f in `find $basedir ! -name "*yarn-server-tests*" -name "%{name}-*-tests.jar"`
 do
@@ -925,7 +928,6 @@ getent passwd yarn >/dev/null || /usr/sbin/useradd --comment "Hadoop Yarn" --she
 %{_libexecdir}/%{name}-config.sh
 %{_libexecdir}/%{name}-layout.sh
 %{_bindir}/%{name}
-%{_bindir}/rcc
 %{_sbindir}/%{name}-daemon.sh
 %{_sbindir}/%{name}-daemons.sh
 %{_sbindir}/start-all.sh
