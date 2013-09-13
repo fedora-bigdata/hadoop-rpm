@@ -1065,7 +1065,7 @@ getent passwd yarn >/dev/null || /usr/sbin/useradd --comment "Hadoop Yarn" --she
 %attr(6050,root,yarn) %{_bindir}/container-executor
 
 %changelog
-* Wed Sep 13 2013 Robert Rati <rrati@redhat> - 2.0.5-9
+* Fri Sep 13 2013 Robert Rati <rrati@redhat> - 2.0.5-9
 - Removed rcc.  It was obsolete and conflicted with qt-devel (BZ1003034)
 - Moved to xmvn-subst for jar dependency symlinks
 - Packaged test jars into test subpackage
