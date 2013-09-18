@@ -701,7 +701,7 @@ pushd %{buildroot}/%{_datadir}/%{name}/common
   %{__ln_s} %{_jnidir}/%{name}-common.jar .
 popd
 install -pm 664 hadoop-common-project/hadoop-common/pom.xml %{buildroot}%{_mavenpomdir}/JPP-%{name}-common.pom
-%add_maven_depmap JPP-%{name}-common.pom %{name}-common.jar -f %{name}-common
+%add_maven_depmap JPP-%{name}-common.pom %{name}-common.jar
 
 # client jar depenencies
 copy_dep_jars %{name}-client/target/%{name}-client-%{hadoop_version}/share/%{name}/client/lib %{buildroot}/%{_datadir}/%{name}/client/lib
@@ -950,8 +950,6 @@ getent passwd yarn >/dev/null || /usr/sbin/useradd --comment "Hadoop Yarn" --she
 # Workaround for BZ986909
 %{_datadir}/%{name}/common/%{name}-common.jar
 %{_jnidir}/%{name}-common.jar
-%{_mavenpomdir}/JPP-%{name}-common.pom
-%{_mavendepmapfragdir}/%{name}-%{name}-common
 
 %{_libexecdir}/%{name}-config.sh
 %{_libexecdir}/%{name}-layout.sh
