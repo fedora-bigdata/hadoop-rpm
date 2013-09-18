@@ -590,6 +590,29 @@ copy_dep_jars()
   rm -f $2/tools-*.jar
 }
 
+# Create a pom file for a test jar
+# $1 what the test jar is associated with
+create_test_pom()
+{
+  cat > %{buildroot}%{_mavenpomdir}/JPP.%{name}-%{name}-$1-tests.pom << EOL
+<project>
+  <modelVersion>4.0.0</modelVersion>
+  <groupId>org.apache.hadoop</groupId>
+  <artifactId>%{name}-$1-tests</artifactId>
+  <version>%{hadoop_version}</version>
+
+  <dependencies>
+    <dependency>
+      <groupId>org.apache.hadoop</groupId>
+      <artifactId>%{name}-$1</artifactId>
+      <version>%{hadoop_version}</version>
+    </dependency>
+</dependencies>
+</project>
+EOL
+  %add_maven_depmap -f %{name}-tests JPP.%{name}-%{name}-$1-tests.pom %{name}/%{name}-$1-tests.jar
+}
+
 %mvn_install
 
 install -d -m 0755 %{buildroot}/%{_libdir}/%{name}
@@ -824,6 +847,11 @@ sed -i "s|{|%{_var}/log/hadoop-hdfs/*.audit\n{|" %{buildroot}/%{_sysconfdir}/log
 
 # hdfs init script
 install -m 755 %{SOURCE13} %{buildroot}/%{_sbindir}
+
+# pom files for test jars
+create_test_pom common
+create_test_pom hdfs
+create_test_pom mapreduce-client-jobclient
 
 %pre common
 getent group hadoop >/dev/null || groupadd -r hadoop
