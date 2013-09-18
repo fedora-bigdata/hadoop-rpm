@@ -259,6 +259,7 @@ Requires: snappy-java
 Requires: tomcat-servlet-3.0-api
 Requires: tomcat-el-2.2-api
 Requires: txw2
+Requires: which
 Requires: xmlenc
 Requires: zookeeper-java
 
