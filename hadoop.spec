@@ -491,10 +491,6 @@ This package contains files needed to run Hadoop YARN in secure mode.
 %pom_remove_plugin :maven-site-plugin hadoop-common-project/hadoop-auth
 %pom_remove_plugin :maven-site-plugin hadoop-hdfs-project/hadoop-hdfs-httpfs
 
-# Increase memory build for x86
-#%%pom_xpath_replace "pom:reporting/pom:plugins/pom:plugin[pom:artifactId ='maven-javadoc-plugin']/pom:reportSets/pom:reportSet/pom:configuration/pom:maxmemory" '<maxmemory>3072m</maxmemory>'
-#%%pom_xpath_replace "pom:build/pom:plugins/pom:plugin[pom:artifactId ='maven-javadoc-plugin']/pom:configuration/pom:maxmemory" '<maxmemory>3072m</maxmemory>' hadoop-project-dist
-
 # War files we don't want
 %mvn_package :%{name}-auth-examples __noinstall
 %mvn_package :%{name}-hdfs-httpfs __noinstall
