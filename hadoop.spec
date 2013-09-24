@@ -486,6 +486,11 @@ This package contains files needed to run Hadoop YARN in secure mode.
 %pom_add_dep org.apache.zookeeper:zookeeper hadoop-hdfs-project/hadoop-hdfs
 %pom_add_dep org.apache.zookeeper:zookeeper-test hadoop-hdfs-project/hadoop-hdfs
 
+# Remove the maven-site-plugin.  It's not needed
+%pom_remove_plugin :maven-site-plugin
+%pom_remove_plugin :maven-site-plugin hadoop-common-project/hadoop-auth
+%pom_remove_plugin :maven-site-plugin hadoop-hdfs-project/hadoop-hdfs-httpfs
+
 # Increase memory build for x86
 #%%pom_xpath_replace "pom:reporting/pom:plugins/pom:plugin[pom:artifactId ='maven-javadoc-plugin']/pom:reportSets/pom:reportSet/pom:configuration/pom:maxmemory" '<maxmemory>3072m</maxmemory>'
 #%%pom_xpath_replace "pom:build/pom:plugins/pom:plugin[pom:artifactId ='maven-javadoc-plugin']/pom:configuration/pom:maxmemory" '<maxmemory>3072m</maxmemory>' hadoop-project-dist
