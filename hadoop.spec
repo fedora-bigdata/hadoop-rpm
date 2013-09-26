@@ -723,10 +723,20 @@ copy_dep_jars %{name}-client/target/%{name}-client-%{hadoop_version}/share/%{nam
 # common jar depenencies
 copy_dep_jars $basedir/share/%{name}/common/lib %{buildroot}/%{_datadir}/%{name}/common/lib
 %{_bindir}/xmvn-subst %{buildroot}/%{_datadir}/%{name}/common/lib
+# Avoid duplicate file warnings
+for f in `ls %{buildroot}/%{_datadir}/%{name}/common/lib | grep -v hadoop`
+do
+  echo "%{_datadir}/%{name}/common/lib/$f" >> %{_builddir}/%{buildsubdir}/.mfiles
+done
 
 # hdfs jar dependencies
 copy_dep_jars $basedir/share/%{name}/hdfs/lib %{buildroot}/%{_datadir}/%{name}/hdfs/lib
 %{_bindir}/xmvn-subst %{buildroot}/%{_datadir}/%{name}/hdfs/lib
+# Avoid duplicate file warnings
+for f in `ls %{buildroot}/%{_datadir}/%{name}/hdfs/lib | grep -v hadoop`
+do
+  echo "%{_datadir}/%{name}/hdfs/lib/$f" >> %{_builddir}/%{buildsubdir}/.mfiles-%{name}-hdfs
+done
 
 # httpfs
 %if %{package_httpfs}
@@ -958,15 +968,9 @@ getent passwd yarn >/dev/null || /usr/sbin/useradd --comment "Hadoop Yarn" --she
 %config(noreplace) %{_sysconfdir}/%{name}/ssl-client.xml.example
 %config(noreplace) %{_sysconfdir}/%{name}/ssl-server.xml.example
 %dir %{_datadir}/%{name}
-%{_datadir}/%{name}/common/lib
 
 # Workaround for BZ986909
 %{_datadir}/%{name}/common/%{name}-common.jar
-%{_jnidir}/%{name}-common.jar
-
-# Workaround for bz1012059
-%{_javadir}/%{name}/%{name}-project-dist.jar
-%{_mavenpomdir}/JPP.%{name}-%{name}-project-dist.pom
 
 %{_libexecdir}/%{name}-config.sh
 %{_libexecdir}/%{name}-layout.sh
@@ -995,7 +999,6 @@ getent passwd yarn >/dev/null || /usr/sbin/useradd --comment "Hadoop Yarn" --she
 %config(noreplace) %{_sysconfdir}/security/limits.d/hdfs.conf
 %dir %{_datadir}/%{name}/hdfs
 %{_datadir}/%{name}/hdfs/webapps
-%{_datadir}/%{name}/hdfs/lib
 %attr(-,hdfs,hadoop) %{_sharedstatedir}/%{name}-hdfs
 %{_unitdir}/%{name}-datanode.service
 %{_unitdir}/%{name}-namenode.service
