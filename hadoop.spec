@@ -599,23 +599,24 @@ copy_dep_jars()
 # $1 what the test jar is associated with
 create_test_pom()
 {
-  cat > %{buildroot}%{_mavenpomdir}/JPP.%{name}-%{name}-$1-tests.pom << EOL
+  dep=`echo $1 | sed "s/-tests//g"`
+  cat > %{buildroot}%{_mavenpomdir}/JPP.%{name}-$1.pom << EOL
 <project>
   <modelVersion>4.0.0</modelVersion>
   <groupId>org.apache.hadoop</groupId>
-  <artifactId>%{name}-$1-tests</artifactId>
+  <artifactId>$1</artifactId>
   <version>%{hadoop_version}</version>
 
   <dependencies>
     <dependency>
       <groupId>org.apache.hadoop</groupId>
-      <artifactId>%{name}-$1</artifactId>
+      <artifactId>$dep</artifactId>
       <version>%{hadoop_version}</version>
     </dependency>
-</dependencies>
+  </dependencies>
 </project>
 EOL
-  %add_maven_depmap -f %{name}-tests JPP.%{name}-%{name}-$1-tests.pom %{name}/%{name}-$1-tests.jar
+  %add_maven_depmap -f %{name}-tests JPP.%{name}-$1.pom %{name}/$1.jar
 }
 
 %mvn_install
@@ -664,10 +665,11 @@ done
 rm -rf %{buildroot}/%{_bindir}/rcc
 
 # Copy all test jars but strip out the version in the jar name
-for f in `find $basedir ! -name "*yarn-server-tests*" -name "%{name}-*-tests.jar"`
+for f in `find . ! -name "*yarn-server-tests*" -name "%{name}-*-tests.jar" | awk -F/ '{print $NF}' | sort | uniq`
 do
   name=`echo $(basename $f) | sed "s/-%{hadoop_version}//g"`
-  install -m 0644 $f %{buildroot}/%{_javadir}/%{name}/$name
+  loc=`find . -name $f | grep target/$f`
+  install -m 0644 $loc %{buildroot}/%{_javadir}/%{name}/$name
 done
 
 # We don't care about this
@@ -859,9 +861,10 @@ sed -i "s|{|%{_var}/log/hadoop-hdfs/*.audit\n{|" %{buildroot}/%{_sysconfdir}/log
 install -m 755 %{SOURCE13} %{buildroot}/%{_sbindir}
 
 # pom files for test jars
-create_test_pom common
-create_test_pom hdfs
-create_test_pom mapreduce-client-jobclient
+for f in `ls %{buildroot}/%{_javadir}/%{name}/%{name}-*-tests.jar | grep -v yarn-server-tests`
+do
+  create_test_pom $(basename $f | sed "s/.jar//g")
+done
 
 %pre common
 getent group hadoop >/dev/null || groupadd -r hadoop
@@ -1074,7 +1077,6 @@ getent passwd yarn >/dev/null || /usr/sbin/useradd --comment "Hadoop Yarn" --she
 %doc hadoop-dist/target/hadoop-%{hadoop_version}/share/doc/hadoop/common/LICENSE.txt
 
 %files -f .mfiles-hadoop-tests tests
-%{_javadir}/%{name}/%{name}-*-tests.jar
 
 %files -f .mfiles-hadoop-yarn yarn
 %exclude %{_datadir}/%{name}/client
