@@ -498,6 +498,9 @@ This package contains files needed to run Hadoop YARN in secure mode.
 # Parts we don't want to distribute
 %mvn_package :%{name}-assemblies __noinstall
 
+# Workaround for bz1012059
+%mvn_package :%{name}-project-dist __noinstall
+
 # Create separate file lists for packaging
 %mvn_package ":%{name}-client*" hadoop-client
 %mvn_package ":%{name}-hdfs*" hadoop-hdfs
@@ -702,8 +705,13 @@ cp -arf $basedir/share/hadoop/common/%{name}-common-%{hadoop_version}.jar %{buil
 pushd %{buildroot}/%{_datadir}/%{name}/common
   %{__ln_s} %{_jnidir}/%{name}-common.jar .
 popd
-install -pm 664 hadoop-common-project/hadoop-common/pom.xml %{buildroot}%{_mavenpomdir}/JPP-%{name}-common.pom
+install -pm 644 hadoop-common-project/hadoop-common/pom.xml %{buildroot}%{_mavenpomdir}/JPP-%{name}-common.pom
 %add_maven_depmap JPP-%{name}-common.pom %{name}-common.jar
+
+# Workaround for bz1012059
+install -pm 644 %{name}-project-dist/target/%{name}-project-dist-%{hadoop_version}.jar %{buildroot}/%{_javadir}/%{name}/%{name}-project-dist.jar
+install -pm 644 hadoop-project-dist/pom.xml %{buildroot}/%{_mavenpomdir}/JPP.%{name}-%{name}-project-dist.pom
+%add_maven_depmap JPP.%{name}-%{name}-project-dist.pom %{name}/%{name}-project-dist.jar
 
 # client jar depenencies
 copy_dep_jars %{name}-client/target/%{name}-client-%{hadoop_version}/share/%{name}/client/lib %{buildroot}/%{_datadir}/%{name}/client/lib
@@ -952,6 +960,10 @@ getent passwd yarn >/dev/null || /usr/sbin/useradd --comment "Hadoop Yarn" --she
 # Workaround for BZ986909
 %{_datadir}/%{name}/common/%{name}-common.jar
 %{_jnidir}/%{name}-common.jar
+
+# Workaround for bz1012059
+%{_javadir}/%{name}/%{name}-project-dist.jar
+%{_mavenpomdir}/JPP.%{name}-%{name}-project-dist.pom
 
 %{_libexecdir}/%{name}-config.sh
 %{_libexecdir}/%{name}-layout.sh
