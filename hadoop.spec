@@ -168,6 +168,7 @@ BuildRequires: systemd
 BuildRequires: tomcat-el-2.2-api
 BuildRequires: tomcat-servlet-3.0-api
 BuildRequires: txw2
+BuildRequires: which
 BuildRequires: xmlenc
 BuildRequires: znerd-oss-parent
 BuildRequires: zookeeper-java
