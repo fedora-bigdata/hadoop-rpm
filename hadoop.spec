@@ -502,53 +502,27 @@ This package contains files needed to run Hadoop YARN in secure mode.
 %mvn_package :%{name}-project-dist __noinstall
 
 # Create separate file lists for packaging
-%mvn_package ":%{name}-client*" hadoop-client
-%mvn_package ":%{name}-hdfs*" hadoop-hdfs
-%mvn_package ":%{name}-mapreduce-client*" hadoop-mapreduce
-%mvn_package ":%{name}-archives*" hadoop-mapreduce
-%mvn_package ":%{name}-datajoin*" hadoop-mapreduce
-%mvn_package ":%{name}-distcp*" hadoop-mapreduce
-%mvn_package ":%{name}-extras*" hadoop-mapreduce
-%mvn_package ":%{name}-gridmix*" hadoop-mapreduce
-%mvn_package ":%{name}-rumen*" hadoop-mapreduce
-%mvn_package ":%{name}-streaming*" hadoop-mapreduce
-%mvn_package ":%{name}-tools-dist*" hadoop-mapreduce
-%mvn_package ":%{name}-mapreduce-examples*" hadoop-mapreduce-examples
-%mvn_package ":%{name}-maven-plugins" hadoop-maven-plugin
-%mvn_package ":%{name}-minicluster*" hadoop-tests
-%mvn_package ":%{name}-*-tests*" hadoop-tests
-%mvn_package ":%{name}-yarn*" hadoop-yarn
+%mvn_package :::tests: hadoop-tests
+%mvn_package :%{name}-client*::{}: hadoop-client
+%mvn_package :%{name}-hdfs*::{}: hadoop-hdfs
+%mvn_package :%{name}-mapreduce-examples*::{}: hadoop-mapreduce-examples
+%mvn_package :%{name}-mapreduce*::{}: hadoop-mapreduce
+%mvn_package :%{name}-archives::{}: hadoop-mapreduce
+%mvn_package :%{name}-datajoin::{}: hadoop-mapreduce
+%mvn_package :%{name}-distcp::{}: hadoop-mapreduce
+%mvn_package :%{name}-extras::{}: hadoop-mapreduce
+%mvn_package :%{name}-gridmix::{}: hadoop-mapreduce
+%mvn_package :%{name}-rumen::{}: hadoop-mapreduce
+%mvn_package :%{name}-streaming::{}: hadoop-mapreduce
+%mvn_package :%{name}-pipes::{}: hadoop-mapreduce
+%mvn_package :%{name}-tools*::{}: hadoop-mapreduce
+%mvn_package :%{name}-maven-plugins::{}: hadoop-maven-plugin
+%mvn_package :%{name}-minicluster::{}: hadoop-tests
+%mvn_package :%{name}-yarn*::{}: hadoop-yarn
 
-# Workaround for BZ986909
-%mvn_package :%{name}-common __noinstall
-
-# Jar files for client
-%mvn_file ":%{name}-client" %{name}/%{name}-client %{_datadir}/%{name}/client/%{name}-client
-
-# Jar files for common
-# Workaround for BZ986909
-#%%mvn_file ":%{name}-common" %{_jnidir}/%{name}-common %{_datadir}/%{name}/common/%{name}-common
-%mvn_file ":%{name}-annotations" %{name}/%{name}-annotations %{_datadir}/%{name}/client/lib/%{name}-annotations %{_datadir}/%{name}/common/lib/%{name}-annotations %{_datadir}/%{name}/mapreduce/lib/%{name}-annotations %{_datadir}/%{name}/yarn/lib/%{name}-annotations
-%mvn_file ":%{name}-auth" %{name}/%{name}-auth %{_datadir}/%{name}/client/lib/%{name}-auth %{_datadir}/%{name}/common/lib/%{name}-auth
-
-# Jar files for hdfs
-%mvn_file ":%{name}-hdfs" %{name}/%{name}-hdfs %{_datadir}/%{name}/client/lib/%{name}-hdfs %{_datadir}/%{name}/hdfs/%{name}-hdfs
-%mvn_file ":%{name}-hdfs-bkjournal" %{name}/%{name}-hdfs-bkjournal %{_datadir}/%{name}/hdfs/lib/%{name}-hdfs-bkjournal
-
-# Jar files for mapreduce
-%mvn_file ":{%{name}-mapreduce-client-{app,common,core,jobclient,shuffle}}" %{name}/@1 %{_datadir}/%{name}/client/lib/@1 %{_datadir}/%{name}/mapreduce/@1
-%mvn_file ":{%{name}-mapreduce-client-{hs,hs-plugins}}" %{name}/@1 %{_datadir}/%{name}/mapreduce/@1
-%mvn_file ":{%{name}-{archives,datajoin,distcp,extras,gridmix,rumen,streaming}}" %{name}/@1 %{_datadir}/%{name}/mapreduce/@1
-
-# Jar files for mapreduce-examples
-%mvn_file ":%{name}-mapreduce-examples" %{name}/%{name}-mapreduce-examples %{_datadir}/%{name}/mapreduce/%{name}-mapreduce-examples
-
-# Some jar files for tests
-%mvn_file ":%{name}-yarn-server-tests" %{name}/%{name}-yarn-server-tests-tests
-
-# Jar files for yarn
-%mvn_file ":{%{name}-yarn-{api,client,common,server-common}}" %{name}/@1 %{_datadir}/%{name}/client/lib/@1 %{_datadir}/%{name}/yarn/@1
-%mvn_file ":{%{name}-yarn-{applications-distributedshell,applications-unmanaged-am-launcher,server-nodemanager,server-resourcemanager,server-web-proxy,site}}" %{name}/@1 %{_datadir}/%{name}/yarn/@1
+# Jar files that need to be overridden due to installation location
+%mvn_file :%{name}-common::{}: %{_jnidir}/%{name}-common %{_datadir}/%{name}/common/%{name}-common
+%mvn_file :%{name}-common::tests: %{name}/%{name}-common-tests
 
 %build
 %ifnarch x86_64
@@ -600,7 +574,8 @@ copy_dep_jars()
 create_test_pom()
 {
   dep=`echo $1 | sed "s/-tests//g"`
-  cat > %{buildroot}%{_mavenpomdir}/JPP.%{name}-$1.pom << EOL
+  pom="JPP.%{name}-$1.pom"
+  cat > %{buildroot}%{_mavenpomdir}/$pom << EOL
 <project>
   <modelVersion>4.0.0</modelVersion>
   <groupId>org.apache.hadoop</groupId>
@@ -616,7 +591,7 @@ create_test_pom()
   </dependencies>
 </project>
 EOL
-  %add_maven_depmap -f %{name}-tests JPP.%{name}-$1.pom %{name}/$1.jar
+  %add_maven_depmap -f %{name}-tests $pom %{name}/$1.jar
 }
 
 %mvn_install
@@ -664,14 +639,6 @@ done
 # This binary is obsoleted and causes a conflict with qt-devel
 rm -rf %{buildroot}/%{_bindir}/rcc
 
-# Copy all test jars but strip out the version in the jar name
-for f in `find . ! -name "*yarn-server-tests*" -name "%{name}-*-tests.jar" | awk -F/ '{print $NF}' | sort | uniq`
-do
-  name=`echo $(basename $f) | sed "s/-%{hadoop_version}//g"`
-  loc=`find . -name $f | grep target/$f`
-  install -m 0644 $loc %{buildroot}/%{_javadir}/%{name}/$name
-done
-
 # We don't care about this
 rm -f %{buildroot}/%{_bindir}/test-container-executor
 
@@ -701,15 +668,6 @@ sed -i "s|\${JSVC_HOME}|/usr/bin|" %{buildroot}/%{_sysconfdir}/%{name}/hadoop-en
 sed -i "s|\(HADOOP_OPTS.*=.*\)\$HADOOP_CLIENT_OPTS|\1 -Djavax.xml.parsers.DocumentBuilderFactory=com.sun.org.apache.xerces.internal.jaxp.DocumentBuilderFactoryImpl \$HADOOP_CLIENT_OPTS|" %{buildroot}/%{_sysconfdir}/%{name}/hadoop-env.sh
 echo "export YARN_OPTS=\"\$YARN_OPTS -Djavax.xml.parsers.DocumentBuilderFactory=com.sun.org.apache.xerces.internal.jaxp.DocumentBuilderFactoryImpl\"" >> %{buildroot}/%{_sysconfdir}/%{name}/yarn-env.sh
 
-# Workaround for BZ986909
-# hadoop-common uses JNI so needs to be handled separately
-cp -arf $basedir/share/hadoop/common/%{name}-common-%{hadoop_version}.jar %{buildroot}/%{_jnidir}/%{name}-common.jar
-pushd %{buildroot}/%{_datadir}/%{name}/common
-  %{__ln_s} %{_jnidir}/%{name}-common.jar .
-popd
-install -pm 644 hadoop-common-project/hadoop-common/pom.xml %{buildroot}%{_mavenpomdir}/JPP-%{name}-common.pom
-%add_maven_depmap JPP-%{name}-common.pom %{name}-common.jar
-
 # Workaround for bz1012059
 install -pm 644 %{name}-project-dist/target/%{name}-project-dist-%{hadoop_version}.jar %{buildroot}/%{_javadir}/%{name}/%{name}-project-dist.jar
 install -pm 644 hadoop-project-dist/pom.xml %{buildroot}/%{_mavenpomdir}/JPP.%{name}-%{name}-project-dist.pom
@@ -719,24 +677,25 @@ install -pm 644 hadoop-project-dist/pom.xml %{buildroot}/%{_mavenpomdir}/JPP.%{n
 copy_dep_jars %{name}-client/target/%{name}-client-%{hadoop_version}/share/%{name}/client/lib %{buildroot}/%{_datadir}/%{name}/client/lib
 %{_bindir}/xmvn-subst %{buildroot}/%{_datadir}/%{name}/client/lib
 %{__ln_s} %{_jnidir}/%{name}-common.jar %{buildroot}/%{_datadir}/%{name}/client/lib
+%{__ln_s} %{javadir}/%{name}/%{name}-client.jar %{buildroot}/%{_datadir}/%{name}/client
+for f in annotations auth hdfs mapreduce-client-app mapreduce-client-common mapreduce-client-core mapreduce-client-jobclient mapreduce-client-shuffle yarn-api yarn-client yarn-common yarn-server-common
+do
+  %{__ln_s} %{javadir}/%{name}/%{name}-$f.jar %{buildroot}/%{_datadir}/%{name}/client/lib
+done
 
 # common jar depenencies
 copy_dep_jars $basedir/share/%{name}/common/lib %{buildroot}/%{_datadir}/%{name}/common/lib
 %{_bindir}/xmvn-subst %{buildroot}/%{_datadir}/%{name}/common/lib
-# Avoid duplicate file warnings
-for f in `ls %{buildroot}/%{_datadir}/%{name}/common/lib | grep -v hadoop`
+for f in annotations auth
 do
-  echo "%{_datadir}/%{name}/common/lib/$f" >> %{_builddir}/%{buildsubdir}/.mfiles
+  %{__ln_s} %{javadir}/%{name}/%{name}-$f.jar %{buildroot}/%{_datadir}/%{name}/common/lib
 done
 
 # hdfs jar dependencies
 copy_dep_jars $basedir/share/%{name}/hdfs/lib %{buildroot}/%{_datadir}/%{name}/hdfs/lib
 %{_bindir}/xmvn-subst %{buildroot}/%{_datadir}/%{name}/hdfs/lib
-# Avoid duplicate file warnings
-for f in `ls %{buildroot}/%{_datadir}/%{name}/hdfs/lib | grep -v hadoop`
-do
-  echo "%{_datadir}/%{name}/hdfs/lib/$f" >> %{_builddir}/%{buildsubdir}/.mfiles-%{name}-hdfs
-done
+%{__ln_s} %{javadir}/%{name}/%{name}-hdfs.jar %{buildroot}/%{_datadir}/%{name}/hdfs
+%{__ln_s} %{javadir}/%{name}/%{name}-bkjournal.jar %{buildroot}/%{_datadir}/%{name}/hdfs/lib
 
 # httpfs
 %if %{package_httpfs}
@@ -788,10 +747,24 @@ popd
 # mapreduce jar dependencies
 copy_dep_jars $basedir/share/%{name}/mapreduce/lib %{buildroot}/%{_datadir}/%{name}/mapreduce/lib
 %{_bindir}/xmvn-subst %{buildroot}/%{_datadir}/%{name}/mapreduce/lib
+%{__ln_s} %{javadir}/%{name}/%{name}-annotations.jar %{buildroot}/%{_datadir}/%{name}/mapreduce/lib
+for f in app common core jobclient shuffle hs hs-plugins
+do
+  %{__ln_s} %{javadir}/%{name}/%{name}-mapreduce-client-$f.jar %{buildroot}/%{_datadir}/%{name}/mapreduce
+done
+for f in archives datajoin distcp extras gridmix rumen streaming
+do
+  %{__ln_s} %{javadir}/%{name}/%{name}-$f.jar %{buildroot}/%{_datadir}/%{name}/mapreduce
+done
 
 # yarn jar dependencies
 copy_dep_jars $basedir/share/%{name}/yarn/lib %{buildroot}/%{_datadir}/%{name}/yarn/lib
 %{_bindir}/xmvn-subst %{buildroot}/%{_datadir}/%{name}/yarn/lib
+%{__ln_s} %{javadir}/%{name}/%{name}-annotations.jar %{buildroot}/%{_datadir}/%{name}/yarn/lib
+for f in api client common server-common applications-distributedshell applications-unmanaged-am-launcher server-nodemanager server-resourcemanager server-web-proxy site
+do
+  %{__ln_s} %{javadir}/%{name}/%{name}-yarn-$f.jar %{buildroot}/%{_datadir}/%{name}/yarn
+done
 
 # Install hdfs webapp bits
 cp -arf $basedir/share/hadoop/hdfs/webapps/* %{buildroot}/%{_sharedstatedir}/%{name}-hdfs/webapps
@@ -871,10 +844,13 @@ sed -i "s|{|%{_var}/log/hadoop-hdfs/*.audit\n{|" %{buildroot}/%{_sysconfdir}/log
 install -m 755 %{SOURCE13} %{buildroot}/%{_sbindir}
 
 # pom files for test jars
-for f in `ls %{buildroot}/%{_javadir}/%{name}/%{name}-*-tests.jar | grep -v yarn-server-tests`
+for f in `ls %{buildroot}/%{_javadir}/%{name}/%{name}-*-tests.jar %{buildroot}/%{_jnidir}/%{name}-*-tests.jar | grep -v yarn-server-tests`
 do
   create_test_pom $(basename $f | sed "s/.jar//g")
 done
+
+install -m 0644 hadoop-yarn-project/hadoop-yarn/hadoop-yarn-server/hadoop-yarn-server-tests/pom.xml %{buildroot}/%{_mavenpomdir}/JPP.%{name}-%{name}-yarn-server-tests-tests.pom
+%add_maven_depmap -f %{name}-tests JPP.%{name}-%{name}-yarn-server-tests-tests.pom %{name}/%{name}-yarn-server-tests-tests.jar
 
 %pre common
 getent group hadoop >/dev/null || groupadd -r hadoop
@@ -948,14 +924,9 @@ getent passwd yarn >/dev/null || /usr/sbin/useradd --comment "Hadoop Yarn" --she
 %systemd_postun_with_restart %{yarn_services}
 
 %files -f .mfiles-hadoop-client client
-%dir %{_datadir}/%{name}/client
-%{_datadir}/%{name}/client/lib
+%{_datadir}/%{name}/client
 
 %files -f .mfiles common
-%exclude %{_datadir}/%{name}/client
-%exclude %{_datadir}/%{name}/hdfs
-%exclude %{_datadir}/%{name}/mapreduce
-%exclude %{_datadir}/%{name}/yarn
 %doc hadoop-dist/target/hadoop-%{hadoop_version}/share/doc/hadoop/common/*
 %config(noreplace) %{_sysconfdir}/%{name}/configuration.xsl
 %config(noreplace) %{_sysconfdir}/%{name}/core-site.xml
@@ -968,10 +939,7 @@ getent passwd yarn >/dev/null || /usr/sbin/useradd --comment "Hadoop Yarn" --she
 %config(noreplace) %{_sysconfdir}/%{name}/ssl-client.xml.example
 %config(noreplace) %{_sysconfdir}/%{name}/ssl-server.xml.example
 %dir %{_datadir}/%{name}
-
-# Workaround for BZ986909
-%{_datadir}/%{name}/common/%{name}-common.jar
-
+%{_datadir}/%{name}/common/lib
 %{_libexecdir}/%{name}-config.sh
 %{_libexecdir}/%{name}-layout.sh
 %{_bindir}/%{name}
@@ -997,8 +965,7 @@ getent passwd yarn >/dev/null || /usr/sbin/useradd --comment "Hadoop Yarn" --she
 %exclude %{_datadir}/%{name}/client
 %config(noreplace) %{_sysconfdir}/%{name}/hdfs-site.xml
 %config(noreplace) %{_sysconfdir}/security/limits.d/hdfs.conf
-%dir %{_datadir}/%{name}/hdfs
-%{_datadir}/%{name}/hdfs/webapps
+%{_datadir}/%{name}/hdfs
 %attr(-,hdfs,hadoop) %{_sharedstatedir}/%{name}-hdfs
 %{_unitdir}/%{name}-datanode.service
 %{_unitdir}/%{name}-namenode.service
@@ -1062,8 +1029,7 @@ getent passwd yarn >/dev/null || /usr/sbin/useradd --comment "Hadoop Yarn" --she
 %config(noreplace) %{_sysconfdir}/%{name}/mapred-site.xml
 %config(noreplace) %{_sysconfdir}/%{name}/mapred-site.xml.template
 %config(noreplace) %{_sysconfdir}/security/limits.d/mapreduce.conf
-%dir %{_datadir}/%{name}/mapreduce
-%{_datadir}/%{name}/mapreduce/lib
+%{_datadir}/%{name}/mapreduce
 %{_libexecdir}/mapred-config.sh
 %{_unitdir}/%{name}-historyserver.service
 %{_bindir}/mapred
@@ -1091,8 +1057,7 @@ getent passwd yarn >/dev/null || /usr/sbin/useradd --comment "Hadoop Yarn" --she
 %{_unitdir}/%{name}-proxyserver.service
 %{_unitdir}/%{name}-resourcemanager.service
 %{_libexecdir}/yarn-config.sh
-%dir %{_datadir}/%{name}/yarn
-%{_datadir}/%{name}/yarn/lib
+%{_datadir}/%{name}/yarn
 %{_bindir}/yarn
 %{_sbindir}/yarn-daemon.sh
 %{_sbindir}/yarn-daemons.sh
