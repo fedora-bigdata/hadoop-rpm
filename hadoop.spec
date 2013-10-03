@@ -492,6 +492,29 @@ This package contains files needed to run Hadoop YARN in secure mode.
 %pom_remove_plugin :maven-site-plugin hadoop-common-project/hadoop-auth
 %pom_remove_plugin :maven-site-plugin hadoop-hdfs-project/hadoop-hdfs-httpfs
 
+# Remove the findbugs-maven-plugin.  It's not needed and isn't available
+%pom_remove_plugin :findbugs-maven-plugin hadoop-hdfs-project/hadoop-hdfs-httpfs
+%pom_remove_plugin :findbugs-maven-plugin hadoop-hdfs-project/hadoop-hdfs/src/contrib/bkjournal
+%pom_remove_plugin :findbugs-maven-plugin hadoop-mapreduce-project/hadoop-mapreduce-client
+%pom_remove_plugin :findbugs-maven-plugin hadoop-mapreduce-project/hadoop-mapreduce-examples
+%pom_remove_plugin :findbugs-maven-plugin hadoop-mapreduce-project
+%pom_remove_plugin :findbugs-maven-plugin hadoop-project-dist
+%pom_remove_plugin :findbugs-maven-plugin hadoop-project
+%pom_remove_plugin :findbugs-maven-plugin hadoop-tools/hadoop-rumen
+%pom_remove_plugin :findbugs-maven-plugin hadoop-tools/hadoop-streaming
+%pom_remove_plugin :findbugs-maven-plugin hadoop-yarn-project/hadoop-yarn
+%pom_remove_plugin :findbugs-maven-plugin hadoop-yarn-project
+
+# Remove the maven-project-info-reports plugin.  It's not needed and isn't available
+%pom_remove_plugin :maven-project-info-reports-plugin hadoop-common-project/hadoop-auth
+%pom_remove_plugin :maven-project-info-reports-plugin hadoop-hdfs-project/hadoop-hdfs-httpfs
+%pom_remove_plugin :maven-project-info-reports-plugin hadoop-project
+
+# Remove the maven-checkstyle plugin.  It's not needed and isn't available
+%pom_remove_plugin :maven-checkstyle-plugin hadoop-project-dist
+%pom_remove_plugin :maven-checkstyle-plugin hadoop-project
+%pom_remove_plugin :maven-checkstyle-plugin hadoop-tools/hadoop-distcp
+
 # War files we don't want
 %mvn_package :%{name}-auth-examples __noinstall
 %mvn_package :%{name}-hdfs-httpfs __noinstall
