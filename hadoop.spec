@@ -16,7 +16,7 @@
 
 Name:   hadoop
 Version: 2.0.5
-Release: 9%{?dist}
+Release: 10%{?dist}
 Summary: A software platform for processing vast amounts of data
 # The BSD license file is missing
 # https://issues.apache.org/jira/browse/HADOOP-9849
@@ -1099,6 +1099,15 @@ getent passwd yarn >/dev/null || /usr/sbin/useradd --comment "Hadoop Yarn" --she
 %attr(6050,root,yarn) %{_bindir}/container-executor
 
 %changelog
+* Thu Oct  3 2013 Robert Rati <rrati@redhat> - 2.0.5-10
+- Added dependency on which
+- Added pom files for test jars
+- Removed workaround for BZ986909
+- Packaged additional test jars and pom files
+- Added workaround for bz1012059
+- Updated hdfs-create-dirs to format the namenode if it is not formatted
+- Spec cleanup
+
 * Fri Sep 13 2013 Robert Rati <rrati@redhat> - 2.0.5-9
 - Removed rcc.  It was obsolete and conflicted with qt-devel (BZ1003034)
 - Moved to xmvn-subst for jar dependency symlinks
