@@ -95,6 +95,7 @@ BuildRequires: ecj >= 1:4.2.1-6
 BuildRequires: fuse-devel
 BuildRequires: fusesource-pom
 BuildRequires: geronimo-jms
+BuildRequires: gcc-c++
 BuildRequires: glassfish-jaxb
 BuildRequires: glassfish-jsp
 BuildRequires: glassfish-jsp-api
@@ -130,6 +131,7 @@ BuildRequires: jsr-311
 BuildRequires: junit
 BuildRequires: jzlib
 BuildRequires: log4j
+BuildRequires: make
 BuildRequires: maven
 BuildRequires: maven-antrun-plugin
 BuildRequires: maven-assembly-plugin
