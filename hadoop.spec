@@ -211,14 +211,6 @@ Requires: /usr/sbin/useradd
 # These are required to meet the symlinks for the classpath
 Requires: antlr-tool
 Requires: apache-commons-beanutils
-Requires: apache-commons-cli
-Requires: apache-commons-collections
-Requires: apache-commons-configuration
-Requires: apache-commons-el
-Requires: apache-commons-lang
-Requires: apache-commons-logging
-Requires: apache-commons-math
-Requires: apache-commons-net
 Requires: avalon-framework
 Requires: avalon-logkit
 Requires: checkstyle
@@ -228,28 +220,16 @@ Requires: geronimo-jms
 Requires: glassfish-jaxb
 Requires: glassfish-jsp
 Requires: glassfish-jsp-api
-Requires: guava
-Requires: httpcomponents-client
-Requires: httpcomponents-core
 Requires: istack-commons
-Requires: jackson
 Requires: java-base64
 Requires: java-xmlbuilder
 Requires: javamail
-Requires: jets3t
 Requires: jettison
 Requires: jetty-http
 Requires: jetty-io
 Requires: jetty-security
-Requires: jetty-server
-Requires: jetty-servlet
-Requires: jetty-util
-Requires: jetty-util-ajax
-Requires: jetty-webapp
 Requires: jetty-xml
 Requires: jline
-Requires: jsch
-Requires: jsr-305
 Requires: jsr-311
 Requires: mockito
 Requires: nc6
@@ -259,12 +239,8 @@ Requires: paranamer
 Requires: relaxngDatatype
 Requires: servlet3
 Requires: snappy-java
-Requires: tomcat-servlet-3.0-api
-Requires: tomcat-el-2.2-api
 Requires: txw2
 Requires: which
-Requires: xmlenc
-Requires: zookeeper-java
 
 %description common
 Hadoop is a framework that allows for the distributed processing of large data
@@ -299,9 +275,9 @@ Header files for Hadoop's hdfs library and other utilities
 Summary: The Hadoop Distributed File System
 Group: Applications/System
 BuildArch: noarch
+Requires: apache-commons-daemon-jsvc
 Requires: %{name}-common = %{version}-%{release}
 Requires(pre): %{name}-common = %{version}-%{release}
-Requires: apache-commons-daemon-jsvc
 Requires(post): systemd
 Requires(preun): systemd
 Requires(postun): systemd
@@ -318,12 +294,12 @@ used by Hadoop applications.
 %package hdfs-fuse
 Summary: Allows mounting of Hadoop HDFS
 Group: Development/Libraries
-Requires: %{name}-common = %{version}-%{release}
-Requires: libhdfs%{?_isa} = %{version}-%{release}
-Requires: %{name}-hdfs = %{version}-%{release}
-Requires: %{name}-yarn = %{version}-%{release}
-Requires: %{name}-mapreduce = %{version}-%{release}
 Requires: fuse
+Requires: libhdfs%{?_isa} = %{version}-%{release}
+Requires: %{name}-common = %{version}-%{release}
+Requires: %{name}-hdfs = %{version}-%{release}
+Requires: %{name}-mapreduce = %{version}-%{release}
+Requires: %{name}-yarn = %{version}-%{release}
 
 %description hdfs-fuse
 Hadoop is a framework that allows for the distributed processing of large data
@@ -425,8 +401,8 @@ Summary: Hadoop test resources
 BuildArch: noarch
 Requires: %{name}-common = %{version}-%{release}
 Requires: %{name}-hdfs = %{version}-%{release}
-Requires: %{name}-yarn = %{version}-%{release}
 Requires: %{name}-mapreduce = %{version}-%{release}
+Requires: %{name}-yarn = %{version}-%{release}
 
 %description tests
 Hadoop is a framework that allows for the distributed processing of large data
