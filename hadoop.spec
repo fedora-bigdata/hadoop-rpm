@@ -16,7 +16,7 @@
 
 Name:   hadoop
 Version: 2.0.5
-Release: 10%{?dist}
+Release: 11%{?dist}
 Summary: A software platform for processing vast amounts of data
 # The BSD license file is missing
 # https://issues.apache.org/jira/browse/HADOOP-9849
@@ -1080,6 +1080,11 @@ getent passwd yarn >/dev/null || /usr/sbin/useradd --comment "Hadoop Yarn" --she
 %attr(6050,root,yarn) %{_bindir}/container-executor
 
 %changelog
+* Mon Oct  7 2013 Robert Rati <rrati@redhat> - 2.0.5-11
+- Workaround for BZ1015612
+- Added BuildRequires on gcc-g++ and make
+- Removed duplicated deps from common package
+
 * Thu Oct  3 2013 Robert Rati <rrati@redhat> - 2.0.5-10
 - Added dependency on which
 - Added pom files for test jars
