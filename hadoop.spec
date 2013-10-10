@@ -14,6 +14,10 @@
 %global yarn_services hadoop-proxyserver.service hadoop-resourcemanager.service hadoop-nodemanager.service
 %global httpfs_services hadoop-httpfs.service
 
+# Filter out undesired provides
+%global __requires_exclude_from ^%{_libdir}/%{name}/.*$
+%global __provides_exclude_from ^%{_libdir}/%{name}/.*$
+
 Name:   hadoop
 Version: 2.0.5
 Release: 11%{?dist}
