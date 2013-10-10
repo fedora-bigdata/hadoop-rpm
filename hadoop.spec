@@ -602,9 +602,6 @@ EOL
 
 %mvn_install
 
-# Work around for BZ1015612 (blocks correction of commons-el dep issue)
-sed -i "/<version>1.0<\/version>/d" %{buildroot}/%{_mavendepmapfragdir}/hadoop.xml
-
 install -d -m 0755 %{buildroot}/%{_libdir}/%{name}
 install -d -m 0755 %{buildroot}/%{_includedir}/%{name}
 install -d -m 0755 %{buildroot}/%{_jnidir}/
