@@ -682,10 +682,10 @@ install -pm 644 hadoop-project-dist/pom.xml %{buildroot}/%{_mavenpomdir}/JPP.%{n
 copy_dep_jars %{name}-client/target/%{name}-client-%{hadoop_version}/share/%{name}/client/lib %{buildroot}/%{_datadir}/%{name}/client/lib
 %{_bindir}/xmvn-subst %{buildroot}/%{_datadir}/%{name}/client/lib
 %{__ln_s} %{_jnidir}/%{name}-common.jar %{buildroot}/%{_datadir}/%{name}/client/lib
-%{__ln_s} %{javadir}/%{name}/%{name}-client.jar %{buildroot}/%{_datadir}/%{name}/client
+%{__ln_s} %{_javadir}/%{name}/%{name}-client.jar %{buildroot}/%{_datadir}/%{name}/client
 for f in annotations auth hdfs mapreduce-client-app mapreduce-client-common mapreduce-client-core mapreduce-client-jobclient mapreduce-client-shuffle yarn-api yarn-client yarn-common yarn-server-common
 do
-  %{__ln_s} %{javadir}/%{name}/%{name}-$f.jar %{buildroot}/%{_datadir}/%{name}/client/lib
+  %{__ln_s} %{_javadir}/%{name}/%{name}-$f.jar %{buildroot}/%{_datadir}/%{name}/client/lib
 done
 
 # common jar depenencies
@@ -693,14 +693,14 @@ copy_dep_jars $basedir/share/%{name}/common/lib %{buildroot}/%{_datadir}/%{name}
 %{_bindir}/xmvn-subst %{buildroot}/%{_datadir}/%{name}/common/lib
 for f in annotations auth
 do
-  %{__ln_s} %{javadir}/%{name}/%{name}-$f.jar %{buildroot}/%{_datadir}/%{name}/common/lib
+  %{__ln_s} %{_javadir}/%{name}/%{name}-$f.jar %{buildroot}/%{_datadir}/%{name}/common/lib
 done
 
 # hdfs jar dependencies
 copy_dep_jars $basedir/share/%{name}/hdfs/lib %{buildroot}/%{_datadir}/%{name}/hdfs/lib
 %{_bindir}/xmvn-subst %{buildroot}/%{_datadir}/%{name}/hdfs/lib
-%{__ln_s} %{javadir}/%{name}/%{name}-hdfs.jar %{buildroot}/%{_datadir}/%{name}/hdfs
-%{__ln_s} %{javadir}/%{name}/%{name}-bkjournal.jar %{buildroot}/%{_datadir}/%{name}/hdfs/lib
+%{__ln_s} %{_javadir}/%{name}/%{name}-hdfs.jar %{buildroot}/%{_datadir}/%{name}/hdfs
+%{__ln_s} %{_javadir}/%{name}/%{name}-bkjournal.jar %{buildroot}/%{_datadir}/%{name}/hdfs/lib
 
 # httpfs
 %if %{package_httpfs}
@@ -752,23 +752,23 @@ popd
 # mapreduce jar dependencies
 copy_dep_jars $basedir/share/%{name}/mapreduce/lib %{buildroot}/%{_datadir}/%{name}/mapreduce/lib
 %{_bindir}/xmvn-subst %{buildroot}/%{_datadir}/%{name}/mapreduce/lib
-%{__ln_s} %{javadir}/%{name}/%{name}-annotations.jar %{buildroot}/%{_datadir}/%{name}/mapreduce/lib
+%{__ln_s} %{_javadir}/%{name}/%{name}-annotations.jar %{buildroot}/%{_datadir}/%{name}/mapreduce/lib
 for f in app common core jobclient shuffle hs hs-plugins
 do
-  %{__ln_s} %{javadir}/%{name}/%{name}-mapreduce-client-$f.jar %{buildroot}/%{_datadir}/%{name}/mapreduce
+  %{__ln_s} %{_javadir}/%{name}/%{name}-mapreduce-client-$f.jar %{buildroot}/%{_datadir}/%{name}/mapreduce
 done
 for f in archives datajoin distcp extras gridmix rumen streaming
 do
-  %{__ln_s} %{javadir}/%{name}/%{name}-$f.jar %{buildroot}/%{_datadir}/%{name}/mapreduce
+  %{__ln_s} %{_javadir}/%{name}/%{name}-$f.jar %{buildroot}/%{_datadir}/%{name}/mapreduce
 done
 
 # yarn jar dependencies
 copy_dep_jars $basedir/share/%{name}/yarn/lib %{buildroot}/%{_datadir}/%{name}/yarn/lib
 %{_bindir}/xmvn-subst %{buildroot}/%{_datadir}/%{name}/yarn/lib
-%{__ln_s} %{javadir}/%{name}/%{name}-annotations.jar %{buildroot}/%{_datadir}/%{name}/yarn/lib
+%{__ln_s} %{_javadir}/%{name}/%{name}-annotations.jar %{buildroot}/%{_datadir}/%{name}/yarn/lib
 for f in api client common server-common applications-distributedshell applications-unmanaged-am-launcher server-nodemanager server-resourcemanager server-web-proxy site
 do
-  %{__ln_s} %{javadir}/%{name}/%{name}-yarn-$f.jar %{buildroot}/%{_datadir}/%{name}/yarn
+  %{__ln_s} %{_javadir}/%{name}/%{name}-yarn-$f.jar %{buildroot}/%{_datadir}/%{name}/yarn
 done
 
 # Install hdfs webapp bits
