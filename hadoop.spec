@@ -965,6 +965,7 @@ getent passwd yarn >/dev/null || /usr/sbin/useradd --comment "Hadoop Yarn" --she
 
 %files devel
 %{_includedir}/%{name}
+%{_libdir}/libhdfs.so
 
 %files -f .mfiles-hadoop-hdfs hdfs
 %exclude %{_datadir}/%{name}/client
@@ -1025,7 +1026,7 @@ getent passwd yarn >/dev/null || /usr/sbin/useradd --comment "Hadoop Yarn" --she
 
 %files -n libhdfs
 %doc hadoop-dist/target/hadoop-%{hadoop_version}/share/doc/hadoop/hdfs/LICENSE.txt
-%{_libdir}/libhdfs*
+%{_libdir}/libhdfs.so.*
 
 %files -f .mfiles-hadoop-mapreduce mapreduce
 %exclude %{_datadir}/%{name}/client
