@@ -20,7 +20,7 @@
 
 Name:   hadoop
 Version: 2.0.5
-Release: 11%{?dist}
+Release: 12%{?dist}
 Summary: A software platform for processing vast amounts of data
 # The BSD license file is missing
 # https://issues.apache.org/jira/browse/HADOOP-9849
@@ -1083,6 +1083,14 @@ getent passwd yarn >/dev/null || /usr/sbin/useradd --comment "Hadoop Yarn" --she
 %attr(6050,root,yarn) %{_bindir}/container-executor
 
 %changelog
+* Thu Oct 10 2013 Robert Rati <rrati@redhat> - 2.0.5-12
+- Removed workaround for BZ1015612
+- Filtered libhadoop provides/requires (BZ1017596)
+- Fixed symlink for hdfs-bkjournal
+- Moved libhdfs.so to devel package (BZ1017579)
+- Fixed symlink paths for hadoop jars (BZ1017568)
+- Added ownership of %{_datadir}/%{name}/hadoop/common
+
 * Mon Oct  7 2013 Robert Rati <rrati@redhat> - 2.0.5-11
 - Workaround for BZ1015612
 - Added BuildRequires on gcc-g++ and make
