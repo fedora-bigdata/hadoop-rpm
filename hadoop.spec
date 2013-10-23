@@ -1119,6 +1119,15 @@ getent passwd yarn >/dev/null || /usr/sbin/useradd --comment "Hadoop Yarn" --she
 %attr(6050,root,yarn) %{_bindir}/container-executor
 
 %changelog
+* Wed Oct 23 2013 Robert Rati <rrati@redhat> - 2.2.0-1
+- Update to upstream 2.2.0
+- New patch to open libjvm with dlopen
+- Conditionally compile libhdfs and deps for x86 only
+- Added BR on objenesis >= 1.2-16
+- Removed rpath from libhdfs
+- Removed unneeded header files from devel
+- Removed kfs removal patch
+
 * Thu Oct 10 2013 Robert Rati <rrati@redhat> - 2.0.5-12
 - Removed workaround for BZ1015612
 - Filtered libhadoop provides/requires (BZ1017596)
