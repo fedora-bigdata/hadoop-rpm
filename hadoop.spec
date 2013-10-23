@@ -5,22 +5,29 @@
 # so there's no means to substitute from rpms
 %global package_httpfs 0
 
-%global commit b92d9bcf559cc2e62fc166e09bd2852766b27bec
+# libhdfs is only supported on intel architectures atm.
+%ifarch %ix86 x86_64
+%global package_libhdfs 1
+%else
+%global package_libhdfs 0
+%endif
+
+%global commit 2e01e27e5ba4ece19650484f646fac42596250ce
 %global shortcommit %(c=%{commit}; echo ${c:0:7})
 
-%global hadoop_version %{version}-alpha
+%global hadoop_version %{version}
 %global hdfs_services hadoop-zkfc.service hadoop-datanode.service hadoop-secondarynamenode.service hadoop-namenode.service
 %global mapreduce_services hadoop-historyserver.service
 %global yarn_services hadoop-proxyserver.service hadoop-resourcemanager.service hadoop-nodemanager.service
 %global httpfs_services hadoop-httpfs.service
 
 # Filter out undesired provides and requires
-%global __requires_exclude_from ^%{_libdir}/%{name}/.*$
+%global __requires_exclude_from ^%{_libdir}/%{name}/libhadoop.so.*$
 %global __provides_exclude_from ^%{_libdir}/%{name}/.*$
 
 Name:   hadoop
-Version: 2.0.5
-Release: 12%{?dist}
+Version: 2.2.0
+Release: 1%{?dist}
 Summary: A software platform for processing vast amounts of data
 # The BSD license file is missing
 # https://issues.apache.org/jira/browse/HADOOP-9849
@@ -51,14 +58,14 @@ Source13: hdfs-create-dirs
 # https://issues.apache.org/jira/browse/HADOOP-9623
 # https://issues.apache.org/jira/browse/HADOOP-9650
 Patch0: hadoop-fedora-integration.patch
-# Remove the kfs dependency (https://issues.apache.org/jira/browse/HADOOP-8886)
-Patch1: hadoop-8886.patch
 # Fedora packaging guidelines for JNI library loading
 Patch2: hadoop-jni-library-loading.patch
 # Clean up warnings with maven 3.0.5
 Patch3: hadoop-maven.patch
 # Don't download tomcat.  This is incompatible with building httpfs
 Patch4: hadoop-no-download-tomcat.patch
+# Use dlopen to find libjvm.so
+Patch5: hadoop-dlopen-libjvm.patch
 # The native bits don't compile on ARM
 ExcludeArch: %{arm}
 
@@ -93,7 +100,7 @@ BuildRequires: chrpath
 BuildRequires: cmake
 BuildRequires: commons-codec
 BuildRequires: commons-httpclient
-%if package_httpfs
+%if %{package_httpfs}
 BuildRequires: ecj >= 1:4.2.1-6
 %endif
 BuildRequires: fuse-devel
@@ -160,7 +167,7 @@ BuildRequires: mockito
 BuildRequires: native-maven-plugin
 BuildRequires: netty
 BuildRequires: objectweb-asm
-BuildRequires: objenesis
+BuildRequires: objenesis >= 1.2-16
 BuildRequires: openssl-devel
 BuildRequires: paranamer
 BuildRequires: protobuf-compiler
@@ -225,6 +232,7 @@ Requires: glassfish-jaxb
 Requires: glassfish-jsp
 Requires: glassfish-jsp-api
 Requires: istack-commons
+Requires: java
 Requires: java-base64
 Requires: java-xmlbuilder
 Requires: javamail
@@ -267,6 +275,7 @@ offering local computation and storage.
 
 This package contains the native-hadoop library
 
+%if %{package_libhdfs}
 %package devel
 Summary: Headers for Hadoop
 Group: Development/System
@@ -274,6 +283,7 @@ Requires: libhdfs%{?_isa} = %{version}-%{release}
 
 %description devel
 Header files for Hadoop's hdfs library and other utilities
+%endif
 
 %package hdfs
 Summary: The Hadoop Distributed File System
@@ -295,6 +305,7 @@ offering local computation and storage.
 The Hadoop Distributed File System (HDFS) is the primary storage system
 used by Hadoop applications.
 
+%if %{package_libhdfs}
 %package hdfs-fuse
 Summary: Allows mounting of Hadoop HDFS
 Group: Development/Libraries
@@ -313,6 +324,7 @@ offering local computation and storage.
 
 This package provides tools that allow HDFS to be mounted as a standard
 file system through fuse.
+%endif
 
 %if %{package_httpfs}
 %package httpfs
@@ -350,6 +362,7 @@ BuildArch: noarch
 This package contains the API documentation for %{name}
 %endif
 
+%if %{package_libhdfs}
 %package -n libhdfs
 Summary: The Hadoop Filesystem Library
 Group: Development/Libraries
@@ -363,6 +376,7 @@ designed to scale up from single servers to thousands of machines, each
 offering local computation and storage.
 
 This package provides the Hadoop Filesystem Library.
+%endif
 
 %package mapreduce
 Summary: Hadoop MapReduce (MRv2)
@@ -453,11 +467,13 @@ This package contains files needed to run Hadoop YARN in secure mode.
 %prep
 %setup -qn %{name}-common-%{commit}
 %patch0 -p1
-%patch1 -p0
 %patch2 -p1
 %patch3 -p1
 %if 0%{package_httpfs} == 0
 %patch4 -p1
+%endif
+%if %{package_libhdfs}
+%patch5 -p1
 %endif
 
 # The hadoop test suite needs classes from the zookeeper test suite.
@@ -466,8 +482,9 @@ This package contains files needed to run Hadoop YARN in secure mode.
 %pom_add_dep org.apache.zookeeper:zookeeper hadoop-common-project/hadoop-common
 %pom_add_dep org.apache.zookeeper:zookeeper-test hadoop-common-project/hadoop-common
 %pom_remove_dep org.apache.zookeeper:zookeeper hadoop-hdfs-project/hadoop-hdfs
-%pom_add_dep org.apache.zookeeper:zookeeper hadoop-hdfs-project/hadoop-hdfs
 %pom_add_dep org.apache.zookeeper:zookeeper-test hadoop-hdfs-project/hadoop-hdfs
+%pom_remove_dep org.apache.zookeeper:zookeeper hadoop-hdfs-project/hadoop-hdfs-nfs
+%pom_add_dep org.apache.zookeeper:zookeeper-test hadoop-hdfs-project/hadoop-hdfs-nfs
 
 # Remove the maven-site-plugin.  It's not needed
 %pom_remove_plugin :maven-site-plugin
@@ -652,18 +669,24 @@ rm -f %{buildroot}/%{_bindir}/test-container-executor
 rm -f %{buildroot}/%{_sbindir}/hdfs-config.sh
 
 cp -arf $basedir/etc/* %{buildroot}/%{_sysconfdir}
-cp -arf $basedir/include/* %{buildroot}/%{_includedir}/%{name}
 cp -arf $basedir/lib/native/libhadoop.so* %{buildroot}/%{_libdir}/%{name}
-cp -arf $basedir/lib/native/libhdfs.so* %{buildroot}/%{_libdir}
 chrpath --delete %{buildroot}/%{_libdir}/%{name}/*
+%if %{package_libhdfs}
+cp -arf $basedir/include/hdfs.h %{buildroot}/%{_includedir}/%{name}
+cp -arf $basedir/lib/native/libhdfs.so* %{buildroot}/%{_libdir}
+chrpath --delete %{buildroot}/%{_libdir}/libhdfs*
 cp -af hadoop-hdfs-project/hadoop-hdfs/target/native/main/native/fuse-dfs/fuse_dfs %{buildroot}/%{_bindir}
 chrpath --delete %{buildroot}/%{_bindir}/fuse_dfs
+%endif
 
 %if 0%{package_httpfs} == 0
 rm -f %{buildroot}/%{_sbindir}/httpfs.sh
 rm -f %{buildroot}/%{_libexecdir}/httpfs-config.sh
 rm -f %{buildroot}/%{_sysconfdir}/%{name}/httpfs*
 %endif
+
+# Remove files with .cmd extension
+find %{buildroot} -name *.cmd | xargs rm -f 
 
 # Modify hadoop-env.sh to point to correct locations for JAVA_HOME
 # and JSVC_HOME.
@@ -692,6 +715,8 @@ done
 # common jar depenencies
 copy_dep_jars $basedir/share/%{name}/common/lib %{buildroot}/%{_datadir}/%{name}/common/lib
 %{_bindir}/xmvn-subst %{buildroot}/%{_datadir}/%{name}/common/lib
+%{__ln_s} %{_javadir}/%{name}/%{name}-nfs.jar %{buildroot}/%{_datadir}/%{name}/common
+echo "%{_datadir}/%{name}/common/%{name}-nfs.jar" >> .mfiles
 for f in annotations auth
 do
   %{__ln_s} %{_javadir}/%{name}/%{name}-$f.jar %{buildroot}/%{_datadir}/%{name}/common/lib
@@ -701,6 +726,7 @@ done
 copy_dep_jars $basedir/share/%{name}/hdfs/lib %{buildroot}/%{_datadir}/%{name}/hdfs/lib
 %{_bindir}/xmvn-subst %{buildroot}/%{_datadir}/%{name}/hdfs/lib
 %{__ln_s} %{_javadir}/%{name}/%{name}-hdfs.jar %{buildroot}/%{_datadir}/%{name}/hdfs
+%{__ln_s} %{_javadir}/%{name}/%{name}-hdfs-nfs.jar %{buildroot}/%{_datadir}/%{name}/hdfs
 %{__ln_s} %{_javadir}/%{name}/%{name}-hdfs-bkjournal.jar %{buildroot}/%{_datadir}/%{name}/hdfs/lib
 
 # httpfs
@@ -903,7 +929,9 @@ getent passwd yarn >/dev/null || /usr/sbin/useradd --comment "Hadoop Yarn" --she
 %systemd_post %{httpfs_services}
 %endif
 
+%if %{package_libhdfs}
 %post -n libhdfs -p /sbin/ldconfig
+%endif
 
 %post mapreduce
 %systemd_post %{mapreduce_services}
@@ -921,7 +949,9 @@ getent passwd yarn >/dev/null || /usr/sbin/useradd --comment "Hadoop Yarn" --she
 %systemd_postun_with_restart %{httpfs_services}
 %endif
 
+%if %{package_libhdfs}
 %postun -n libhdfs -p /sbin/ldconfig
+%endif
 
 %postun mapreduce
 %systemd_postun_with_restart %{mapreduce_services}
@@ -965,9 +995,11 @@ getent passwd yarn >/dev/null || /usr/sbin/useradd --comment "Hadoop Yarn" --she
 %files common-native
 %{_libdir}/%{name}/libhadoop.*
 
+%if %{package_libhdfs}
 %files devel
 %{_includedir}/%{name}
 %{_libdir}/libhdfs.so
+%endif
 
 %files -f .mfiles-hadoop-hdfs hdfs
 %exclude %{_datadir}/%{name}/client
@@ -990,8 +1022,10 @@ getent passwd yarn >/dev/null || /usr/sbin/useradd --comment "Hadoop Yarn" --she
 %attr(0755,hdfs,hadoop) %dir %{_var}/log/%{name}-hdfs
 %attr(0755,hdfs,hadoop) %dir %{_var}/cache/%{name}-hdfs
 
+%if %{package_libhdfs}
 %files hdfs-fuse
 %attr(755,hdfs,hadoop) %{_bindir}/fuse_dfs
+%endif
 
 %if %{package_httpfs}
 %files httpfs
@@ -1026,9 +1060,11 @@ getent passwd yarn >/dev/null || /usr/sbin/useradd --comment "Hadoop Yarn" --she
 %doc hadoop-dist/target/hadoop-%{hadoop_version}/share/doc/hadoop/common/LICENSE.txt hadoop-dist/target/hadoop-%{hadoop_version}/share/doc/hadoop/common/NOTICE.txt
 %endif
 
+%if %{package_libhdfs}
 %files -n libhdfs
 %doc hadoop-dist/target/hadoop-%{hadoop_version}/share/doc/hadoop/hdfs/LICENSE.txt
 %{_libdir}/libhdfs.so.*
+%endif
 
 %files -f .mfiles-hadoop-mapreduce mapreduce
 %exclude %{_datadir}/%{name}/client
