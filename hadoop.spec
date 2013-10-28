@@ -50,13 +50,17 @@ Source12: hadoop-httpfs-env.sh
 Source13: hdfs-create-dirs
 # This patch includes the following upstream tickets:
 # https://issues.apache.org/jira/browse/HADOOP-9594
-# https://issues.apache.org/jira/browse/HADOOP-9605
-# https://issues.apache.org/jira/browse/HADOOP-9607
-# https://issues.apache.org/jira/browse/HADOOP-9610
+# https://issues.apache.org/jira/browse/MAPREDUCE-5431
 # https://issues.apache.org/jira/browse/HADOOP-9611
 # https://issues.apache.org/jira/browse/HADOOP-9613
 # https://issues.apache.org/jira/browse/HADOOP-9623
 # https://issues.apache.org/jira/browse/HADOOP-9650
+# https://issues.apache.org/jira/browse/HDFS-5411
+# https://issues.apache.org/jira/browse/HADOOP-10067
+# https://issues.apache.org/jira/browse/HDFS-5075
+# https://issues.apache.org/jira/browse/HADOOP-10068
+# https://issues.apache.org/jira/browse/HADOOP-10075
+# https://issues.apache.org/jira/browse/HADOOP-10076
 Patch0: hadoop-fedora-integration.patch
 # Fedora packaging guidelines for JNI library loading
 Patch2: hadoop-jni-library-loading.patch
