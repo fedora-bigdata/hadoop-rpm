@@ -22,7 +22,7 @@
 %global httpfs_services hadoop-httpfs.service
 
 # Filter out undesired provides and requires
-%global __requires_exclude_from ^%{_libdir}/%{name}/libhadoop.so.*$
+%global __requires_exclude_from ^%{_libdir}/%{name}/libhadoop.so$
 %global __provides_exclude_from ^%{_libdir}/%{name}/.*$
 
 Name:   hadoop
