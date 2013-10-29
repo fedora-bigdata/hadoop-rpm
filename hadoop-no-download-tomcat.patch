@@ -1,0 +1,55 @@
+diff --git a/hadoop-hdfs-project/hadoop-hdfs-httpfs/pom.xml b/hadoop-hdfs-project/hadoop-hdfs-httpfs/pom.xml
+index 72f3b7b..1d99c76 100644
+--- a/hadoop-hdfs-project/hadoop-hdfs-httpfs/pom.xml
++++ b/hadoop-hdfs-project/hadoop-hdfs-httpfs/pom.xml
+@@ -523,50 +523,6 @@
+             <artifactId>maven-antrun-plugin</artifactId>
+             <executions>
+               <execution>
+-                <id>dist</id>
+-                <goals>
+-                  <goal>run</goal>
+-                </goals>
+-                <phase>package</phase>
+-                <configuration>
+-                  <target>
+-                    <mkdir dir="downloads"/>
+-                    <get
+-                        src="${tomcat.download.url}"
+-                        dest="downloads/apache-tomcat-${tomcat.version}.tar.gz" verbose="true" skipexisting="true"/>
+-                    <delete dir="${project.build.directory}/tomcat.exp"/>
+-                    <mkdir dir="${project.build.directory}/tomcat.exp"/>
+-
+-                    <!-- Using Unix script to preserve file permissions -->
+-                    <echo file="${project.build.directory}/tomcat-untar.sh">
+-                      cd "${project.build.directory}/tomcat.exp"
+-                      gzip -cd ../../downloads/apache-tomcat-${tomcat.version}.tar.gz | tar xf -
+-                    </echo>
+-                    <exec executable="sh" dir="${project.build.directory}" failonerror="true">
+-                      <arg line="./tomcat-untar.sh"/>
+-                    </exec>
+-
+-                    <move file="${project.build.directory}/tomcat.exp/apache-tomcat-${tomcat.version}"
+-                          tofile="${httpfs.tomcat.dist.dir}"/>
+-                    <delete dir="${project.build.directory}/tomcat.exp"/>
+-                    <delete dir="${httpfs.tomcat.dist.dir}/webapps"/>
+-                    <mkdir dir="${httpfs.tomcat.dist.dir}/webapps"/>
+-                    <delete file="${httpfs.tomcat.dist.dir}/conf/server.xml"/>
+-                    <copy file="${basedir}/src/main/tomcat/server.xml"
+-                          toDir="${httpfs.tomcat.dist.dir}/conf"/>
+-                    <delete file="${httpfs.tomcat.dist.dir}/conf/logging.properties"/>
+-                    <copy file="${basedir}/src/main/tomcat/logging.properties"
+-                          toDir="${httpfs.tomcat.dist.dir}/conf"/>
+-                    <copy toDir="${httpfs.tomcat.dist.dir}/webapps/ROOT">
+-                      <fileset dir="${basedir}/src/main/tomcat/ROOT"/>
+-                    </copy>
+-                    <copy toDir="${httpfs.tomcat.dist.dir}/webapps/webhdfs">
+-                      <fileset dir="${project.build.directory}/webhdfs"/>
+-                    </copy>
+-                  </target>
+-                </configuration>
+-              </execution>
+-              <execution>
+                 <id>tar</id>
+                 <phase>package</phase>
+                 <goals>
