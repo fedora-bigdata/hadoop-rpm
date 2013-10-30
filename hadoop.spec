@@ -54,7 +54,6 @@ Source13: hdfs-create-dirs
 # https://issues.apache.org/jira/browse/HADOOP-9611
 # https://issues.apache.org/jira/browse/HADOOP-9613
 # https://issues.apache.org/jira/browse/HADOOP-9623
-# https://issues.apache.org/jira/browse/HADOOP-9650
 # https://issues.apache.org/jira/browse/HDFS-5411
 # https://issues.apache.org/jira/browse/HADOOP-10067
 # https://issues.apache.org/jira/browse/HDFS-5075
