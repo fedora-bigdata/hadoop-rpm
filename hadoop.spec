@@ -549,7 +549,7 @@ This package contains files needed to run Hadoop YARN in secure mode.
 
 # Jar files that need to be overridden due to installation location
 %mvn_file :%{name}-common::{}: %{_jnidir}/%{name}-common %{_datadir}/%{name}/common/%{name}-common
-%mvn_file :%{name}-common::tests: %{name}/%{name}-common-tests
+%mvn_file :%{name}-common::tests: %{name}/%{name}-common
 
 %build
 %ifnarch x86_64
