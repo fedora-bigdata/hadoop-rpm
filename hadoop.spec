@@ -137,7 +137,6 @@ BuildRequires: jettison
 BuildRequires: jetty
 BuildRequires: jetty-jspc-maven-plugin
 BuildRequires: jetty-util-ajax
-BuildRequires: jline
 BuildRequires: jsch
 BuildRequires: json_simple
 BuildRequires: jsr-305
