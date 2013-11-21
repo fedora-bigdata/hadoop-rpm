@@ -194,13 +194,13 @@ BuildRequires: jersey-test-framework
 BuildRequires: maven-surefire-provider-junit4
 
 %description
-Hadoop is a framework that allows for the distributed processing of large data
-sets across clusters of computers using simple programming models.  It is
-designed to scale up from single servers to thousands of machines, each
+Apache Hadoop is a framework that allows for the distributed processing of
+large data sets across clusters of computers using simple programming models.
+It is designed to scale up from single servers to thousands of machines, each
 offering local computation and storage.
 
 %package client
-Summary: Libraries for Hadoop clients
+Summary: Libraries for Apache Hadoop clients
 Group: Applications/System
 BuildArch: noarch
 Requires: %{name}-common = %{version}-%{release}
@@ -209,15 +209,15 @@ Requires: %{name}-mapreduce = %{version}-%{release}
 Requires: %{name}-yarn = %{version}-%{release}
 
 %description client
-Hadoop is a framework that allows for the distributed processing of large data
-sets across clusters of computers using simple programming models.  It is
-designed to scale up from single servers to thousands of machines, each
+Apache Hadoop is a framework that allows for the distributed processing of
+large data sets across clusters of computers using simple programming models.
+It is designed to scale up from single servers to thousands of machines, each
 offering local computation and storage.
 
-This package provides libraries for Hadoop clients.
+This package provides libraries for Apache Hadoop clients.
 
 %package common
-Summary: Common files needed by Hadoop daemons
+Summary: Common files needed by Apache Hadoop daemons
 Group: Applications/System
 BuildArch: noarch
 Requires: /usr/sbin/useradd
@@ -258,38 +258,39 @@ Requires: txw2
 Requires: which
 
 %description common
-Hadoop is a framework that allows for the distributed processing of large data
-sets across clusters of computers using simple programming models.  It is
-designed to scale up from single servers to thousands of machines, each
+Apache Hadoop is a framework that allows for the distributed processing of
+large data sets across clusters of computers using simple programming models.
+It is designed to scale up from single servers to thousands of machines, each
 offering local computation and storage.
 
-This package contains common files and utilities needed by other Hadoop modules.
+This package contains common files and utilities needed by other Apache
+Hadoop modules.
 
 %package common-native
-Summary: The native Hadoop library file
+Summary: The native Apache Hadoop library file
 Group: Applications/System
 Requires: %{name}-common = %{version}-%{release}
 
 %description common-native
-Hadoop is a framework that allows for the distributed processing of large data
-sets across clusters of computers using simple programming models.  It is
-designed to scale up from single servers to thousands of machines, each
+Apache Hadoop is a framework that allows for the distributed processing of
+large data sets across clusters of computers using simple programming models.
+It is designed to scale up from single servers to thousands of machines, each
 offering local computation and storage.
 
 This package contains the native-hadoop library
 
 %if %{package_libhdfs}
 %package devel
-Summary: Headers for Hadoop
+Summary: Headers for Apache Hadoop
 Group: Development/System
 Requires: libhdfs%{?_isa} = %{version}-%{release}
 
 %description devel
-Header files for Hadoop's hdfs library and other utilities
+Header files for Apache Hadoop's hdfs library and other utilities
 %endif
 
 %package hdfs
-Summary: The Hadoop Distributed File System
+Summary: The Apache Hadoop Distributed File System
 Group: Applications/System
 BuildArch: noarch
 Requires: apache-commons-daemon-jsvc
@@ -300,17 +301,17 @@ Requires(preun): systemd
 Requires(postun): systemd
 
 %description hdfs
-Hadoop is a framework that allows for the distributed processing of large data
-sets across clusters of computers using simple programming models.  It is
-designed to scale up from single servers to thousands of machines, each
+Apache Hadoop is a framework that allows for the distributed processing of
+large data sets across clusters of computers using simple programming models.
+It is designed to scale up from single servers to thousands of machines, each
 offering local computation and storage.
 
 The Hadoop Distributed File System (HDFS) is the primary storage system
-used by Hadoop applications.
+used by Apache Hadoop applications.
 
 %if %{package_libhdfs}
 %package hdfs-fuse
-Summary: Allows mounting of Hadoop HDFS
+Summary: Allows mounting of Apache Hadoop HDFS
 Group: Development/Libraries
 Requires: fuse
 Requires: libhdfs%{?_isa} = %{version}-%{release}
@@ -320,9 +321,9 @@ Requires: %{name}-mapreduce = %{version}-%{release}
 Requires: %{name}-yarn = %{version}-%{release}
 
 %description hdfs-fuse
-Hadoop is a framework that allows for the distributed processing of large data
-sets across clusters of computers using simple programming models.  It is
-designed to scale up from single servers to thousands of machines, each
+Apache Hadoop is a framework that allows for the distributed processing of
+large data sets across clusters of computers using simple programming models.
+It is designed to scale up from single servers to thousands of machines, each
 offering local computation and storage.
 
 This package provides tools that allow HDFS to be mounted as a standard
@@ -344,9 +345,9 @@ Requires(preun): systemd
 Requires(postun): systemd
 
 %description httpfs
-Hadoop is a framework that allows for the distributed processing of large data
-sets across clusters of computers using simple programming models.  It is
-designed to scale up from single servers to thousands of machines, each
+Apache Hadoop is a framework that allows for the distributed processing of
+large data sets across clusters of computers using simple programming models.
+It is designed to scale up from single servers to thousands of machines, each
 offering local computation and storage.
 
 This package provides a server that provides HTTP REST API support for
@@ -357,32 +358,32 @@ the complete FileSystem/FileContext interface in HDFS.
 # most architectures so only generate on intel 64-bit
 %ifarch x86_64
 %package javadoc
-Summary: Javadoc for Hadoop
+Summary: Javadoc for Apache Hadoop
 Group: Documentation
 BuildArch: noarch
 
 %description javadoc
-This package contains the API documentation for %{name}
+This package contains the API documentation for %{name}.
 %endif
 
 %if %{package_libhdfs}
 %package -n libhdfs
-Summary: The Hadoop Filesystem Library
+Summary: The Apache Hadoop Filesystem Library
 Group: Development/Libraries
 Requires: %{name}-hdfs = %{version}-%{release}
 Requires: lzo
 
 %description -n libhdfs
-Hadoop is a framework that allows for the distributed processing of large data
-sets across clusters of computers using simple programming models.  It is
-designed to scale up from single servers to thousands of machines, each
+Apache Hadoop is a framework that allows for the distributed processing of
+large data sets across clusters of computers using simple programming models.
+It is designed to scale up from single servers to thousands of machines, each
 offering local computation and storage.
 
-This package provides the Hadoop Filesystem Library.
+This package provides the Apache Hadoop Filesystem Library.
 %endif
 
 %package mapreduce
-Summary: Hadoop MapReduce (MRv2)
+Summary: Apache Hadoop MapReduce (MRv2)
 Group: Applications/System
 BuildArch: noarch
 Requires(pre): %{name}-common = %{version}-%{release}
@@ -391,15 +392,15 @@ Requires(preun): systemd
 Requires(postun): systemd
 
 %description mapreduce
-Hadoop is a framework that allows for the distributed processing of large data
-sets across clusters of computers using simple programming models.  It is
-designed to scale up from single servers to thousands of machines, each
+Apache Hadoop is a framework that allows for the distributed processing of
+large data sets across clusters of computers using simple programming models.
+It is designed to scale up from single servers to thousands of machines, each
 offering local computation and storage.
 
-This package provides Hadoop MapReduce (MRv2).
+This package provides Apache Hadoop MapReduce (MRv2).
 
 %package mapreduce-examples
-Summary: Hadoop MapReduce (MRv2) examples
+Summary: Apache Hadoop MapReduce (MRv2) examples
 Group: Applications/System
 BuildArch: noarch
 Requires: %{name}-mapreduce = %{version}-%{release}
@@ -409,16 +410,16 @@ Requires: hsqldb
 This package contains mapreduce examples.
 
 %package maven-plugin
-Summary: Hadoop maven plugin
+Summary: Apache Hadoop maven plugin
 Group: Development/Libraries
 BuildArch: noarch
 Requires: maven
 
 %description maven-plugin
-The Hadoop maven plugin
+The Apache Hadoop maven plugin
 
 %package tests
-Summary: Hadoop test resources
+Summary: Apache Hadoop test resources
 BuildArch: noarch
 Requires: %{name}-common = %{version}-%{release}
 Requires: %{name}-hdfs = %{version}-%{release}
@@ -426,15 +427,15 @@ Requires: %{name}-mapreduce = %{version}-%{release}
 Requires: %{name}-yarn = %{version}-%{release}
 
 %description tests
-Hadoop is a framework that allows for the distributed processing of large data
-sets across clusters of computers using simple programming models.  It is
-designed to scale up from single servers to thousands of machines, each
+Apache Hadoop is a framework that allows for the distributed processing of
+large data sets across clusters of computers using simple programming models.
+It is designed to scale up from single servers to thousands of machines, each
 offering local computation and storage.
 
-This package contains test related resources for Hadoop.
+This package contains test related resources for Apache Hadoop.
 
 %package yarn
-Summary: Hadoop YARN
+Summary: Apache Hadoop YARN
 Group: Applications/System
 BuildArch: noarch
 Requires(pre): %{name}-common = %{version}-%{release}
@@ -446,26 +447,25 @@ Requires(preun): systemd
 Requires(postun): systemd
 
 %description yarn
-Hadoop is a framework that allows for the distributed processing of large data
-sets across clusters of computers using simple programming models.  It is
-designed to scale up from single servers to thousands of machines, each
+Apache Hadoop is a framework that allows for the distributed processing of
+large data sets across clusters of computers using simple programming models.
+It is designed to scale up from single servers to thousands of machines, each
 offering local computation and storage.
 
-This package contains Hadoop YARN.
+This package contains Apache Hadoop YARN.
 
 %package yarn-security
-Summary: The ability to run Hadoop YARN in secure mode
+Summary: The ability to run Apache Hadoop YARN in secure mode
 Group: Applications/System
 Requires: %{name}-yarn = %{version}-%{release}
 
 %description yarn-security
-Hadoop is a framework that allows for the distributed processing of large data
-sets across clusters of computers using simple programming models.  It is
-designed to scale up from single servers to thousands of machines, each
-offering local computation and storage.  YARN (Hadoop NextGen MapReduce) is
-a general purpose data-computation framework.
+Apache Hadoop is a framework that allows for the distributed processing of
+large data sets across clusters of computers using simple programming models.
+It is designed to scale up from single servers to thousands of machines, each
+offering local computation and storage.
 
-This package contains files needed to run Hadoop YARN in secure mode.
+This package contains files needed to run Apache Hadoop YARN in secure mode.
 
 %prep
 %setup -qn %{name}-common-%{commit}
@@ -528,23 +528,23 @@ This package contains files needed to run Hadoop YARN in secure mode.
 %mvn_package :%{name}-project-dist __noinstall
 
 # Create separate file lists for packaging
-%mvn_package :::tests: hadoop-tests
-%mvn_package :%{name}-client*::{}: hadoop-client
-%mvn_package :%{name}-hdfs*::{}: hadoop-hdfs
-%mvn_package :%{name}-mapreduce-examples*::{}: hadoop-mapreduce-examples
-%mvn_package :%{name}-mapreduce*::{}: hadoop-mapreduce
-%mvn_package :%{name}-archives::{}: hadoop-mapreduce
-%mvn_package :%{name}-datajoin::{}: hadoop-mapreduce
-%mvn_package :%{name}-distcp::{}: hadoop-mapreduce
-%mvn_package :%{name}-extras::{}: hadoop-mapreduce
-%mvn_package :%{name}-gridmix::{}: hadoop-mapreduce
-%mvn_package :%{name}-rumen::{}: hadoop-mapreduce
-%mvn_package :%{name}-streaming::{}: hadoop-mapreduce
-%mvn_package :%{name}-pipes::{}: hadoop-mapreduce
-%mvn_package :%{name}-tools*::{}: hadoop-mapreduce
-%mvn_package :%{name}-maven-plugins::{}: hadoop-maven-plugin
-%mvn_package :%{name}-minicluster::{}: hadoop-tests
-%mvn_package :%{name}-yarn*::{}: hadoop-yarn
+%mvn_package :::tests: %{name}-tests
+%mvn_package :%{name}-client*::{}: %{name}-client
+%mvn_package :%{name}-hdfs*::{}: %{name}-hdfs
+%mvn_package :%{name}-mapreduce-examples*::{}: %{name}-mapreduce-examples
+%mvn_package :%{name}-mapreduce*::{}: %{name}-mapreduce
+%mvn_package :%{name}-archives::{}: %{name}-mapreduce
+%mvn_package :%{name}-datajoin::{}: %{name}-mapreduce
+%mvn_package :%{name}-distcp::{}: %{name}-mapreduce
+%mvn_package :%{name}-extras::{}: %{name}-mapreduce
+%mvn_package :%{name}-gridmix::{}: %{name}-mapreduce
+%mvn_package :%{name}-rumen::{}: %{name}-mapreduce
+%mvn_package :%{name}-streaming::{}: %{name}-mapreduce
+%mvn_package :%{name}-pipes::{}: %{name}-mapreduce
+%mvn_package :%{name}-tools*::{}: %{name}-mapreduce
+%mvn_package :%{name}-maven-plugins::{}: %{name}-maven-plugin
+%mvn_package :%{name}-minicluster::{}: %{name}-tests
+%mvn_package :%{name}-yarn*::{}: %{name}-yarn
 
 # Jar files that need to be overridden due to installation location
 %mvn_file :%{name}-common::{}: %{_jnidir}/%{name}-common %{_datadir}/%{name}/common/%{name}-common
@@ -554,7 +554,7 @@ This package contains files needed to run Hadoop YARN in secure mode.
 %ifnarch x86_64
 opts="-j"
 %endif
-%mvn_build $opts -- -Drequire.snappy=true -Dcontainer-executor.conf.dir=%{_sysconfdir}/hadoop -Pdist,native -DskipTests -DskipTest -DskipIT
+%mvn_build $opts -- -Drequire.snappy=true -Dcontainer-executor.conf.dir=%{_sysconfdir}/%{name} -Pdist,native -DskipTests -DskipTest -DskipIT
 
 # This takes a long time to run, so comment out for now
 #%%check
@@ -693,11 +693,11 @@ find %{buildroot} -name *.cmd | xargs rm -f
 
 # Modify hadoop-env.sh to point to correct locations for JAVA_HOME
 # and JSVC_HOME.
-sed -i "s|\${JAVA_HOME}|/usr/lib/jvm/jre|" %{buildroot}/%{_sysconfdir}/%{name}/hadoop-env.sh
-sed -i "s|\${JSVC_HOME}|/usr/bin|" %{buildroot}/%{_sysconfdir}/%{name}/hadoop-env.sh
+sed -i "s|\${JAVA_HOME}|/usr/lib/jvm/jre|" %{buildroot}/%{_sysconfdir}/%{name}/%{name}-env.sh
+sed -i "s|\${JSVC_HOME}|/usr/bin|" %{buildroot}/%{_sysconfdir}/%{name}/%{name}-env.sh
 
 # Ensure the java provided DocumentBuilderFactory is used
-sed -i "s|\(HADOOP_OPTS.*=.*\)\$HADOOP_CLIENT_OPTS|\1 -Djavax.xml.parsers.DocumentBuilderFactory=com.sun.org.apache.xerces.internal.jaxp.DocumentBuilderFactoryImpl \$HADOOP_CLIENT_OPTS|" %{buildroot}/%{_sysconfdir}/%{name}/hadoop-env.sh
+sed -i "s|\(HADOOP_OPTS.*=.*\)\$HADOOP_CLIENT_OPTS|\1 -Djavax.xml.parsers.DocumentBuilderFactory=com.sun.org.apache.xerces.internal.jaxp.DocumentBuilderFactoryImpl \$HADOOP_CLIENT_OPTS|" %{buildroot}/%{_sysconfdir}/%{name}/%{name}-env.sh
 echo "export YARN_OPTS=\"\$YARN_OPTS -Djavax.xml.parsers.DocumentBuilderFactory=com.sun.org.apache.xerces.internal.jaxp.DocumentBuilderFactoryImpl\"" >> %{buildroot}/%{_sysconfdir}/%{name}/yarn-env.sh
 
 # Workaround for bz1012059
@@ -749,7 +749,7 @@ cat > %{buildroot}/%{_sharedstatedir}/%{name}-httpfs/webapps/webhdfs/META-INF/co
 EOF
 
 # Remove the jars included in the webapp and create symlinks
-rm -f %{buildroot}%{_sharedstatedir}/%{name}-httpfs/webapps/webhdfs/WEB-INF/lib/hadoop-common*.jar
+rm -f %{buildroot}%{_sharedstatedir}/%{name}-httpfs/webapps/webhdfs/WEB-INF/lib/%{name}-common*.jar
 rm -f %{buildroot}%{_sharedstatedir}/%{name}-httpfs/webapps/webhdfs/WEB-INF/lib/tools*.jar
 %{_bindir}/xmvn-subst %{buildroot}/%{_sharedstatedir}/%{name}-httpfs/webapps/webhdfs/WEB-INF/lib
 %{__ln_s} %{_jnidir}/%{name}-common.jar %{buildroot}%{_sharedstatedir}/%{name}-httpfs/webapps/webhdfs/WEB-INF/lib
@@ -813,7 +813,7 @@ if [ "$lib" = "%_libdir" ]; then
   echo "_libdir is not located in /usr.  Lib location is wrong"
   exit 1
 fi
-sed -e "s|HADOOP_COMMON_LIB_NATIVE_DIR\s*=.*|HADOOP_COMMON_LIB_NATIVE_DIR=$lib/%{name}|" %{SOURCE1} > %{buildroot}/%{_libexecdir}/hadoop-layout.sh
+sed -e "s|HADOOP_COMMON_LIB_NATIVE_DIR\s*=.*|HADOOP_COMMON_LIB_NATIVE_DIR=$lib/%{name}|" %{SOURCE1} > %{buildroot}/%{_libexecdir}/%{name}-layout.sh
 
 # Default config
 cp -f %{SOURCE8} %{buildroot}/%{_sysconfdir}/%{name}/core-site.xml
@@ -856,11 +856,11 @@ do
 done
 
 # Ensure /var/run directories are recreated on boot
-echo "d %{_var}/run/%{name}-yarn 0775 yarn hadoop -" > %{buildroot}/%{_tmpfilesdir}/hadoop-yarn.conf
-echo "d %{_var}/run/%{name}-hdfs 0775 hdfs hadoop -" > %{buildroot}/%{_tmpfilesdir}/hadoop-hdfs.conf
-echo "d %{_var}/run/%{name}-mapreduce 0775 mapred hadoop -" > %{buildroot}/%{_tmpfilesdir}/hadoop-mapreduce.conf
+echo "d %{_var}/run/%{name}-yarn 0775 yarn hadoop -" > %{buildroot}/%{_tmpfilesdir}/%{name}-yarn.conf
+echo "d %{_var}/run/%{name}-hdfs 0775 hdfs hadoop -" > %{buildroot}/%{_tmpfilesdir}/%{name}-hdfs.conf
+echo "d %{_var}/run/%{name}-mapreduce 0775 mapred hadoop -" > %{buildroot}/%{_tmpfilesdir}/%{name}-mapreduce.conf
 %if %{package_httpfs}
-echo "d %{_var}/run/%{name}-httpfs 0775 httpfs hadoop -" > %{buildroot}/%{_tmpfilesdir}/hadoop-httpfs.conf
+echo "d %{_var}/run/%{name}-httpfs 0775 httpfs hadoop -" > %{buildroot}/%{_tmpfilesdir}/%{name}-httpfs.conf
 %endif
 
 # logrotate config
@@ -962,7 +962,7 @@ getent passwd yarn >/dev/null || /usr/sbin/useradd --comment "Hadoop Yarn" --she
 %postun yarn
 %systemd_postun_with_restart %{yarn_services}
 
-%files -f .mfiles-hadoop-client client
+%files -f .mfiles-%{name}-client client
 %{_datadir}/%{name}/client
 
 %files -f .mfiles common
@@ -1004,7 +1004,7 @@ getent passwd yarn >/dev/null || /usr/sbin/useradd --comment "Hadoop Yarn" --she
 %{_libdir}/libhdfs.so
 %endif
 
-%files -f .mfiles-hadoop-hdfs hdfs
+%files -f .mfiles-%{name}-hdfs hdfs
 %exclude %{_datadir}/%{name}/client
 %config(noreplace) %{_sysconfdir}/%{name}/hdfs-site.xml
 %config(noreplace) %{_sysconfdir}/security/limits.d/hdfs.conf
@@ -1069,7 +1069,7 @@ getent passwd yarn >/dev/null || /usr/sbin/useradd --comment "Hadoop Yarn" --she
 %{_libdir}/libhdfs.so.*
 %endif
 
-%files -f .mfiles-hadoop-mapreduce mapreduce
+%files -f .mfiles-%{name}-mapreduce mapreduce
 %exclude %{_datadir}/%{name}/client
 %config(noreplace) %{_sysconfdir}/%{name}/mapred-env.sh
 %config(noreplace) %{_sysconfdir}/%{name}/mapred-queues.xml.template
@@ -1087,14 +1087,14 @@ getent passwd yarn >/dev/null || /usr/sbin/useradd --comment "Hadoop Yarn" --she
 %attr(0755,mapred,hadoop) %dir %{_var}/log/%{name}-mapreduce
 %attr(0755,mapred,hadoop) %dir %{_var}/cache/%{name}-mapreduce
 
-%files -f .mfiles-hadoop-mapreduce-examples mapreduce-examples
+%files -f .mfiles-%{name}-mapreduce-examples mapreduce-examples
 
-%files -f .mfiles-hadoop-maven-plugin maven-plugin
+%files -f .mfiles-%{name}-maven-plugin maven-plugin
 %doc hadoop-dist/target/hadoop-%{hadoop_version}/share/doc/hadoop/common/LICENSE.txt
 
-%files -f .mfiles-hadoop-tests tests
+%files -f .mfiles-%{name}-tests tests
 
-%files -f .mfiles-hadoop-yarn yarn
+%files -f .mfiles-%{name}-yarn yarn
 %exclude %{_datadir}/%{name}/client
 %config(noreplace) %{_sysconfdir}/%{name}/capacity-scheduler.xml
 %config(noreplace) %{_sysconfdir}/%{name}/yarn-env.sh
