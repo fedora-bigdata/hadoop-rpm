@@ -27,7 +27,7 @@
 
 Name:   hadoop
 Version: 2.2.0
-Release: 2%{?dist}
+Release: 3%{?dist}
 Summary: A software platform for processing vast amounts of data
 # The BSD license file is missing
 # https://issues.apache.org/jira/browse/HADOOP-9849
@@ -1129,6 +1129,9 @@ getent passwd yarn >/dev/null || /usr/sbin/useradd --comment "Apache Hadoop Yarn
 %attr(6050,root,yarn) %{_bindir}/container-executor
 
 %changelog
+* Tue Dec  3 2013 Robert Rati <rrati@redhat> - 2.2.0-3
+- Removed jline Requires
+
 * Tue Dec  3 2013 Robert Rati <rrati@redhat> - 2.2.0-2
 - Changed provides filter to just filter the .so
 - Corrected naming of hadoop-common test jar
