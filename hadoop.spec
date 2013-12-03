@@ -243,7 +243,6 @@ Requires: jetty-http
 Requires: jetty-io
 Requires: jetty-security
 Requires: jetty-xml
-Requires: jline
 Requires: jsr-311
 Requires: mockito
 Requires: nc6
