@@ -921,7 +921,7 @@ getent passwd yarn >/dev/null || /usr/sbin/useradd --comment "Apache Hadoop Yarn
 %preun yarn
 %systemd_preun %{yarn_services}
 
-%post common -p /sbin/ldconfig
+%post common-native -p /sbin/ldconfig
 
 %post hdfs
 %systemd_post %{hdfs_services}
@@ -941,7 +941,7 @@ getent passwd yarn >/dev/null || /usr/sbin/useradd --comment "Apache Hadoop Yarn
 %post yarn
 %systemd_post %{yarn_services}
 
-%postun common -p /sbin/ldconfig
+%postun common-native -p /sbin/ldconfig
 
 %postun hdfs
 %systemd_postun_with_restart %{hdfs_services}
