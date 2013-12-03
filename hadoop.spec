@@ -27,7 +27,7 @@
 
 Name:   hadoop
 Version: 2.2.0
-Release: 1%{?dist}
+Release: 2%{?dist}
 Summary: A software platform for processing vast amounts of data
 # The BSD license file is missing
 # https://issues.apache.org/jira/browse/HADOOP-9849
@@ -1130,6 +1130,13 @@ getent passwd yarn >/dev/null || /usr/sbin/useradd --comment "Apache Hadoop Yarn
 %attr(6050,root,yarn) %{_bindir}/container-executor
 
 %changelog
+* Tue Dec  3 2013 Robert Rati <rrati@redhat> - 2.2.0-2
+- Changed provides filter to just filter the .so
+- Corrected naming of hadoop-common test jar
+- Removed jline BuildRequires
+- Moved pre/port install invocation of ldconfig to common-native
+- Added workaround for bz1023116
+
 * Wed Oct 23 2013 Robert Rati <rrati@redhat> - 2.2.0-1
 - Update to upstream 2.2.0
 - New patch to open libjvm with dlopen
