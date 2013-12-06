@@ -545,9 +545,11 @@ This package contains files needed to run Apache Hadoop YARN in secure mode.
 %mvn_package :%{name}-yarn*::{}: %{name}-yarn
 
 # Jar files that need to be overridden due to installation location
+%if %{fedora} < 21
 # Workaround for bz1023116
 #%%mvn_file :%{name}-common::{}: %{_jnidir}/%{name}-common %{_datadir}/%{name}/common/%{name}-common
 %mvn_file :%{name}-common::{}: %{_jnidir}/%{name}-common
+%endif
 %mvn_file :%{name}-common::tests: %{name}/%{name}-common
 
 %build
