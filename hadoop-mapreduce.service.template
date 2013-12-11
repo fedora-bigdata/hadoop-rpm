@@ -12,6 +12,8 @@ ExecStop=/usr/sbin/mr-jobhistory-daemon.sh stop DAEMON
 User=mapred
 Group=mapred
 PIDFile=/var/run/hadoop-mapreduce/mapred-mapred-DAEMON.pid
+LimitNOFILE=32768
+LimitNPROC=65536
 #ControlGroup=cpu:/hadoop memory:/hadoop
 
 [Install]

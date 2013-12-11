@@ -12,6 +12,8 @@ ExecStop=/usr/sbin/hadoop-daemon.sh stop DAEMON
 User=hdfs
 Group=hdfs
 PIDFile=/var/run/hadoop-hdfs/hadoop-hdfs-DAEMON.pid
+LimitNOFILE=32768
+LimitNPROC=65536
 #ControlGroup=cpu:/hadoop memory:/hadoop
 
 [Install]

@@ -41,7 +41,6 @@ Source3: hadoop-mapreduce.service.template
 Source4: hadoop-yarn.service.template
 Source5: hadoop-httpfs.service
 Source6: hadoop.logrotate
-Source7: hadoop-limits.conf
 Source8: hadoop-core-site.xml
 Source9: hadoop-hdfs-site.xml
 Source10: hadoop-mapred-site.xml
@@ -853,13 +852,6 @@ cp -f %{SOURCE12} %{buildroot}/%{_sysconfdir}/%{name}/httpfs-env.sh
 %{__ln_s} %{_sysconfdir}/%{name}/httpfs-env.sh %{buildroot}/%{_bindir}
 %endif
 
-# Install security limits
-install -d -m 0755 %{buildroot}/%{_sysconfdir}/security/limits.d
-for limit in hdfs yarn mapreduce
-do
-  sed -e "s|name|${limit:0:6}|" %{SOURCE7} > %{buildroot}/%{_sysconfdir}/security/limits.d/${limit}.conf
-done
-
 # Ensure /var/run directories are recreated on boot
 echo "d %{_var}/run/%{name}-yarn 0775 yarn hadoop -" > %{buildroot}/%{_tmpfilesdir}/%{name}-yarn.conf
 echo "d %{_var}/run/%{name}-hdfs 0775 hdfs hadoop -" > %{buildroot}/%{_tmpfilesdir}/%{name}-hdfs.conf
@@ -1016,7 +1008,6 @@ getent passwd yarn >/dev/null || /usr/sbin/useradd --comment "Apache Hadoop Yarn
 %files -f .mfiles-%{name}-hdfs hdfs
 %exclude %{_datadir}/%{name}/client
 %config(noreplace) %{_sysconfdir}/%{name}/hdfs-site.xml
-%config(noreplace) %{_sysconfdir}/security/limits.d/hdfs.conf
 %{_datadir}/%{name}/hdfs
 %attr(-,hdfs,hadoop) %{_sharedstatedir}/%{name}-hdfs
 %{_unitdir}/%{name}-datanode.service
@@ -1084,7 +1075,6 @@ getent passwd yarn >/dev/null || /usr/sbin/useradd --comment "Apache Hadoop Yarn
 %config(noreplace) %{_sysconfdir}/%{name}/mapred-queues.xml.template
 %config(noreplace) %{_sysconfdir}/%{name}/mapred-site.xml
 %config(noreplace) %{_sysconfdir}/%{name}/mapred-site.xml.template
-%config(noreplace) %{_sysconfdir}/security/limits.d/mapreduce.conf
 %{_datadir}/%{name}/mapreduce
 %{_libexecdir}/mapred-config.sh
 %{_unitdir}/%{name}-historyserver.service
@@ -1108,7 +1098,6 @@ getent passwd yarn >/dev/null || /usr/sbin/useradd --comment "Apache Hadoop Yarn
 %config(noreplace) %{_sysconfdir}/%{name}/capacity-scheduler.xml
 %config(noreplace) %{_sysconfdir}/%{name}/yarn-env.sh
 %config(noreplace) %{_sysconfdir}/%{name}/yarn-site.xml
-%config(noreplace) %{_sysconfdir}/security/limits.d/yarn.conf
 %{_unitdir}/%{name}-nodemanager.service
 %{_unitdir}/%{name}-proxyserver.service
 %{_unitdir}/%{name}-resourcemanager.service
