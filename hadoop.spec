@@ -721,6 +721,7 @@ done
 
 # common jar depenencies
 copy_dep_jars $basedir/share/%{name}/common/lib %{buildroot}/%{_datadir}/%{name}/common/lib
+rm -f %{buildroot}/%{_datadir}/%{name}/common/lib/tomcat-juli*
 %{_bindir}/xmvn-subst %{buildroot}/%{_datadir}/%{name}/common/lib
 %{__ln_s} %{_javadir}/%{name}/%{name}-nfs.jar %{buildroot}/%{_datadir}/%{name}/common
 echo "%{_datadir}/%{name}/common/%{name}-nfs.jar" >> .mfiles
@@ -731,6 +732,7 @@ done
 
 # hdfs jar dependencies
 copy_dep_jars $basedir/share/%{name}/hdfs/lib %{buildroot}/%{_datadir}/%{name}/hdfs/lib
+rm -f %{buildroot}/%{_datadir}/%{name}/hdfs/lib/tomcat-juli*
 %{_bindir}/xmvn-subst %{buildroot}/%{_datadir}/%{name}/hdfs/lib
 %{__ln_s} %{_javadir}/%{name}/%{name}-hdfs.jar %{buildroot}/%{_datadir}/%{name}/hdfs
 %{__ln_s} %{_javadir}/%{name}/%{name}-hdfs-nfs.jar %{buildroot}/%{_datadir}/%{name}/hdfs
