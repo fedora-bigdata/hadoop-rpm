@@ -478,13 +478,42 @@ This package contains files needed to run Apache Hadoop YARN in secure mode.
 
 # The hadoop test suite needs classes from the zookeeper test suite.
 # We need to modify the deps to use the pom for the zookeeper-test jar
-%pom_remove_dep org.apache.zookeeper:zookeeper hadoop-common-project/hadoop-common
-%pom_add_dep org.apache.zookeeper:zookeeper hadoop-common-project/hadoop-common
-%pom_add_dep org.apache.zookeeper:zookeeper-test hadoop-common-project/hadoop-common
-%pom_remove_dep org.apache.zookeeper:zookeeper hadoop-hdfs-project/hadoop-hdfs
-%pom_add_dep org.apache.zookeeper:zookeeper-test hadoop-hdfs-project/hadoop-hdfs
-%pom_remove_dep org.apache.zookeeper:zookeeper hadoop-hdfs-project/hadoop-hdfs-nfs
-%pom_add_dep org.apache.zookeeper:zookeeper-test hadoop-hdfs-project/hadoop-hdfs-nfs
+%pom_xpath_replace "pom:project/pom:dependencies/pom:dependency[pom:artifactId='zookeeper'][pom:scope='test']/pom:artifactId" "
+<artifactId>zookeeper-test</artifactId>
+" hadoop-common-project/hadoop-common
+%pom_xpath_remove "pom:project/pom:dependencies/pom:dependency[pom:groupId='org.apache.zookeeper'][pom:scope='test']/pom:type" hadoop-common-project/hadoop-common
+%pom_xpath_inject "pom:project/pom:dependencies/pom:dependency[pom:groupId='org.apache.zookeeper'][pom:scope='test']" "
+      <exclusions>
+        <exclusion>
+          <groupId>org.jboss.netty</groupId>
+          <artifactId>netty</artifactId>
+        </exclusion>
+      </exclusions>
+  " hadoop-common-project/hadoop-common
+%pom_xpath_replace "pom:project/pom:dependencies/pom:dependency[pom:artifactId='zookeeper'][pom:scope='test']/pom:artifactId" "
+<artifactId>zookeeper-test</artifactId>
+" hadoop-hdfs-project/hadoop-hdfs
+%pom_xpath_remove "pom:project/pom:dependencies/pom:dependency[pom:groupId='org.apache.zookeeper'][pom:scope='test']/pom:type" hadoop-hdfs-project/hadoop-hdfs
+%pom_xpath_inject "pom:project/pom:dependencies/pom:dependency[pom:groupId='org.apache.zookeeper'][pom:scope='test']" "
+      <exclusions>
+        <exclusion>
+          <groupId>org.jboss.netty</groupId>
+          <artifactId>netty</artifactId>
+        </exclusion>
+      </exclusions>
+" hadoop-hdfs-project/hadoop-hdfs
+%pom_xpath_replace "pom:project/pom:dependencies/pom:dependency[pom:artifactId='zookeeper'][pom:scope='test']/pom:artifactId" "
+<artifactId>zookeeper-test</artifactId>
+" hadoop-hdfs-project/hadoop-hdfs-nfs
+%pom_xpath_remove "pom:project/pom:dependencies/pom:dependency[pom:groupId='org.apache.zookeeper'][pom:scope='test']/pom:type" hadoop-hdfs-project/hadoop-hdfs-nfs
+%pom_xpath_inject "pom:project/pom:dependencies/pom:dependency[pom:groupId='org.apache.zookeeper'][pom:scope='test']" "
+      <exclusions>
+        <exclusion>
+          <groupId>org.jboss.netty</groupId>
+          <artifactId>netty</artifactId>
+        </exclusion>
+      </exclusions>
+" hadoop-hdfs-project/hadoop-hdfs-nfs
 
 # Remove the maven-site-plugin.  It's not needed
 %pom_remove_plugin :maven-site-plugin
