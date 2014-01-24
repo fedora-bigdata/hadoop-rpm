@@ -68,6 +68,10 @@ Patch3: hadoop-maven.patch
 Patch4: hadoop-no-download-tomcat.patch
 # Use dlopen to find libjvm.so
 Patch5: hadoop-dlopen-libjvm.patch
+# Update to jetty 9.1.0
+Patch6: hadoop-jetty-9.1.0.patch
+# Update to Guava 0.15
+Patch7: hadoop-guava-0.15.patch
 # The native bits don't compile on ARM
 ExcludeArch: %{arm}
 
@@ -166,7 +170,11 @@ BuildRequires: maven-surefire-plugin
 BuildRequires: maven-war-plugin
 BuildRequires: mockito
 BuildRequires: native-maven-plugin
+%if %{fedora} < 21
 BuildRequires: netty
+%else
+BuildRequires: netty3
+%endif
 BuildRequires: objectweb-asm
 BuildRequires: objenesis >= 1.2-16
 BuildRequires: openssl-devel
@@ -475,14 +483,16 @@ This package contains files needed to run Apache Hadoop YARN in secure mode.
 %if %{package_libhdfs}
 %patch5 -p1
 %endif
+%if %{fedora} >= 21
+%patch6 -p1
+%patch7 -p1
+%endif
 
 # The hadoop test suite needs classes from the zookeeper test suite.
 # We need to modify the deps to use the pom for the zookeeper-test jar
-%pom_xpath_replace "pom:project/pom:dependencies/pom:dependency[pom:artifactId='zookeeper'][pom:scope='test']/pom:artifactId" "
-<artifactId>zookeeper-test</artifactId>
-" hadoop-common-project/hadoop-common
-%pom_xpath_remove "pom:project/pom:dependencies/pom:dependency[pom:groupId='org.apache.zookeeper'][pom:scope='test']/pom:type" hadoop-common-project/hadoop-common
-%pom_xpath_inject "pom:project/pom:dependencies/pom:dependency[pom:groupId='org.apache.zookeeper'][pom:scope='test']" "
+%pom_xpath_set "pom:project/pom:dependencies/pom:dependency[pom:artifactId='zookeeper' and pom:scope='test']/pom:artifactId" zookeeper-test hadoop-common-project/hadoop-common
+%pom_xpath_remove "pom:project/pom:dependencies/pom:dependency[pom:groupId='org.apache.zookeeper' and pom:scope='test']/pom:type" hadoop-common-project/hadoop-common
+%pom_xpath_inject "pom:project/pom:dependencies/pom:dependency[pom:groupId='org.apache.zookeeper' and pom:scope='test']" "
       <exclusions>
         <exclusion>
           <groupId>org.jboss.netty</groupId>
@@ -490,11 +500,10 @@ This package contains files needed to run Apache Hadoop YARN in secure mode.
         </exclusion>
       </exclusions>
   " hadoop-common-project/hadoop-common
-%pom_xpath_replace "pom:project/pom:dependencies/pom:dependency[pom:artifactId='zookeeper'][pom:scope='test']/pom:artifactId" "
-<artifactId>zookeeper-test</artifactId>
-" hadoop-hdfs-project/hadoop-hdfs
-%pom_xpath_remove "pom:project/pom:dependencies/pom:dependency[pom:groupId='org.apache.zookeeper'][pom:scope='test']/pom:type" hadoop-hdfs-project/hadoop-hdfs
-%pom_xpath_inject "pom:project/pom:dependencies/pom:dependency[pom:groupId='org.apache.zookeeper'][pom:scope='test']" "
+
+%pom_xpath_set "pom:project/pom:dependencies/pom:dependency[pom:artifactId='zookeeper' and pom:scope='test']/pom:artifactId" zookeeper-test hadoop-hdfs-project/hadoop-hdfs
+%pom_xpath_remove "pom:project/pom:dependencies/pom:dependency[pom:groupId='org.apache.zookeeper' and pom:scope='test']/pom:type" hadoop-hdfs-project/hadoop-hdfs
+%pom_xpath_inject "pom:project/pom:dependencies/pom:dependency[pom:groupId='org.apache.zookeeper' and pom:scope='test']" "
       <exclusions>
         <exclusion>
           <groupId>org.jboss.netty</groupId>
@@ -502,11 +511,10 @@ This package contains files needed to run Apache Hadoop YARN in secure mode.
         </exclusion>
       </exclusions>
 " hadoop-hdfs-project/hadoop-hdfs
-%pom_xpath_replace "pom:project/pom:dependencies/pom:dependency[pom:artifactId='zookeeper'][pom:scope='test']/pom:artifactId" "
-<artifactId>zookeeper-test</artifactId>
-" hadoop-hdfs-project/hadoop-hdfs-nfs
-%pom_xpath_remove "pom:project/pom:dependencies/pom:dependency[pom:groupId='org.apache.zookeeper'][pom:scope='test']/pom:type" hadoop-hdfs-project/hadoop-hdfs-nfs
-%pom_xpath_inject "pom:project/pom:dependencies/pom:dependency[pom:groupId='org.apache.zookeeper'][pom:scope='test']" "
+
+%pom_xpath_set "pom:project/pom:dependencies/pom:dependency[pom:artifactId='zookeeper' and pom:scope='test']/pom:artifactId" zookeeper-test hadoop-hdfs-project/hadoop-hdfs-nfs
+%pom_xpath_remove "pom:project/pom:dependencies/pom:dependency[pom:groupId='org.apache.zookeeper' and pom:scope='test']/pom:type" hadoop-hdfs-project/hadoop-hdfs-nfs
+%pom_xpath_inject "pom:project/pom:dependencies/pom:dependency[pom:groupId='org.apache.zookeeper' and pom:scope='test']" "
       <exclusions>
         <exclusion>
           <groupId>org.jboss.netty</groupId>

@@ -2465,7 +2465,7 @@ index 11640d7..6290e72 100644
        </exclusions>
      </dependency>
 diff --git a/hadoop-project/pom.xml b/hadoop-project/pom.xml
-index b7a7456..0bee9b1 100644
+index b7a7456..d7cc299 100644
 --- a/hadoop-project/pom.xml
 +++ b/hadoop-project/pom.xml
 @@ -63,7 +63,7 @@
@@ -2555,6 +2555,15 @@ index b7a7456..0bee9b1 100644
  
        <dependency>
          <groupId>com.google.inject.extensions</groupId>
+@@ -438,7 +449,7 @@
+       <dependency>
+         <groupId>io.netty</groupId>
+         <artifactId>netty</artifactId>
+-        <version>3.6.2.Final</version>
++        <version>3.6.6.Final</version>
+       </dependency>
+ 
+       <dependency>
 @@ -448,14 +459,9 @@
        </dependency>
  

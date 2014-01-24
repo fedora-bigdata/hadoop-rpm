@@ -1,0 +1,56 @@
+diff --git a/hadoop-hdfs-project/hadoop-hdfs/src/main/java/org/apache/hadoop/hdfs/qjournal/server/Journal.java b/hadoop-hdfs-project/hadoop-hdfs/src/main/java/org/apache/hadoop/hdfs/qjournal/server/Journal.java
+index b68516b..d3acd19 100644
+--- a/hadoop-hdfs-project/hadoop-hdfs/src/main/java/org/apache/hadoop/hdfs/qjournal/server/Journal.java
++++ b/hadoop-hdfs-project/hadoop-hdfs/src/main/java/org/apache/hadoop/hdfs/qjournal/server/Journal.java
+@@ -65,7 +65,6 @@
+ import com.google.common.base.Stopwatch;
+ import com.google.common.collect.ImmutableList;
+ import com.google.common.collect.Range;
+-import com.google.common.collect.Ranges;
+ import com.google.protobuf.TextFormat;
+ 
+ /**
+@@ -851,7 +850,7 @@ public synchronized void acceptRecovery(RequestInfo reqInfo,
+   private Range<Long> txnRange(SegmentStateProto seg) {
+     Preconditions.checkArgument(seg.hasEndTxId(),
+         "invalid segment: %s", seg);
+-    return Ranges.closed(seg.getStartTxId(), seg.getEndTxId());
++    return Range.closed(seg.getStartTxId(), seg.getEndTxId());
+   }
+ 
+   /**
+diff --git a/hadoop-hdfs-project/hadoop-hdfs/src/test/java/org/apache/hadoop/hdfs/TestDataTransferKeepalive.java b/hadoop-hdfs-project/hadoop-hdfs/src/test/java/org/apache/hadoop/hdfs/TestDataTransferKeepalive.java
+index bf4e13b..f008722 100644
+--- a/hadoop-hdfs-project/hadoop-hdfs/src/test/java/org/apache/hadoop/hdfs/TestDataTransferKeepalive.java
++++ b/hadoop-hdfs-project/hadoop-hdfs/src/test/java/org/apache/hadoop/hdfs/TestDataTransferKeepalive.java
+@@ -46,7 +46,7 @@
+ import org.junit.Before;
+ import org.junit.Test;
+ 
+-import com.google.common.io.NullOutputStream;
++import com.google.common.io.ByteStreams;
+ 
+ public class TestDataTransferKeepalive {
+   Configuration conf = new HdfsConfiguration();
+@@ -177,7 +177,7 @@ public void testManyClosedSocketsInCache() throws Exception {
+         stms[i] = fs.open(TEST_FILE);
+       }
+       for (InputStream stm : stms) {
+-        IOUtils.copyBytes(stm, new NullOutputStream(), 1024);
++        IOUtils.copyBytes(stm, ByteStreams.nullOutputStream(), 1024);
+       }
+     } finally {
+       IOUtils.cleanup(null, stms);
+diff --git a/hadoop-project/pom.xml b/hadoop-project/pom.xml
+index b7a7456..e8f9110 100644
+--- a/hadoop-project/pom.xml
++++ b/hadoop-project/pom.xml
+@@ -302,7 +302,7 @@
+       <dependency>
+         <groupId>com.google.guava</groupId>
+         <artifactId>guava</artifactId>
+-        <version>11.0.2</version>
++        <version>15.0</version>
+       </dependency>
+       <dependency>
+         <groupId>commons-cli</groupId>

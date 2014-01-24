@@ -1,0 +1,70 @@
+From 3a91850a038316d5f2550838f5acc78aa45c5652 Mon Sep 17 00:00:00 2001
+From: Michael Simacek <msimacek@redhat.com>
+Date: Mon, 2 Dec 2013 13:43:05 +0100
+Subject: [PATCH] Update to jetty-9.1.0
+
+Signed-off-by: Michael Simacek <msimacek@redhat.com>
+---
+ hadoop-hdfs-project/hadoop-hdfs/pom.xml | 18 +++++++++++++-----
+ 1 file changed, 13 insertions(+), 5 deletions(-)
+
+diff --git a/hadoop-hdfs-project/hadoop-hdfs/pom.xml b/hadoop-hdfs-project/hadoop-hdfs/pom.xml
+index bffe4d0..6df146a 100644
+--- a/hadoop-hdfs-project/hadoop-hdfs/pom.xml
++++ b/hadoop-hdfs-project/hadoop-hdfs/pom.xml
+@@ -184,7 +184,9 @@
+             </goals>
+             <configuration>
+               <webAppSourceDirectory>${basedir}/src/main/webapps/hdfs</webAppSourceDirectory>
+-              <packageRoot>org.apache.hadoop.hdfs.server.namenode</packageRoot>
++              <jspc>
++                  <targetPackage>org.apache.hadoop.hdfs.server.namenode</targetPackage>
++              </jspc>
+               <includes>*.jsp</includes>
+               <workingDirectory>${project.build.directory}/generated-sources/java</workingDirectory>
+               <webXmlFragment>${project.build.directory}/hdfs-jsp-servlet-definitions.xml</webXmlFragment>
+@@ -198,7 +200,9 @@
+             </goals>
+             <configuration>
+               <webAppSourceDirectory>${basedir}/src/main/webapps/secondary</webAppSourceDirectory>
+-              <packageRoot>org.apache.hadoop.hdfs.server.namenode</packageRoot>
++              <jspc>
++                  <targetPackage>org.apache.hadoop.hdfs.server.namenode</targetPackage>
++              </jspc>
+               <includes>*.jsp</includes>
+               <workingDirectory>${project.build.directory}/generated-sources/java</workingDirectory>
+               <webXmlFragment>${project.build.directory}/secondary-jsp-servlet-definitions.xml</webXmlFragment>
+@@ -212,7 +216,9 @@
+             </goals>
+             <configuration>
+               <webAppSourceDirectory>${basedir}/src/main/webapps/journal</webAppSourceDirectory>
+-              <packageRoot>org.apache.hadoop.hdfs.server.journalservice</packageRoot>
++              <jspc>
++                  <targetPackage>org.apache.hadoop.hdfs.server.journalservice</targetPackage>
++              </jspc>
+               <includes>*.jsp</includes>
+               <workingDirectory>${project.build.directory}/generated-sources/java</workingDirectory>
+               <webXmlFragment>${project.build.directory}/journal-jsp-servlet-definitions.xml</webXmlFragment>
+@@ -226,7 +232,9 @@
+             </goals>
+             <configuration>
+               <webAppSourceDirectory>${basedir}/src/main/webapps/datanode</webAppSourceDirectory>
+-              <packageRoot>org.apache.hadoop.hdfs.server.datanode</packageRoot>
++              <jspc>
++                  <targetPackage>org.apache.hadoop.hdfs.server.datanode</targetPackage>
++              </jspc>
+               <includes>*.jsp</includes>
+               <workingDirectory>${project.build.directory}/generated-sources/java</workingDirectory>
+               <webXmlFragment>${project.build.directory}/datanode-jsp-servlet-definitions.xml</webXmlFragment>
+@@ -308,7 +316,7 @@
+                 <loadfile property="hdfs.servlet.definitions" srcFile="${project.build.directory}/hdfs-jsp-servlet-definitions.xml"/>
+                 <loadfile property="secondary.servlet.definitions" srcFile="${project.build.directory}/secondary-jsp-servlet-definitions.xml"/>
+                 <loadfile property="datanode.servlet.definitions" srcFile="${project.build.directory}/datanode-jsp-servlet-definitions.xml"/>
+-                <loadfile property="journal.servlet.definitions" srcFile="${project.build.directory}/journal-jsp-servlet-definitions.xml"/>               
++                <loadfile property="journal.servlet.definitions" srcFile="${project.build.directory}/journal-jsp-servlet-definitions.xml"/>
+                 <echoproperties destfile="${project.build.directory}/webxml.properties">
+                   <propertyset>
+                     <propertyref regex=".*.servlet.definitions"/>
+-- 
+1.8.3.1
+
