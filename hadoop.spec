@@ -572,7 +572,7 @@ This package contains files needed to run Apache Hadoop YARN in secure mode.
 %if %{fedora} < 21
 # Workaround for bz1023116
 #%%mvn_file :%{name}-common::{}: %{_jnidir}/%{name}-common %{_datadir}/%{name}/common/%{name}-common
-%mvn_file :%{name}-common::{}: %{_jnidir}/%{name}-common
+%mvn_file :%{name}-common::{}: %{_jnidir}/%{name}/%{name}-common
 %endif
 %mvn_file :%{name}-common::tests: %{name}/%{name}-common
 
@@ -625,7 +625,7 @@ EOL
 
 install -d -m 0755 %{buildroot}/%{_libdir}/%{name}
 install -d -m 0755 %{buildroot}/%{_includedir}/%{name}
-install -d -m 0755 %{buildroot}/%{_jnidir}/
+install -d -m 0755 %{buildroot}/%{_jnidir}/%{name}
 
 install -d -m 0755 %{buildroot}/%{_datadir}/%{name}/client/lib
 install -d -m 0755 %{buildroot}/%{_datadir}/%{name}/common/lib
@@ -702,7 +702,7 @@ install -pm 644 hadoop-project-dist/pom.xml %{buildroot}/%{_mavenpomdir}/JPP.%{n
 %add_maven_depmap JPP.%{name}-%{name}-project-dist.pom %{name}/%{name}-project-dist.jar
 
 # Workaround for bz1023116
-%{__ln_s} %{_jnidir}/%{name}-common.jar %{buildroot}/%{_datadir}/%{name}/common
+%{__ln_s} %{_jnidir}/%{name}/%{name}-common.jar %{buildroot}/%{_datadir}/%{name}/common
 
 # client jar depenencies
 copy_dep_jars %{name}-client/target/%{name}-client-%{hadoop_version}/share/%{name}/client/lib %{buildroot}/%{_datadir}/%{name}/client/lib
@@ -716,7 +716,6 @@ done
 
 # common jar depenencies
 copy_dep_jars $basedir/share/%{name}/common/lib %{buildroot}/%{_datadir}/%{name}/common/lib
-rm -f %{buildroot}/%{_datadir}/%{name}/common/lib/tomcat-juli*
 %{_bindir}/xmvn-subst %{buildroot}/%{_datadir}/%{name}/common/lib
 %{__ln_s} %{_javadir}/%{name}/%{name}-nfs.jar %{buildroot}/%{_datadir}/%{name}/common
 echo "%{_datadir}/%{name}/common/%{name}-nfs.jar" >> .mfiles
@@ -727,7 +726,6 @@ done
 
 # hdfs jar dependencies
 copy_dep_jars $basedir/share/%{name}/hdfs/lib %{buildroot}/%{_datadir}/%{name}/hdfs/lib
-rm -f %{buildroot}/%{_datadir}/%{name}/hdfs/lib/tomcat-juli*
 %{_bindir}/xmvn-subst %{buildroot}/%{_datadir}/%{name}/hdfs/lib
 %{__ln_s} %{_javadir}/%{name}/%{name}-hdfs.jar %{buildroot}/%{_datadir}/%{name}/hdfs
 %{__ln_s} %{_javadir}/%{name}/%{name}-hdfs-nfs.jar %{buildroot}/%{_datadir}/%{name}/hdfs
