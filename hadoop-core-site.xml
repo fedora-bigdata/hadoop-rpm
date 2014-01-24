@@ -25,11 +25,11 @@
 
   <!-- HTTPFS proxy user setting -->
   <property>
-    <name>hadoop.proxyuser.httpfs.hosts</name>
+    <name>hadoop.proxyuser.tomcat.hosts</name>
     <value>*</value>
   </property>
   <property>
-    <name>hadoop.proxyuser.httpfs.groups</name>
+    <name>hadoop.proxyuser.tomcat.groups</name>
     <value>*</value>
   </property>
 

@@ -1,0 +1,5 @@
+CATALINA_BASE=/usr/share/hadoop/httpfs/tomcat
+CATALINA_HOME=/usr/share/hadoop/httpfs/tomcat
+CATALINA_TMPDIR=/var/cache/hadoop-httpfs
+
+CATALINA_OPTS="-Dhttpfs.home.dir=/usr -Dhttpfs.config.dir=/etc/hadoop -Dhttpfs.log.dir=/var/log/hadoop-httpfs -Dhttpfs.temp.dir=/var/cache/hadoop-httpfs -Dhttpfs.admin.port=14001 -Dhttpfs.http.port=14000"
