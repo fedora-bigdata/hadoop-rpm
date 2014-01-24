@@ -21,7 +21,7 @@
 
 Name:   hadoop
 Version: 2.2.0
-Release: 3%{?dist}
+Release: 4%{?dist}
 Summary: A software platform for processing vast amounts of data
 # The BSD license file is missing
 # https://issues.apache.org/jira/browse/HADOOP-9849
@@ -1081,6 +1081,14 @@ getent passwd yarn >/dev/null || /usr/sbin/useradd --comment "Apache Hadoop Yarn
 %attr(6050,root,yarn) %{_bindir}/container-executor
 
 %changelog
+* Fri Jan 24 2014 Robert Rati <rrati@redhat> - 2.2.0-4
+- Fixed 2 packages providing hadoop-yarn-server-tests (BZ1056521)
+- Package httpfs bits using tomcat@ service
+- Patches for jetty 9.1.0 and guava 0.15 on >F20
+- Use netty3 compat package for >F20
+- Moved limits configuration to systemd files
+- By default logrotate will keep 1 year of logs
+
 * Tue Dec  3 2013 Robert Rati <rrati@redhat> - 2.2.0-3
 - Removed jline Requires
 
