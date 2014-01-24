@@ -551,6 +551,7 @@ This package contains files needed to run Apache Hadoop YARN in secure mode.
 
 # Create separate file lists for packaging
 %mvn_package :::tests: %{name}-tests
+%mvn_package :%{name}-*-tests::{}: %{name}-tests
 %mvn_package :%{name}-client*::{}: %{name}-client
 %mvn_package :%{name}-hdfs*::{}: %{name}-hdfs
 %mvn_package :%{name}-mapreduce-examples*::{}: %{name}-mapreduce-examples
