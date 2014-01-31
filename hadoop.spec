@@ -161,7 +161,7 @@ BuildRequires: maven-surefire-plugin
 BuildRequires: maven-war-plugin
 BuildRequires: mockito
 BuildRequires: native-maven-plugin
-%if %{fedora} < 21
+%if 0%{fedora} < 21
 BuildRequires: netty
 %else
 BuildRequires: netty3
@@ -185,7 +185,11 @@ BuildRequires: txw2
 BuildRequires: which
 BuildRequires: xmlenc
 BuildRequires: znerd-oss-parent
+%if 0%{fedora} < 21
 BuildRequires: zookeeper-java
+%else
+BuildRequires: zookeeper-java > 3.4.5-15
+%endif
 
 # For tests
 BuildRequires: jersey-test-framework
@@ -471,11 +475,12 @@ This package contains files needed to run Apache Hadoop YARN in secure mode.
 %if %{package_libhdfs}
 %patch5 -p1
 %endif
-%if %{fedora} >= 21
+%if 0%{fedora} >= 21
 %patch6 -p1
 %patch7 -p1
 %endif
 
+%if 0%{fedora} < 21
 # The hadoop test suite needs classes from the zookeeper test suite.
 # We need to modify the deps to use the pom for the zookeeper-test jar
 %pom_xpath_set "pom:project/pom:dependencies/pom:dependency[pom:artifactId='zookeeper' and pom:scope='test']/pom:artifactId" zookeeper-test hadoop-common-project/hadoop-common
@@ -510,6 +515,7 @@ This package contains files needed to run Apache Hadoop YARN in secure mode.
         </exclusion>
       </exclusions>
 " hadoop-hdfs-project/hadoop-hdfs-nfs
+%endif
 
 # Remove the maven-site-plugin.  It's not needed
 %pom_remove_plugin :maven-site-plugin
@@ -570,7 +576,7 @@ This package contains files needed to run Apache Hadoop YARN in secure mode.
 %mvn_package :%{name}-yarn*::{}: %{name}-yarn
 
 # Jar files that need to be overridden due to installation location
-%if %{fedora} < 21
+%if 0%{fedora} < 21
 # Workaround for bz1023116
 #%%mvn_file :%{name}-common::{}: %{_jnidir}/%{name}-common %{_datadir}/%{name}/common/%{name}-common
 %mvn_file :%{name}-common::{}: %{_jnidir}/%{name}/%{name}-common
