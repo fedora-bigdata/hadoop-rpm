@@ -40,6 +40,7 @@ Source10: hadoop-mapred-site.xml
 Source11: hadoop-yarn-site.xml
 Source12: hadoop-httpfs.sysconfig
 Source13: hdfs-create-dirs
+Source14: hadoop-tomcat-users.xml
 # This patch includes the following upstream tickets:
 # https://issues.apache.org/jira/browse/HADOOP-9594
 # https://issues.apache.org/jira/browse/MAPREDUCE-5431
@@ -755,10 +756,11 @@ popd
 for f in catalina.policy catalina.properties context.xml log4j.properties \
          tomcat.conf web.xml;
 do
-  cp %{_sysconfdir}/tomcat/$f %{buildroot}/%{_sysconfdir}/%{name}/tomcat
+  cp -a %{_sysconfdir}/tomcat/$f %{buildroot}/%{_sysconfdir}/%{name}/tomcat
 done
 
-install -m 644 %{name}-hdfs-project/%{name}-hdfs-httpfs/src/main/tomcat/*.* %{buildroot}/%{_sysconfdir}/%{name}/tomcat
+install -m 660 %{SOURCE14} %{buildroot}/%{_sysconfdir}/%{name}/tomcat/tomcat-users.xml
+install -m 664 %{name}-hdfs-project/%{name}-hdfs-httpfs/src/main/tomcat/*.* %{buildroot}/%{_sysconfdir}/%{name}/tomcat
 
 # Copy the httpfs webapp
 cp -arf %{name}-hdfs-project/%{name}-hdfs-httpfs/target/webhdfs %{buildroot}/%{_datadir}/%{name}/httpfs/tomcat/webapps
@@ -1013,7 +1015,7 @@ getent passwd yarn >/dev/null || /usr/sbin/useradd --comment "Apache Hadoop Yarn
 %config(noreplace) %{_sysconfdir}/%{name}/httpfs-log4j.properties
 %config(noreplace) %{_sysconfdir}/%{name}/httpfs-signature.secret
 %config(noreplace) %{_sysconfdir}/%{name}/httpfs-site.xml
-%config(noreplace) %{_sysconfdir}/%{name}/tomcat/*.*
+%attr(-,tomcat,tomcat) %config(noreplace) %{_sysconfdir}/%{name}/tomcat/*.*
 %attr(0775,root,tomcat) %dir %{_sysconfdir}/%{name}/tomcat
 %attr(0775,root,tomcat) %dir %{_sysconfdir}/%{name}/tomcat/Catalina
 %attr(0775,root,tomcat) %dir %{_sysconfdir}/%{name}/tomcat/Catalina/localhost
