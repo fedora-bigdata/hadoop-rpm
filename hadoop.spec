@@ -338,6 +338,7 @@ Group: Applications/System
 BuildArch: noarch
 Requires: apache-commons-dbcp
 Requires: ecj >= 1:4.2.1-6
+Requires: json_simple
 Requires: tomcat
 Requires: tomcat-lib
 Requires: tomcat-native
