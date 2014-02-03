@@ -21,7 +21,7 @@
 
 Name:   hadoop
 Version: 2.2.0
-Release: 4%{?dist}
+Release: 5%{?dist}
 Summary: A software platform for processing vast amounts of data
 # The BSD license file is missing
 # https://issues.apache.org/jira/browse/HADOOP-9849
@@ -1090,6 +1090,13 @@ getent passwd yarn >/dev/null || /usr/sbin/useradd --comment "Apache Hadoop Yarn
 %attr(6050,root,yarn) %{_bindir}/container-executor
 
 %changelog
+* Mon Feb  3 2014 Robert Rati <rrati@redhat> - 2.2.0-5
+- Added json_simple dependency to httpfs package
+- Added default tomcat-users file
+- Fixed up file permissions and ownership for tomcat configuration
+- Conditionalize the zookeeper-test modes to < F21
+- Additional fix for netty3 compat package for >F20
+
 * Fri Jan 24 2014 Robert Rati <rrati@redhat> - 2.2.0-4
 - Fixed 2 packages providing hadoop-yarn-server-tests (BZ1056521)
 - Package httpfs bits using tomcat@ service
