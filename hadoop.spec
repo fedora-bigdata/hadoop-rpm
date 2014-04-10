@@ -21,7 +21,7 @@
 
 Name:   hadoop
 Version: 2.2.0
-Release: 5%{?dist}
+Release: 7%{?dist}
 Summary: A software platform for processing vast amounts of data
 # The BSD license file is missing
 # https://issues.apache.org/jira/browse/HADOOP-9849
@@ -238,7 +238,6 @@ Requires: glassfish-jaxb
 Requires: glassfish-jsp
 Requires: glassfish-jsp-api
 Requires: istack-commons
-Requires: java
 Requires: java-base64
 Requires: java-xmlbuilder
 Requires: javamail
@@ -1090,6 +1089,12 @@ getent passwd yarn >/dev/null || /usr/sbin/useradd --comment "Apache Hadoop Yarn
 %attr(6050,root,yarn) %{_bindir}/container-executor
 
 %changelog
+* Fri Mar 28 2014 Michael Simacek <msimacek@redhat.com> - 2.2.0-7
+- Use Requires: java-headless rebuild (#1067528)
+
+* Mon Feb 17 2014 Timothy St. Clair <tstclair@redhat.com> - 2.2.0-6
+- Rebuild with modification to systemd initialization for tachyon support
+
 * Mon Feb  3 2014 Robert Rati <rrati@redhat> - 2.2.0-5
 - Added json_simple dependency to httpfs package
 - Added default tomcat-users file

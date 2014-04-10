@@ -10,11 +10,28 @@ EnvironmentFile=-/etc/sysconfig/hadoop-DAEMON
 ExecStart=/usr/sbin/mr-jobhistory-daemon.sh start DAEMON
 ExecStop=/usr/sbin/mr-jobhistory-daemon.sh stop DAEMON
 User=mapred
-Group=mapred
+Group=hadoop
 PIDFile=/var/run/hadoop-mapreduce/mapred-mapred-DAEMON.pid
 LimitNOFILE=32768
 LimitNPROC=65536
-#ControlGroup=cpu:/hadoop memory:/hadoop
+
+#######################################
+# Note: Below are cgroup options
+#######################################
+#Slice=
+#CPUAccounting=true
+#CPUShares=1024
+
+#MemoryAccounting=true
+#TBD: MemoryLimit=bytes, MemorySoftLimit=bytes
+
+#BlockIOAccounting=true
+#BlockIOWeight=??
+#BlockIODeviceWeight=??
+#TBD: BlockIOReadBandwidth=bytes, BlockIOWriteBandwidth=bytes
+
+#DeviceAllow=
+#DevicePolicy=auto|closed|strict
 
 [Install]
 WantedBy=multi-user.target

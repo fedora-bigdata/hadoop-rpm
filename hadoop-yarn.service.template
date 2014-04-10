@@ -10,11 +10,28 @@ EnvironmentFile=-/etc/sysconfig/hadoop-DAEMON
 ExecStart=/usr/sbin/yarn-daemon.sh start DAEMON
 ExecStop=/usr/sbin/yarn-daemon.sh stop DAEMON
 User=yarn
-Group=yarn
+Group=hadoop
 PIDFile=/var/run/hadoop-yarn/yarn-yarn-DAEMON.pid
 LimitNOFILE=32768
 LimitNPROC=65536
-#ControlGroup=cpu:/hadoop memory:/hadoop
+
+#######################################
+# Note: Below are cgroup options
+#######################################
+#Slice=
+#CPUAccounting=true
+#CPUShares=1024
+
+#MemoryAccounting=true
+#TBD: MemoryLimit=bytes, MemorySoftLimit=bytes
+
+#BlockIOAccounting=true
+#BlockIOWeight=??
+#BlockIODeviceWeight=??
+#TBD: BlockIOReadBandwidth=bytes, BlockIOWriteBandwidth=bytes
+
+#DeviceAllow=
+#DevicePolicy=auto|closed|strict
 
 [Install]
 WantedBy=multi-user.target
