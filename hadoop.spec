@@ -586,11 +586,6 @@ rm -f hadoop-yarn-project/hadoop-yarn/hadoop-yarn-server/hadoop-yarn-server-test
 %mvn_package :%{name}-yarn*::{}: %{name}-yarn
 
 # Jar files that need to be overridden due to installation location
-%if 0%{fedora} < 21
-# Workaround for bz1023116
-#%%mvn_file :%{name}-common::{}: %{_jnidir}/%{name}-common %{_datadir}/%{name}/common/%{name}-common
-%mvn_file :%{name}-common::{}: %{_jnidir}/%{name}/%{name}-common
-%endif
 %mvn_file :%{name}-common::tests: %{name}/%{name}-common
 
 %build
@@ -740,9 +735,6 @@ echo "export YARN_OPTS=\"\$YARN_OPTS -Djavax.xml.parsers.DocumentBuilderFactory=
 install -pm 644 %{name}-project-dist/target/%{name}-project-dist-%{hadoop_version}.jar %{buildroot}/%{_javadir}/%{name}/%{name}-project-dist.jar
 install -pm 644 hadoop-project-dist/pom.xml %{buildroot}/%{_mavenpomdir}/JPP.%{name}-%{name}-project-dist.pom
 %add_maven_depmap JPP.%{name}-%{name}-project-dist.pom %{name}/%{name}-project-dist.jar
-
-# Workaround for bz1023116
-%{__ln_s} %{_jnidir}/%{name}/%{name}-common.jar %{buildroot}/%{_datadir}/%{name}/common
 
 # client jar depenencies
 copy_dep_jars %{name}-client/target/%{name}-client-%{hadoop_version}/share/%{name}/client/lib %{buildroot}/%{_datadir}/%{name}/client/lib
@@ -1016,10 +1008,6 @@ fi
 %config(noreplace) %{_sysconfdir}/%{name}/ssl-server.xml.example
 %dir %{_datadir}/%{name}
 %dir %{_datadir}/%{name}/common
-
-# Workaround for bz1023116
-#%%{_datadir}/%{name}/common/%{name}-common.jar
-
 %{_datadir}/%{name}/common/lib
 %{_libexecdir}/%{name}-config.sh
 %{_libexecdir}/%{name}-layout.sh
