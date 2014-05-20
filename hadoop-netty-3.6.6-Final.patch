@@ -1,0 +1,31 @@
+diff --git a/hadoop-hdfs-project/hadoop-hdfs/src/contrib/bkjournal/pom.xml b/hadoop-hdfs-project/hadoop-hdfs/src/contrib/bkjournal/pom.xml
+index 2a532e4..9e0849b 100644
+--- a/hadoop-hdfs-project/hadoop-hdfs/src/contrib/bkjournal/pom.xml
++++ b/hadoop-hdfs-project/hadoop-hdfs/src/contrib/bkjournal/pom.xml
+@@ -38,12 +38,10 @@ http://maven.apache.org/xsd/maven-4.0.0.xsd">
+ 
+   <dependencyManagement>
+     <dependencies>
+-      <!-- This is a really old version of netty, that gets privatized
+-           via shading and hence it is not managed via a parent pom -->
+       <dependency>
+         <groupId>org.jboss.netty</groupId>
+         <artifactId>netty</artifactId>
+-        <version>3.2.4.Final</version>
++        <version>3.6.6.Final</version>
+       </dependency>
+     </dependencies>
+   </dependencyManagement>
+diff --git a/hadoop-project/pom.xml b/hadoop-project/pom.xml
+index 272dadc..41a5a9b 100644
+--- a/hadoop-project/pom.xml
++++ b/hadoop-project/pom.xml
+@@ -462,7 +462,7 @@
+       <dependency>
+         <groupId>io.netty</groupId>
+         <artifactId>netty</artifactId>
+-        <version>3.6.2.Final</version>
++        <version>3.6.6.Final</version>
+       </dependency>
+ 
+       <dependency>

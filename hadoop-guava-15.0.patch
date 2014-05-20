@@ -1,0 +1,144 @@
+diff --git a/hadoop-hdfs-project/hadoop-hdfs/src/main/java/org/apache/hadoop/hdfs/qjournal/server/Journal.java b/hadoop-hdfs-project/hadoop-hdfs/src/main/java/org/apache/hadoop/hdfs/qjournal/server/Journal.java
+index c117ee8..9434429 100644
+--- a/hadoop-hdfs-project/hadoop-hdfs/src/main/java/org/apache/hadoop/hdfs/qjournal/server/Journal.java
++++ b/hadoop-hdfs-project/hadoop-hdfs/src/main/java/org/apache/hadoop/hdfs/qjournal/server/Journal.java
+@@ -68,7 +68,6 @@
+ import com.google.common.base.Stopwatch;
+ import com.google.common.collect.ImmutableList;
+ import com.google.common.collect.Range;
+-import com.google.common.collect.Ranges;
+ import com.google.protobuf.TextFormat;
+ 
+ /**
+@@ -853,7 +852,7 @@ public synchronized void acceptRecovery(RequestInfo reqInfo,
+   private Range<Long> txnRange(SegmentStateProto seg) {
+     Preconditions.checkArgument(seg.hasEndTxId(),
+         "invalid segment: %s", seg);
+-    return Ranges.closed(seg.getStartTxId(), seg.getEndTxId());
++    return Range.closed(seg.getStartTxId(), seg.getEndTxId());
+   }
+ 
+   /**
+diff --git a/hadoop-hdfs-project/hadoop-hdfs/src/main/java/org/apache/hadoop/hdfs/server/namenode/FSImageFormatProtobuf.java b/hadoop-hdfs-project/hadoop-hdfs/src/main/java/org/apache/hadoop/hdfs/server/namenode/FSImageFormatProtobuf.java
+index 5075da9..0d868d4 100644
+--- a/hadoop-hdfs-project/hadoop-hdfs/src/main/java/org/apache/hadoop/hdfs/server/namenode/FSImageFormatProtobuf.java
++++ b/hadoop-hdfs-project/hadoop-hdfs/src/main/java/org/apache/hadoop/hdfs/server/namenode/FSImageFormatProtobuf.java
+@@ -62,7 +62,7 @@
+ 
+ import com.google.common.collect.Lists;
+ import com.google.common.collect.Maps;
+-import com.google.common.io.LimitInputStream;
++import com.google.common.io.ByteStreams;
+ import com.google.protobuf.CodedOutputStream;
+ 
+ /**
+@@ -215,7 +215,7 @@ public int compare(FileSummary.Section s1, FileSummary.Section s2) {
+ 
+       for (FileSummary.Section s : sections) {
+         channel.position(s.getOffset());
+-        InputStream in = new BufferedInputStream(new LimitInputStream(fin,
++        InputStream in = new BufferedInputStream(ByteStreams.limit(fin,
+             s.getLength()));
+ 
+         in = FSImageUtil.wrapInputStreamForCompression(conf,
+diff --git a/hadoop-hdfs-project/hadoop-hdfs/src/main/java/org/apache/hadoop/hdfs/tools/offlineImageViewer/FileDistributionCalculator.java b/hadoop-hdfs-project/hadoop-hdfs/src/main/java/org/apache/hadoop/hdfs/tools/offlineImageViewer/FileDistributionCalculator.java
+index c8033dd..b312bfe 100644
+--- a/hadoop-hdfs-project/hadoop-hdfs/src/main/java/org/apache/hadoop/hdfs/tools/offlineImageViewer/FileDistributionCalculator.java
++++ b/hadoop-hdfs-project/hadoop-hdfs/src/main/java/org/apache/hadoop/hdfs/tools/offlineImageViewer/FileDistributionCalculator.java
+@@ -33,7 +33,7 @@
+ import org.apache.hadoop.io.IOUtils;
+ 
+ import com.google.common.base.Preconditions;
+-import com.google.common.io.LimitInputStream;
++import com.google.common.io.ByteStreams;
+ 
+ /**
+  * This is the tool for analyzing file sizes in the namespace image. In order to
+@@ -106,7 +106,7 @@ void visit(RandomAccessFile file) throws IOException {
+ 
+         in.getChannel().position(s.getOffset());
+         InputStream is = FSImageUtil.wrapInputStreamForCompression(conf,
+-            summary.getCodec(), new BufferedInputStream(new LimitInputStream(
++            summary.getCodec(), new BufferedInputStream(ByteStreams.limit(
+                 in, s.getLength())));
+         run(is);
+         output();
+diff --git a/hadoop-hdfs-project/hadoop-hdfs/src/main/java/org/apache/hadoop/hdfs/tools/offlineImageViewer/LsrPBImage.java b/hadoop-hdfs-project/hadoop-hdfs/src/main/java/org/apache/hadoop/hdfs/tools/offlineImageViewer/LsrPBImage.java
+index d80fcf1..e025f82 100644
+--- a/hadoop-hdfs-project/hadoop-hdfs/src/main/java/org/apache/hadoop/hdfs/tools/offlineImageViewer/LsrPBImage.java
++++ b/hadoop-hdfs-project/hadoop-hdfs/src/main/java/org/apache/hadoop/hdfs/tools/offlineImageViewer/LsrPBImage.java
+@@ -50,7 +50,7 @@
+ 
+ import com.google.common.collect.Lists;
+ import com.google.common.collect.Maps;
+-import com.google.common.io.LimitInputStream;
++import com.google.common.io.ByteStreams;
+ 
+ /**
+  * LsrPBImage displays the blocks of the namespace in a format very similar
+@@ -110,7 +110,7 @@ public int compare(FileSummary.Section s1, FileSummary.Section s2) {
+       for (FileSummary.Section s : sections) {
+         fin.getChannel().position(s.getOffset());
+         InputStream is = FSImageUtil.wrapInputStreamForCompression(conf,
+-            summary.getCodec(), new BufferedInputStream(new LimitInputStream(
++            summary.getCodec(), new BufferedInputStream(ByteStreams.limit(
+                 fin, s.getLength())));
+ 
+         switch (SectionName.fromString(s.getName())) {
+diff --git a/hadoop-hdfs-project/hadoop-hdfs/src/main/java/org/apache/hadoop/hdfs/tools/offlineImageViewer/PBImageXmlWriter.java b/hadoop-hdfs-project/hadoop-hdfs/src/main/java/org/apache/hadoop/hdfs/tools/offlineImageViewer/PBImageXmlWriter.java
+index 99617b8..c613591 100644
+--- a/hadoop-hdfs-project/hadoop-hdfs/src/main/java/org/apache/hadoop/hdfs/tools/offlineImageViewer/PBImageXmlWriter.java
++++ b/hadoop-hdfs-project/hadoop-hdfs/src/main/java/org/apache/hadoop/hdfs/tools/offlineImageViewer/PBImageXmlWriter.java
+@@ -52,7 +52,7 @@
+ import org.apache.hadoop.io.IOUtils;
+ 
+ import com.google.common.collect.Lists;
+-import com.google.common.io.LimitInputStream;
++import com.google.common.io.ByteStreams;
+ 
+ /**
+  * PBImageXmlWriter walks over an fsimage structure and writes out
+@@ -100,7 +100,7 @@ public int compare(FileSummary.Section s1, FileSummary.Section s2) {
+       for (FileSummary.Section s : sections) {
+         fin.getChannel().position(s.getOffset());
+         InputStream is = FSImageUtil.wrapInputStreamForCompression(conf,
+-            summary.getCodec(), new BufferedInputStream(new LimitInputStream(
++            summary.getCodec(), new BufferedInputStream(ByteStreams.limit(
+                 fin, s.getLength())));
+ 
+         switch (SectionName.fromString(s.getName())) {
+diff --git a/hadoop-hdfs-project/hadoop-hdfs/src/test/java/org/apache/hadoop/hdfs/TestDataTransferKeepalive.java b/hadoop-hdfs-project/hadoop-hdfs/src/test/java/org/apache/hadoop/hdfs/TestDataTransferKeepalive.java
+index 132218c..09d42e1 100644
+--- a/hadoop-hdfs-project/hadoop-hdfs/src/test/java/org/apache/hadoop/hdfs/TestDataTransferKeepalive.java
++++ b/hadoop-hdfs-project/hadoop-hdfs/src/test/java/org/apache/hadoop/hdfs/TestDataTransferKeepalive.java
+@@ -47,7 +47,7 @@
+ import org.junit.Before;
+ import org.junit.Test;
+ 
+-import com.google.common.io.NullOutputStream;
++import com.google.common.io.ByteStreams;
+ 
+ public class TestDataTransferKeepalive {
+   final Configuration conf = new HdfsConfiguration();
+@@ -224,7 +224,7 @@ public void testManyClosedSocketsInCache() throws Exception {
+         stms[i] = fs.open(TEST_FILE);
+       }
+       for (InputStream stm : stms) {
+-        IOUtils.copyBytes(stm, new NullOutputStream(), 1024);
++        IOUtils.copyBytes(stm, ByteStreams.nullOutputStream(), 1024);
+       }
+     } finally {
+       IOUtils.cleanup(null, stms);
+diff --git a/hadoop-project/pom.xml b/hadoop-project/pom.xml
+index 272dadc..dc5ae3a 100644
+--- a/hadoop-project/pom.xml
++++ b/hadoop-project/pom.xml
+@@ -310,7 +310,7 @@
+       <dependency>
+         <groupId>com.google.guava</groupId>
+         <artifactId>guava</artifactId>
+-        <version>11.0.2</version>
++        <version>15.0</version>
+       </dependency>
+       <dependency>
+         <groupId>commons-cli</groupId>

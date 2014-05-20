@@ -1,0 +1,32 @@
+diff --git a/hadoop-common-project/hadoop-annotations/pom.xml b/hadoop-common-project/hadoop-annotations/pom.xml
+index 1e109af..c53229a 100644
+--- a/hadoop-common-project/hadoop-annotations/pom.xml
++++ b/hadoop-common-project/hadoop-annotations/pom.xml
+@@ -48,11 +48,8 @@
+       </activation>
+       <dependencies>
+         <dependency>
+-          <groupId>jdk.tools</groupId>
+-          <artifactId>jdk.tools</artifactId>
+-          <version>1.6</version>
+-          <scope>system</scope>
+-          <systemPath>${java.home}/../lib/tools.jar</systemPath>
++          <groupId>com.sun</groupId>
++          <artifactId>tools</artifactId>
+         </dependency>
+       </dependencies>
+     </profile>
+@@ -63,11 +60,8 @@
+       </activation>
+       <dependencies>
+         <dependency>
+-          <groupId>jdk.tools</groupId>
+-          <artifactId>jdk.tools</artifactId>
+-          <version>1.7</version>
+-          <scope>system</scope>
+-          <systemPath>${java.home}/../lib/tools.jar</systemPath>
++          <groupId>com.sun</groupId>
++          <artifactId>tools</artifactId>
+         </dependency>
+       </dependencies>
+     </profile>

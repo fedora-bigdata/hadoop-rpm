@@ -34,19 +34,19 @@
   </property>
   <property>
      <name>hadoop.tmp.dir</name>
-     <value>/var/cache/hadoop-hdfs/${user.name}</value>
+     <value>/var/lib/hadoop-hdfs/${user.name}</value>
   </property>
   <property>
      <name>dfs.namenode.name.dir</name>
-     <value>file:///var/cache/hadoop-hdfs/${user.name}/dfs/namenode</value>
+     <value>file:///var/lib/hadoop-hdfs/${user.name}/dfs/namenode</value>
   </property>
   <property>
      <name>dfs.namenode.checkpoint.dir</name>
-     <value>file:///var/cache/hadoop-hdfs/${user.name}/dfs/secondarynamenode</value>
+     <value>file:///var/lib/hadoop-hdfs/${user.name}/dfs/secondarynamenode</value>
   </property>
   <property>
      <name>dfs.datanode.data.dir</name>
-     <value>file:///var/cache/hadoop-hdfs/${user.name}/dfs/datanode</value>
+     <value>file:///var/lib/hadoop-hdfs/${user.name}/dfs/datanode</value>
   </property>
   <property>
       <name>dfs.http.address</name>

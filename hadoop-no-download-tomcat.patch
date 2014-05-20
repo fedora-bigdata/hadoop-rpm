@@ -1,8 +1,8 @@
 diff --git a/hadoop-hdfs-project/hadoop-hdfs-httpfs/pom.xml b/hadoop-hdfs-project/hadoop-hdfs-httpfs/pom.xml
-index 72f3b7b..1d99c76 100644
+index 4134f82..cdac7e6 100644
 --- a/hadoop-hdfs-project/hadoop-hdfs-httpfs/pom.xml
 +++ b/hadoop-hdfs-project/hadoop-hdfs-httpfs/pom.xml
-@@ -523,50 +523,6 @@
+@@ -523,53 +523,6 @@
              <artifactId>maven-antrun-plugin</artifactId>
              <executions>
                <execution>
@@ -36,6 +36,9 @@ index 72f3b7b..1d99c76 100644
 -                    <mkdir dir="${httpfs.tomcat.dist.dir}/webapps"/>
 -                    <delete file="${httpfs.tomcat.dist.dir}/conf/server.xml"/>
 -                    <copy file="${basedir}/src/main/tomcat/server.xml"
+-                          toDir="${httpfs.tomcat.dist.dir}/conf"/>
+-                    <delete file="${httpfs.tomcat.dist.dir}/conf/ssl-server.xml"/>
+-                    <copy file="${basedir}/src/main/tomcat/ssl-server.xml"
 -                          toDir="${httpfs.tomcat.dist.dir}/conf"/>
 -                    <delete file="${httpfs.tomcat.dist.dir}/conf/logging.properties"/>
 -                    <copy file="${basedir}/src/main/tomcat/logging.properties"
