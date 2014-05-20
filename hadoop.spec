@@ -19,6 +19,8 @@
 %global __requires_exclude_from ^%{_libdir}/%{name}/libhadoop.so$
 %global __provides_exclude_from ^%{_libdir}/%{name}/.*$
 
+%bcond_with javadoc
+
 Name:   hadoop
 Version: 2.4.0
 Release: 1%{?dist}
@@ -354,12 +356,14 @@ the complete FileSystem/FileContext interface in HDFS.
 # Creation of javadocs takes too many resources and results in failures  on
 # most architectures so only generate on intel 64-bit
 %ifarch x86_64
+%if %{with javadoc}
 %package javadoc
 Summary: Javadoc for Apache Hadoop
 BuildArch: noarch
 
 %description javadoc
 This package contains the API documentation for %{name}.
+%endif
 %endif
 
 %if %{package_libhdfs}
@@ -593,6 +597,9 @@ rm -f hadoop-yarn-project/hadoop-yarn/hadoop-yarn-server/hadoop-yarn-server-test
 %ifnarch x86_64
 opts="-j"
 %else
+%if %{without javadoc}
+opts="-j"
+%endif
 %endif
 %mvn_build $opts -- -Drequire.snappy=true -Dcontainer-executor.conf.dir=%{_sysconfdir}/%{name} -Pdist,native -DskipTests -DskipTest -DskipIT
 
@@ -1083,8 +1090,10 @@ fi
 %attr(0775,root,tomcat) %dir %{_var}/cache/%{name}-httpfs/work
 
 %ifarch x86_64
+%if %{with javadoc}
 %files -f .mfiles-javadoc javadoc
 %doc hadoop-dist/target/hadoop-%{hadoop_version}/share/doc/hadoop/common/LICENSE.txt hadoop-dist/target/hadoop-%{hadoop_version}/share/doc/hadoop/common/NOTICE.txt
+%endif
 %endif
 
 %if %{package_libhdfs}
