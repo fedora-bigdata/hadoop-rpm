@@ -160,12 +160,12 @@ BuildRequires: maven-war-plugin
 BuildRequires: metrics
 BuildRequires: mockito
 BuildRequires: native-maven-plugin
-%if 0%{fedora} < 21
+%if 0%{?fedora} < 21
 BuildRequires: netty
 %else
 BuildRequires: netty3
 %endif
-%if 0%{fedora} > 20
+%if 0%{?fedora} > 20
 BuildRequires: objectweb-asm3
 %else
 BuildRequires: objectweb-asm
@@ -183,7 +183,7 @@ BuildRequires: snappy-java
 BuildRequires: systemd
 BuildRequires: tomcat
 BuildRequires: tomcat-el-2.2-api
-%if 0%{fedora} > 20
+%if 0%{?fedora} > 20
 BuildRequires: tomcat-log4j
 %endif
 BuildRequires: tomcat-servlet-3.0-api
@@ -191,7 +191,7 @@ BuildRequires: txw2
 BuildRequires: which
 BuildRequires: xmlenc
 BuildRequires: znerd-oss-parent
-%if 0%{fedora} < 21
+%if 0%{?fedora} < 21
 BuildRequires: zookeeper-java
 %else
 BuildRequires: zookeeper-java > 3.4.5-15
@@ -249,7 +249,7 @@ Requires: jetty8
 Requires: jsr-311
 Requires: mockito
 Requires: nc6
-%if 0%{fedora} > 20
+%if 0%{?fedora} > 20
 Requires: objectweb-asm3
 %else
 Requires: objectweb-asm
@@ -472,13 +472,13 @@ This package contains files needed to run Apache Hadoop YARN in secure mode.
 %if %{package_libhdfs}
 %patch5 -p1
 %endif
-%if 0%{fedora} >= 21
+%if 0%{?fedora} >= 21
 %patch7 -p1
 %patch8 -p1
 %endif
 %patch9 -p1
 
-%if 0%{fedora} < 21
+%if 0%{?fedora} < 21
 # The hadoop test suite needs classes from the zookeeper test suite.
 # We need to modify the deps to use the pom for the zookeeper-test jar
 fix_zookeeper_test()
