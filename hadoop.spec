@@ -135,7 +135,11 @@ BuildRequires: jsr-311
 BuildRequires: junit
 BuildRequires: jzlib
 BuildRequires: leveldbjni
+%if 0%{?fedora} < 21
 BuildRequires: log4j
+%else
+BuildRequires: log4j12
+%endif
 BuildRequires: make
 BuildRequires: maven
 BuildRequires: maven-antrun-plugin
