@@ -1150,6 +1150,12 @@ fi
 %attr(6050,root,yarn) %{_bindir}/container-executor
 
 %changelog
+* Tue May 27 2014 Robert Rati <rrati@redhat> - 2.4.0-1
+- Update to upstream release 2.4.0
+- Fix fedora conditionals for non-fedora systems (BZ1083135)
+- Conditionalize javadoc generation
+- Update BuildRequires
+
 * Fri Mar 28 2014 Michael Simacek <msimacek@redhat.com> - 2.2.0-7
 - Use Requires: java-headless rebuild (#1067528)
 
