@@ -203,7 +203,11 @@ BuildRequires: zookeeper-java > 3.4.5-15
 
 # For tests
 BuildRequires: jersey-test-framework
+%if 0%{?fedora} > 20
+BuildRequires: maven-surefire-provider-junit
+%else
 BuildRequires: maven-surefire-provider-junit4
+%endif
 
 %description
 Apache Hadoop is a framework that allows for the distributed processing of
