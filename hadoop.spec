@@ -677,12 +677,12 @@ install -d -m 0755 %{buildroot}/%{_datadir}/%{name}/hdfs/webapps
 install -d -m 0755 %{buildroot}/%{_datadir}/%{name}/httpfs/tomcat/webapps
 install -d -m 0755 %{buildroot}/%{_datadir}/%{name}/mapreduce/lib
 install -d -m 0755 %{buildroot}/%{_datadir}/%{name}/yarn/lib
-install -d -m 0755 %{buildroot}/%{_sharedstatedir}/tomcats/httpfs
 install -d -m 0755 %{buildroot}/%{_sysconfdir}/%{name}/tomcat/Catalina/localhost
 install -d -m 0755 %{buildroot}/%{_sysconfdir}/logrotate.d
 install -d -m 0755 %{buildroot}/%{_sysconfdir}/sysconfig
 install -d -m 0755 %{buildroot}/%{_tmpfilesdir}
-install -d -m 0755 %{buildroot}/%{_var}/lib/%{name}-hdfs
+install -d -m 0755 %{buildroot}/%{_sharedstatedir}/%{name}-hdfs
+install -d -m 0755 %{buildroot}/%{_sharedstatedir}/tomcats/httpfs
 install -d -m 0755 %{buildroot}/%{_var}/cache/%{name}-yarn
 install -d -m 0755 %{buildroot}/%{_var}/cache/%{name}-httpfs/temp
 install -d -m 0755 %{buildroot}/%{_var}/cache/%{name}-httpfs/work
@@ -923,7 +923,7 @@ getent group hadoop >/dev/null || groupadd -r hadoop
 
 %pre hdfs
 getent group hdfs >/dev/null || groupadd -r hdfs
-getent passwd hdfs >/dev/null || /usr/sbin/useradd --comment "Apache Hadoop HDFS" --shell /sbin/nologin -M -r -g hdfs -G hadoop --home %{_var}/lib/%{name}-hdfs hdfs
+getent passwd hdfs >/dev/null || /usr/sbin/useradd --comment "Apache Hadoop HDFS" --shell /sbin/nologin -M -r -g hdfs -G hadoop --home %{_sharedstatedir}/%{name}-hdfs hdfs
 
 %pre mapreduce
 getent group mapred >/dev/null || groupadd -r mapred
@@ -945,12 +945,10 @@ getent passwd yarn >/dev/null || /usr/sbin/useradd --comment "Apache Hadoop Yarn
 %post common-native -p /sbin/ldconfig
 
 %post hdfs
-%systemd_post %{hdfs_services}
-
 # Change the home directory for the hdfs user
-if [[ `getent passwd hdfs | cut -d: -f 6` != "%{_var}/lib/%{name}-hdfs" ]]
+if [[ `getent passwd hdfs | cut -d: -f 6` != "%{_sharedstatedir}/%{name}-hdfs" ]]
 then
-  /usr/sbin/usermod -d %{_var}/lib/%{name}-hdfs hdfs
+  /usr/sbin/usermod -d %{_sharedstatedir}/%{name}-hdfs hdfs
 fi
 
 if [ $1 -gt 1 ]
@@ -958,9 +956,10 @@ then
   if [ -d %{_var}/cache/%{name}-hdfs ] && [ ! -L %{_var}/cache/%{name}-hdfs ]
   then
     # Move the existing hdfs data to the new location
-    mv -f %{_var}/cache/%{name}-hdfs/* %{_var}/lib/%{name}-hdfs/
+    mv -f %{_var}/cache/%{name}-hdfs/* %{_sharedstatedir}/%{name}-hdfs/
   fi
 fi
+%systemd_post %{hdfs_services}
 
 %if %{package_libhdfs}
 %post -n libhdfs -p /sbin/ldconfig
@@ -977,8 +976,10 @@ fi
 %postun hdfs
 %systemd_postun_with_restart %{hdfs_services}
 
-# Remove the compatibility symlink
-rm -f %{_var}/cache/%{name}-hdfs
+if [ $1 -lt 1 ]
+  # Remove the compatibility symlink
+  rm -f %{_var}/cache/%{name}-hdfs
+fi
 
 %if %{package_libhdfs}
 %postun -n libhdfs -p /sbin/ldconfig
@@ -994,9 +995,9 @@ rm -f %{_var}/cache/%{name}-hdfs
 # Create a symlink to the new location for hdfs data in case the user changed
 # the configuration file and the new one isn't in place to point to the
 # correct location
-if [ ! -f %{_var}/cache/%{name}-hdfs ]
+if [ ! -e %{_var}/cache/%{name}-hdfs ]
 then
-  %{__ln_s} %{_var}/lib/%{name}-hdfs %{_var}/cache
+  %{__ln_s} %{_sharedstatedir}/%{name}-hdfs %{_var}/cache
 fi
 
 %files -f .mfiles-%{name}-client client
@@ -1045,7 +1046,6 @@ fi
 %exclude %{_datadir}/%{name}/client
 %config(noreplace) %{_sysconfdir}/%{name}/hdfs-site.xml
 %{_datadir}/%{name}/hdfs
-%attr(-,hdfs,hadoop) %{_sharedstatedir}/%{name}-hdfs
 %{_unitdir}/%{name}-datanode.service
 %{_unitdir}/%{name}-namenode.service
 %{_unitdir}/%{name}-journalnode.service
@@ -1060,7 +1060,7 @@ fi
 %config(noreplace) %attr(644, root, root) %{_sysconfdir}/logrotate.d/%{name}-hdfs
 %attr(0755,hdfs,hadoop) %dir %{_var}/run/%{name}-hdfs
 %attr(0755,hdfs,hadoop) %dir %{_var}/log/%{name}-hdfs
-%attr(0755,hdfs,hadoop) %dir %{_var}/lib/%{name}-hdfs
+%attr(0755,hdfs,hadoop) %dir %{_sharedstatedir}/%{name}-hdfs
 
 %if %{package_libhdfs}
 %files hdfs-fuse
