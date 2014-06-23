@@ -57,8 +57,8 @@ Patch3: %{name}-maven.patch
 Patch4: %{name}-no-download-tomcat.patch
 # Use dlopen to find libjvm.so
 Patch5: %{name}-dlopen-libjvm.patch
-# Update to Guava 15.0
-Patch7: %{name}-guava-15.0.patch
+# Update to Guava 17.0
+Patch7: %{name}-guava.patch
 # Update to Netty 3.6.6-Final
 Patch8: %{name}-netty-3.6.6-Final.patch
 # Remove problematic issues with tools.jar
