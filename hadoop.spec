@@ -1043,7 +1043,6 @@ fi
 %endif
 
 %files -f .mfiles-%{name}-hdfs hdfs
-%exclude %{_datadir}/%{name}/client
 %config(noreplace) %{_sysconfdir}/%{name}/hdfs-site.xml
 %{_datadir}/%{name}/hdfs
 %{_unitdir}/%{name}-datanode.service
@@ -1099,7 +1098,6 @@ fi
 %endif
 
 %files -f .mfiles-%{name}-mapreduce mapreduce
-%exclude %{_datadir}/%{name}/client
 %config(noreplace) %{_sysconfdir}/%{name}/mapred-env.sh
 %config(noreplace) %{_sysconfdir}/%{name}/mapred-queues.xml.template
 %config(noreplace) %{_sysconfdir}/%{name}/mapred-site.xml
@@ -1123,7 +1121,6 @@ fi
 %files -f .mfiles-%{name}-tests tests
 
 %files -f .mfiles-%{name}-yarn yarn
-%exclude %{_datadir}/%{name}/client
 %config(noreplace) %{_sysconfdir}/%{name}/capacity-scheduler.xml
 %config(noreplace) %{_sysconfdir}/%{name}/yarn-env.sh
 %config(noreplace) %{_sysconfdir}/%{name}/yarn-site.xml
