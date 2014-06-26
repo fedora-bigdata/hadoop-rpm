@@ -23,7 +23,7 @@
 
 Name:   hadoop
 Version: 2.4.0
-Release: 2%{?dist}
+Release: 3%{?dist}
 Summary: A software platform for processing vast amounts of data
 # The BSD license file is missing
 # https://issues.apache.org/jira/browse/HADOOP-9849
@@ -1159,6 +1159,10 @@ fi
 %attr(6050,root,yarn) %{_bindir}/container-executor
 
 %changelog
+* Thu Jun 26 2014 Robert Rati <rrati@redhat> - 2.4.0-3
+- Fixed FTBFS (#1106748)
+- Update to build with guava 17.0
+
 * Sat Jun 07 2014 Fedora Release Engineering <rel-eng@lists.fedoraproject.org> - 2.4.0-2
 - Rebuilt for https://fedoraproject.org/wiki/Fedora_21_Mass_Rebuild
 
