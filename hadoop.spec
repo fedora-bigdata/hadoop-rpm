@@ -63,6 +63,8 @@ Patch7: %{name}-guava.patch
 Patch8: %{name}-netty-3.6.6-Final.patch
 # Remove problematic issues with tools.jar
 Patch9: %{name}-tools.jar.patch
+# Workaround for bz1012059
+Patch10: %{name}-build.patch
 # The native bits don't compile on ARM
 ExcludeArch: %{arm}
 
@@ -485,6 +487,7 @@ This package contains files needed to run Apache Hadoop YARN in secure mode.
 %patch8 -p1
 %endif
 %patch9 -p1
+%patch10 -p1
 
 %if 0%{?fedora} < 21
 # The hadoop test suite needs classes from the zookeeper test suite.
@@ -558,8 +561,8 @@ rm -f hadoop-yarn-project/hadoop-yarn/hadoop-yarn-server/hadoop-yarn-server-test
 # Fix scope on hadoop-common:test-jar
 %pom_xpath_set "pom:project/pom:dependencies/pom:dependency[pom:artifactId='hadoop-common' and pom:type='test-jar']/pom:scope" test hadoop-tools/hadoop-openstack
 
-# Modify asm version to compat library version 3.3.6
-#%%pom_xpath_set "pom:project/pom:dependencyManagement/pom:dependencies/pom:dependency[pom:artifactId='asm']/pom:version" 3.3.6 hadoop-project
+# Modify asm version to version 5.0.2
+%pom_xpath_set "pom:project/pom:dependencyManagement/pom:dependencies/pom:dependency[pom:artifactId='asm']/pom:version" 5.0.2 hadoop-project
 
 # War files we don't want
 %mvn_package :%{name}-auth-examples __noinstall
@@ -740,9 +743,13 @@ sed -i "s|\(HADOOP_OPTS.*=.*\)\$HADOOP_CLIENT_OPTS|\1 -Djavax.xml.parsers.Docume
 echo "export YARN_OPTS=\"\$YARN_OPTS -Djavax.xml.parsers.DocumentBuilderFactory=com.sun.org.apache.xerces.internal.jaxp.DocumentBuilderFactoryImpl\"" >> %{buildroot}/%{_sysconfdir}/%{name}/yarn-env.sh
 
 # Workaround for bz1012059
-install -pm 644 %{name}-project-dist/target/%{name}-project-dist-%{hadoop_version}.jar %{buildroot}/%{_javadir}/%{name}/%{name}-project-dist.jar
 install -pm 644 hadoop-project-dist/pom.xml %{buildroot}/%{_mavenpomdir}/JPP.%{name}-%{name}-project-dist.pom
-%add_maven_depmap JPP.%{name}-%{name}-project-dist.pom %{name}/%{name}-project-dist.jar
+%{__ln_s} %{_jnidir}/%{name}/hadoop-common.jar %{buildroot}/%{_datadir}/%{name}/common
+#echo %{_datadir}/%{name}/common/hadoop-common.jar >> .mfiles
+%{__ln_s} %{_javadir}/%{name}/hadoop-hdfs.jar %{buildroot}/%{_datadir}/%{name}/hdfs
+echo %{_datadir}/%{name}/hdfs/hadoop-hdfs.jar >> .mfiles-%{name}-hdfs
+%{__ln_s} %{_javadir}/%{name}/hadoop-client.jar %{buildroot}/%{_datadir}/%{name}/client
+echo %{_datadir}/%{name}/client/hadoop-client.jar >> .mfiles-%{name}-client
 
 # client jar depenencies
 copy_dep_jars %{name}-client/target/%{name}-client-%{hadoop_version}/share/%{name}/client/lib %{buildroot}/%{_datadir}/%{name}/client/lib
@@ -764,7 +771,7 @@ for f in `ls %{buildroot}/%{_datadir}/%{name}/common/*.jar`
 do
   echo "$f" | sed "s|%{buildroot}||" >> .mfiles
 done
-pushd  $basedir/share/%{name}/common/lib
+pushd $basedir/share/%{name}/common/lib
   link_hadoop_jars %{buildroot}/%{_datadir}/%{name}/common/lib
 popd
 
@@ -977,6 +984,7 @@ fi
 %systemd_postun_with_restart %{hdfs_services}
 
 if [ $1 -lt 1 ]
+then
   # Remove the compatibility symlink
   rm -f %{_var}/cache/%{name}-hdfs
 fi
@@ -1020,6 +1028,10 @@ fi
 %{_datadir}/%{name}/common/lib
 %{_libexecdir}/%{name}-config.sh
 %{_libexecdir}/%{name}-layout.sh
+
+# Workaround for bz1012059
+%{_mavenpomdir}/JPP.%{name}-%{name}-project-dist.pom
+
 %{_bindir}/%{name}
 %{_sbindir}/%{name}-daemon.sh
 %{_sbindir}/%{name}-daemons.sh
