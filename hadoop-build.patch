@@ -1,0 +1,18 @@
+diff --git a/hadoop-project-dist/pom.xml b/hadoop-project-dist/pom.xml
+index 3482f96..cbc8d39 100644
+--- a/hadoop-project-dist/pom.xml
++++ b/hadoop-project-dist/pom.xml
+@@ -58,13 +58,6 @@
+         <artifactId>maven-jar-plugin</artifactId>
+         <executions>
+           <execution>
+-            <id>prepare-jar</id>
+-            <phase>prepare-package</phase>
+-            <goals>
+-              <goal>jar</goal>
+-            </goals>
+-          </execution>
+-          <execution>
+             <id>prepare-test-jar</id>
+             <phase>prepare-package</phase>
+             <goals>
