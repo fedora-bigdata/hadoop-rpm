@@ -720,11 +720,8 @@ echo "export YARN_OPTS=\"\$YARN_OPTS -Djavax.xml.parsers.DocumentBuilderFactory=
 # Workaround for bz1012059
 install -pm 644 hadoop-project-dist/pom.xml %{buildroot}/%{_mavenpomdir}/JPP.%{name}-%{name}-project-dist.pom
 %{__ln_s} %{_jnidir}/%{name}/hadoop-common.jar %{buildroot}/%{_datadir}/%{name}/common
-#echo %{_datadir}/%{name}/common/hadoop-common.jar >> .mfiles
 %{__ln_s} %{_javadir}/%{name}/hadoop-hdfs.jar %{buildroot}/%{_datadir}/%{name}/hdfs
-echo %{_datadir}/%{name}/hdfs/hadoop-hdfs.jar >> .mfiles-%{name}-hdfs
 %{__ln_s} %{_javadir}/%{name}/hadoop-client.jar %{buildroot}/%{_datadir}/%{name}/client
-echo %{_datadir}/%{name}/client/hadoop-client.jar >> .mfiles-%{name}-client
 
 # client jar depenencies
 copy_dep_jars %{name}-client/target/%{name}-client-%{hadoop_version}/share/%{name}/client/lib %{buildroot}/%{_datadir}/%{name}/client/lib
