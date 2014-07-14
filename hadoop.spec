@@ -623,31 +623,6 @@ copy_dep_jars()
   rm -f $2/tools-*.jar
 }
 
-# Create a pom file for a test jar
-# $1 what the test jar is associated with
-create_test_pom()
-{
-  dep=`echo $1 | sed "s/-tests//g"`
-  pom="JPP.%{name}-$1.pom"
-  cat > %{buildroot}%{_mavenpomdir}/$pom << EOL
-<project>
-  <modelVersion>4.0.0</modelVersion>
-  <groupId>org.apache.hadoop</groupId>
-  <artifactId>$1</artifactId>
-  <version>%{hadoop_version}</version>
-
-  <dependencies>
-    <dependency>
-      <groupId>org.apache.hadoop</groupId>
-      <artifactId>$dep</artifactId>
-      <version>%{hadoop_version}</version>
-    </dependency>
-  </dependencies>
-</project>
-EOL
-  %add_maven_depmap -f %{name}-tests $pom %{name}/$1.jar
-}
-
 # Create symlinks for jars from the build
 # $1 the location to create the symlink
 link_hadoop_jars()
@@ -908,15 +883,6 @@ sed -i "s|{|%{_var}/log/hadoop-hdfs/*.audit\n{|" %{buildroot}/%{_sysconfdir}/log
 
 # hdfs init script
 install -m 755 %{SOURCE13} %{buildroot}/%{_sbindir}
-
-# pom files for test jars
-for f in `ls %{buildroot}/%{_javadir}/%{name}/%{name}-*-tests.jar %{buildroot}/%{_jnidir}/%{name}-*-tests.jar | grep -v yarn-server-tests`
-do
-  create_test_pom $(basename $f | sed "s/.jar//g")
-done
-
-install -m 0644 hadoop-yarn-project/hadoop-yarn/hadoop-yarn-server/hadoop-yarn-server-tests/pom.xml %{buildroot}/%{_mavenpomdir}/JPP.%{name}-%{name}-yarn-server-tests-tests.pom
-%add_maven_depmap -f %{name}-tests JPP.%{name}-%{name}-yarn-server-tests-tests.pom %{name}/%{name}-yarn-server-tests-tests.jar
 
 %pretrans -p <lua> hdfs
 path = "%{_datadir}/%{name}/hdfs/webapps"
