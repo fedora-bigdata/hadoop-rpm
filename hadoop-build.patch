@@ -1,5 +1,5 @@
 diff --git a/hadoop-project-dist/pom.xml b/hadoop-project-dist/pom.xml
-index 3482f96..cbc8d39 100644
+index bd3c555..c89a237 100644
 --- a/hadoop-project-dist/pom.xml
 +++ b/hadoop-project-dist/pom.xml
 @@ -58,13 +58,6 @@

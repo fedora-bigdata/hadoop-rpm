@@ -7,7 +7,7 @@
 %global package_libhdfs 0
 %endif
 
-%global commit 9d04888c2ca6ffc0d11e5fd894e3fa567398214a
+%global commit 9e2ef43a240fb0f603d8c384e501daec11524510
 %global shortcommit %(c=%{commit}; echo ${c:0:7})
 
 %global hadoop_version %{version}
@@ -22,8 +22,8 @@
 %bcond_with javadoc
 
 Name:   hadoop
-Version: 2.4.0
-Release: 3%{?dist}
+Version: 2.4.1
+Release: 1%{?dist}
 Summary: A software platform for processing vast amounts of data
 # The BSD license file is missing
 # https://issues.apache.org/jira/browse/HADOOP-9849

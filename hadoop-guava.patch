@@ -397,7 +397,7 @@ index 5f32f11..a4f293c 100644
      return splits;
    }
 diff --git a/hadoop-project/pom.xml b/hadoop-project/pom.xml
-index 272dadc..dc5ae3a 100644
+index b315e2b..9ad8bcd 100644
 --- a/hadoop-project/pom.xml
 +++ b/hadoop-project/pom.xml
 @@ -310,7 +310,7 @@
@@ -405,7 +405,7 @@ index 272dadc..dc5ae3a 100644
          <groupId>com.google.guava</groupId>
          <artifactId>guava</artifactId>
 -        <version>11.0.2</version>
-+        <version>15.0</version>
++        <version>17.0</version>
        </dependency>
        <dependency>
          <groupId>commons-cli</groupId>

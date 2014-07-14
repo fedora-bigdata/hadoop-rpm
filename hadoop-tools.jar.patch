@@ -1,5 +1,5 @@
 diff --git a/hadoop-common-project/hadoop-annotations/pom.xml b/hadoop-common-project/hadoop-annotations/pom.xml
-index 1e109af..c53229a 100644
+index c3e1aa1..9042f73 100644
 --- a/hadoop-common-project/hadoop-annotations/pom.xml
 +++ b/hadoop-common-project/hadoop-annotations/pom.xml
 @@ -48,11 +48,8 @@

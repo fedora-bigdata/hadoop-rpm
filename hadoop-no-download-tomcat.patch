@@ -1,5 +1,5 @@
 diff --git a/hadoop-hdfs-project/hadoop-hdfs-httpfs/pom.xml b/hadoop-hdfs-project/hadoop-hdfs-httpfs/pom.xml
-index 4134f82..cdac7e6 100644
+index d01a32f..9ebc494 100644
 --- a/hadoop-hdfs-project/hadoop-hdfs-httpfs/pom.xml
 +++ b/hadoop-hdfs-project/hadoop-hdfs-httpfs/pom.xml
 @@ -523,53 +523,6 @@

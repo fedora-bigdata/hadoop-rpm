@@ -1,5 +1,5 @@
 diff --git a/hadoop-common-project/hadoop-common/pom.xml b/hadoop-common-project/hadoop-common/pom.xml
-index 7eae610..c05a202 100644
+index 7cf67a3..c090916 100644
 --- a/hadoop-common-project/hadoop-common/pom.xml
 +++ b/hadoop-common-project/hadoop-common/pom.xml
 @@ -364,16 +364,6 @@
@@ -31,7 +31,7 @@ index 7eae610..c05a202 100644
              <property>
                <name>listener</name>
 diff --git a/pom.xml b/pom.xml
-index 9c824ff..d354566 100644
+index 13dbf49..ad84034 100644
 --- a/pom.xml
 +++ b/pom.xml
 @@ -387,6 +387,7 @@ xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xs

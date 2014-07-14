@@ -1,5 +1,5 @@
 diff --git a/hadoop-client/pom.xml b/hadoop-client/pom.xml
-index 585bbb6..974213e 100644
+index c6f6c1b..7a3e0d4 100644
 --- a/hadoop-client/pom.xml
 +++ b/hadoop-client/pom.xml
 @@ -40,12 +40,8 @@
@@ -61,7 +61,7 @@ index 585bbb6..974213e 100644
          <exclusion>
            <groupId>com.sun.jersey</groupId>
 diff --git a/hadoop-common-project/hadoop-auth/pom.xml b/hadoop-common-project/hadoop-auth/pom.xml
-index f692ca3..8bb2429 100644
+index b9d6c60..9330a1a 100644
 --- a/hadoop-common-project/hadoop-auth/pom.xml
 +++ b/hadoop-common-project/hadoop-auth/pom.xml
 @@ -53,18 +53,9 @@
@@ -137,7 +137,7 @@ index 4e4ecc4..3429931 100644
      host = "localhost";
      ServerSocket ss = new ServerSocket(0);
 diff --git a/hadoop-common-project/hadoop-common/pom.xml b/hadoop-common-project/hadoop-common/pom.xml
-index 7eae610..479fed0 100644
+index 7cf67a3..ef2733f 100644
 --- a/hadoop-common-project/hadoop-common/pom.xml
 +++ b/hadoop-common-project/hadoop-common/pom.xml
 @@ -87,18 +87,25 @@
@@ -846,7 +846,7 @@ index 1c22ee6..90846d9 100644
 \ No newline at end of file
 +}
 diff --git a/hadoop-common-project/hadoop-common/src/test/java/org/apache/hadoop/fs/FSMainOperationsBaseTest.java b/hadoop-common-project/hadoop-common/src/test/java/org/apache/hadoop/fs/FSMainOperationsBaseTest.java
-index 0df0fe7..332af99 100644
+index e862db4..7f73534 100644
 --- a/hadoop-common-project/hadoop-common/src/test/java/org/apache/hadoop/fs/FSMainOperationsBaseTest.java
 +++ b/hadoop-common-project/hadoop-common/src/test/java/org/apache/hadoop/fs/FSMainOperationsBaseTest.java
 @@ -32,7 +32,7 @@
@@ -1120,7 +1120,7 @@ index fe1284f..91c13a8 100644
    }
  }
 diff --git a/hadoop-hdfs-project/hadoop-hdfs-httpfs/pom.xml b/hadoop-hdfs-project/hadoop-hdfs-httpfs/pom.xml
-index 4134f82..59cb118 100644
+index d01a32f..d85405b 100644
 --- a/hadoop-hdfs-project/hadoop-hdfs-httpfs/pom.xml
 +++ b/hadoop-hdfs-project/hadoop-hdfs-httpfs/pom.xml
 @@ -34,7 +34,7 @@
@@ -1527,7 +1527,7 @@ index b0f14f4..fb81ab2 100644
  public class TestJettyHelper implements MethodRule {
    private boolean ssl;
 diff --git a/hadoop-hdfs-project/hadoop-hdfs-nfs/pom.xml b/hadoop-hdfs-project/hadoop-hdfs-nfs/pom.xml
-index 3a2d8a3..02e8227 100644
+index 5ee5841..8b56730 100644
 --- a/hadoop-hdfs-project/hadoop-hdfs-nfs/pom.xml
 +++ b/hadoop-hdfs-project/hadoop-hdfs-nfs/pom.xml
 @@ -85,12 +85,12 @@ http://maven.apache.org/xsd/maven-4.0.0.xsd">
@@ -1570,7 +1570,7 @@ index 3a2d8a3..02e8227 100644
        <artifactId>xmlenc</artifactId>
        <scope>compile</scope>
 diff --git a/hadoop-hdfs-project/hadoop-hdfs/pom.xml b/hadoop-hdfs-project/hadoop-hdfs/pom.xml
-index 55b8c6f..a2dc6de 100644
+index 420e5d2..c134d71 100644
 --- a/hadoop-hdfs-project/hadoop-hdfs/pom.xml
 +++ b/hadoop-hdfs-project/hadoop-hdfs/pom.xml
 @@ -71,12 +71,12 @@ http://maven.apache.org/xsd/maven-4.0.0.xsd">
@@ -1625,20 +1625,21 @@ index 55b8c6f..a2dc6de 100644
        <groupId>xmlenc</groupId>
        <artifactId>xmlenc</artifactId>
        <scope>compile</scope>
-@@ -280,18 +265,38 @@ http://maven.apache.org/xsd/maven-4.0.0.xsd">
+@@ -278,20 +263,40 @@ http://maven.apache.org/xsd/maven-4.0.0.xsd">
+           </execution>
+         </executions>
          <dependencies>
-           <dependency>
-             <groupId>org.codehaus.mojo.jspc</groupId>
--            <artifactId>jspc-compiler-tomcat5</artifactId>
-+            <artifactId>jspc-compiler-tomcat6</artifactId>
-             <version>2.0-alpha-3</version>
-+            <exclusions>
-+              <exclusion>
-+                <groupId>org.apache.tomcat</groupId>
-+                <artifactId>*</artifactId>
-+              </exclusion>
-+            </exclusions>
-+          </dependency>
++            <dependency>
++                <groupId>org.codehaus.mojo.jspc</groupId>
++                <artifactId>jspc-compiler-tomcat6</artifactId>
++                <version>2.0-alpha-3</version>
++                <exclusions>
++                    <exclusion>
++                        <groupId>org.apache.tomcat</groupId>
++                        <artifactId>*</artifactId>
++                    </exclusion>
++                </exclusions>
++            </dependency>
 +          <!-- mix of glassfish 2.2 jspc impl & Tomcat's servlet 3.0 api
 +               note order of these
 +          -->
@@ -1647,7 +1648,10 @@ index 55b8c6f..a2dc6de 100644
 +            <artifactId>tomcat-servlet-api</artifactId>
 +            <version>7.0.37</version>
 +          </dependency>
-+          <dependency>
+           <dependency>
+-            <groupId>org.codehaus.mojo.jspc</groupId>
+-            <artifactId>jspc-compiler-tomcat5</artifactId>
+-            <version>2.0-alpha-3</version>
 +            <groupId>org.apache.tomcat</groupId>
 +            <artifactId>tomcat-el-api</artifactId>
 +            <version>7.0.37</version>
@@ -1703,7 +1707,7 @@ index 50b44f8..d5a91d3 100644
  import com.google.common.base.Preconditions;
  import com.google.common.collect.Maps;
 diff --git a/hadoop-hdfs-project/hadoop-hdfs/src/main/java/org/apache/hadoop/hdfs/server/datanode/DataNode.java b/hadoop-hdfs-project/hadoop-hdfs/src/main/java/org/apache/hadoop/hdfs/server/datanode/DataNode.java
-index 2bfedb9..f23f1f1 100644
+index fc85a5e..1610c8c 100644
 --- a/hadoop-hdfs-project/hadoop-hdfs/src/main/java/org/apache/hadoop/hdfs/server/datanode/DataNode.java
 +++ b/hadoop-hdfs-project/hadoop-hdfs/src/main/java/org/apache/hadoop/hdfs/server/datanode/DataNode.java
 @@ -88,7 +88,7 @@
@@ -1733,7 +1737,7 @@ index 477b7f6..8a22654 100644
   * Utility class to start a datanode in a secure cluster, first obtaining 
   * privileged resources before main startup and handing them to the datanode.
 diff --git a/hadoop-hdfs-project/hadoop-hdfs/src/main/java/org/apache/hadoop/hdfs/server/namenode/FSNamesystem.java b/hadoop-hdfs-project/hadoop-hdfs/src/main/java/org/apache/hadoop/hdfs/server/namenode/FSNamesystem.java
-index a5b40a0..8a425ef 100644
+index 4232e00..3386dff 100644
 --- a/hadoop-hdfs-project/hadoop-hdfs/src/main/java/org/apache/hadoop/hdfs/server/namenode/FSNamesystem.java
 +++ b/hadoop-hdfs-project/hadoop-hdfs/src/main/java/org/apache/hadoop/hdfs/server/namenode/FSNamesystem.java
 @@ -264,7 +264,7 @@
@@ -1759,7 +1763,7 @@ index aa4ba5d..5b945ba 100644
  @InterfaceAudience.Private
  public class StreamFile extends DfsServlet {
 diff --git a/hadoop-hdfs-project/hadoop-hdfs/src/main/java/org/apache/hadoop/hdfs/web/JsonUtil.java b/hadoop-hdfs-project/hadoop-hdfs/src/main/java/org/apache/hadoop/hdfs/web/JsonUtil.java
-index afae1a3..78c9122 100644
+index 50a7f21..1d96e15 100644
 --- a/hadoop-hdfs-project/hadoop-hdfs/src/main/java/org/apache/hadoop/hdfs/web/JsonUtil.java
 +++ b/hadoop-hdfs-project/hadoop-hdfs/src/main/java/org/apache/hadoop/hdfs/web/JsonUtil.java
 @@ -32,7 +32,7 @@
@@ -1772,7 +1776,7 @@ index afae1a3..78c9122 100644
  import java.io.ByteArrayInputStream;
  import java.io.DataInputStream;
 diff --git a/hadoop-hdfs-project/hadoop-hdfs/src/main/java/org/apache/hadoop/hdfs/web/WebHdfsFileSystem.java b/hadoop-hdfs-project/hadoop-hdfs/src/main/java/org/apache/hadoop/hdfs/web/WebHdfsFileSystem.java
-index 855545d..2a1b808 100644
+index 6aa935c..dfc1e39 100644
 --- a/hadoop-hdfs-project/hadoop-hdfs/src/main/java/org/apache/hadoop/hdfs/web/WebHdfsFileSystem.java
 +++ b/hadoop-hdfs-project/hadoop-hdfs/src/main/java/org/apache/hadoop/hdfs/web/WebHdfsFileSystem.java
 @@ -98,7 +98,7 @@
@@ -1782,8 +1786,8 @@ index 855545d..2a1b808 100644
 -import org.mortbay.util.ajax.JSON;
 +import org.eclipse.jetty.util.ajax.JSON;
  
+ import com.google.common.annotations.VisibleForTesting;
  import com.google.common.base.Charsets;
- import com.google.common.collect.Lists;
 diff --git a/hadoop-hdfs-project/hadoop-hdfs/src/test/java/org/apache/hadoop/hdfs/qjournal/server/TestJournalNodeMXBean.java b/hadoop-hdfs-project/hadoop-hdfs/src/test/java/org/apache/hadoop/hdfs/qjournal/server/TestJournalNodeMXBean.java
 index 3471848..b4e0202 100644
 --- a/hadoop-hdfs-project/hadoop-hdfs/src/test/java/org/apache/hadoop/hdfs/qjournal/server/TestJournalNodeMXBean.java
@@ -2003,7 +2007,7 @@ index 420c428..3a3257e 100644
  public class TestShuffleHandler {
    static final long MiB = 1024 * 1024; 
 diff --git a/hadoop-mapreduce-project/hadoop-mapreduce-client/pom.xml b/hadoop-mapreduce-project/hadoop-mapreduce-client/pom.xml
-index ebf5014..e2fab7e 100644
+index 8ae5809..b7da2bc 100644
 --- a/hadoop-mapreduce-project/hadoop-mapreduce-client/pom.xml
 +++ b/hadoop-mapreduce-project/hadoop-mapreduce-client/pom.xml
 @@ -43,8 +43,8 @@
@@ -2037,7 +2041,7 @@ index ebf5014..e2fab7e 100644
        </exclusions>
      </dependency>
 diff --git a/hadoop-mapreduce-project/pom.xml b/hadoop-mapreduce-project/pom.xml
-index c41aac5..90a741f 100644
+index 8f1d2b0..b0f511b 100644
 --- a/hadoop-mapreduce-project/pom.xml
 +++ b/hadoop-mapreduce-project/pom.xml
 @@ -52,8 +52,8 @@
@@ -2071,7 +2075,7 @@ index c41aac5..90a741f 100644
        </exclusions>
      </dependency>
 diff --git a/hadoop-project/pom.xml b/hadoop-project/pom.xml
-index 272dadc..48e17a9 100644
+index b315e2b..e282926 100644
 --- a/hadoop-project/pom.xml
 +++ b/hadoop-project/pom.xml
 @@ -59,7 +59,7 @@
@@ -2188,7 +2192,7 @@ index 272dadc..48e17a9 100644
        </dependency>
        <dependency>
 diff --git a/hadoop-tools/hadoop-sls/pom.xml b/hadoop-tools/hadoop-sls/pom.xml
-index b6d5dbe..7729ec3 100644
+index 6166725..e0d3ee7 100644
 --- a/hadoop-tools/hadoop-sls/pom.xml
 +++ b/hadoop-tools/hadoop-sls/pom.xml
 @@ -55,18 +55,12 @@
@@ -2263,7 +2267,7 @@ index 123ccea..e961e58 100644
                // json request
                if (target.equals("/simulateMetrics")) {
 diff --git a/hadoop-yarn-project/hadoop-yarn/hadoop-yarn-api/pom.xml b/hadoop-yarn-project/hadoop-yarn/hadoop-yarn-api/pom.xml
-index 9e8bf05..a5a280a 100644
+index fe2955a..0179f7b 100644
 --- a/hadoop-yarn-project/hadoop-yarn/hadoop-yarn-api/pom.xml
 +++ b/hadoop-yarn-project/hadoop-yarn/hadoop-yarn-api/pom.xml
 @@ -64,10 +64,6 @@
@@ -2278,7 +2282,7 @@ index 9e8bf05..a5a280a 100644
      </dependency>
  
 diff --git a/hadoop-yarn-project/hadoop-yarn/hadoop-yarn-applications/hadoop-yarn-applications-distributedshell/pom.xml b/hadoop-yarn-project/hadoop-yarn/hadoop-yarn-applications/hadoop-yarn-applications-distributedshell/pom.xml
-index 2942e71..7b9bb5d 100644
+index c639de8..37c0908 100644
 --- a/hadoop-yarn-project/hadoop-yarn/hadoop-yarn-applications/hadoop-yarn-applications-distributedshell/pom.xml
 +++ b/hadoop-yarn-project/hadoop-yarn/hadoop-yarn-applications/hadoop-yarn-applications-distributedshell/pom.xml
 @@ -51,10 +51,6 @@
@@ -2293,7 +2297,7 @@ index 2942e71..7b9bb5d 100644
      </dependency>
  
 diff --git a/hadoop-yarn-project/hadoop-yarn/hadoop-yarn-applications/hadoop-yarn-applications-unmanaged-am-launcher/pom.xml b/hadoop-yarn-project/hadoop-yarn/hadoop-yarn-applications/hadoop-yarn-applications-unmanaged-am-launcher/pom.xml
-index 7179262..1fffa89 100644
+index 35d1a42..48c0d50 100644
 --- a/hadoop-yarn-project/hadoop-yarn/hadoop-yarn-applications/hadoop-yarn-applications-unmanaged-am-launcher/pom.xml
 +++ b/hadoop-yarn-project/hadoop-yarn/hadoop-yarn-applications/hadoop-yarn-applications-unmanaged-am-launcher/pom.xml
 @@ -63,10 +63,6 @@
@@ -2308,7 +2312,7 @@ index 7179262..1fffa89 100644
      </dependency>
      <!-- 'mvn dependency:analyze' fails to detect use of this dependency -->
 diff --git a/hadoop-yarn-project/hadoop-yarn/hadoop-yarn-client/pom.xml b/hadoop-yarn-project/hadoop-yarn/hadoop-yarn-client/pom.xml
-index ac7d470..c60a9d1 100644
+index 82d66cb..cc7606f 100644
 --- a/hadoop-yarn-project/hadoop-yarn/hadoop-yarn-client/pom.xml
 +++ b/hadoop-yarn-project/hadoop-yarn/hadoop-yarn-client/pom.xml
 @@ -48,10 +48,6 @@
@@ -2358,7 +2362,7 @@ index 1efb54c..1b3463b 100644
  import org.apache.commons.cli.Options;
  
 diff --git a/hadoop-yarn-project/hadoop-yarn/hadoop-yarn-common/pom.xml b/hadoop-yarn-project/hadoop-yarn/hadoop-yarn-common/pom.xml
-index ece280f..0407643 100644
+index a19a78c..1cb621d 100644
 --- a/hadoop-yarn-project/hadoop-yarn/hadoop-yarn-common/pom.xml
 +++ b/hadoop-yarn-project/hadoop-yarn/hadoop-yarn-common/pom.xml
 @@ -51,10 +51,6 @@
@@ -2387,7 +2391,7 @@ index f8c6f55..71df06b 100644
          webapp.setConf(conf);
          webapp.setHttpServer(server);
 diff --git a/hadoop-yarn-project/hadoop-yarn/hadoop-yarn-server/hadoop-yarn-server-applicationhistoryservice/pom.xml b/hadoop-yarn-project/hadoop-yarn/hadoop-yarn-server/hadoop-yarn-server-applicationhistoryservice/pom.xml
-index a933f41..c240daa 100644
+index 8a4e6f5..c785145 100644
 --- a/hadoop-yarn-project/hadoop-yarn/hadoop-yarn-server/hadoop-yarn-server-applicationhistoryservice/pom.xml
 +++ b/hadoop-yarn-project/hadoop-yarn/hadoop-yarn-server/hadoop-yarn-server-applicationhistoryservice/pom.xml
 @@ -58,10 +58,6 @@
@@ -2402,7 +2406,7 @@ index a933f41..c240daa 100644
      </dependency>
  
 diff --git a/hadoop-yarn-project/hadoop-yarn/hadoop-yarn-server/hadoop-yarn-server-common/pom.xml b/hadoop-yarn-project/hadoop-yarn/hadoop-yarn-server/hadoop-yarn-server-common/pom.xml
-index 93495d4..d88077b 100644
+index 294f969..24d7706 100644
 --- a/hadoop-yarn-project/hadoop-yarn/hadoop-yarn-server/hadoop-yarn-server-common/pom.xml
 +++ b/hadoop-yarn-project/hadoop-yarn/hadoop-yarn-server/hadoop-yarn-server-common/pom.xml
 @@ -51,10 +51,6 @@
@@ -2417,7 +2421,7 @@ index 93495d4..d88077b 100644
      </dependency>
      <!-- 'mvn dependency:analyze' fails to detect use of this dependency -->
 diff --git a/hadoop-yarn-project/hadoop-yarn/hadoop-yarn-server/hadoop-yarn-server-nodemanager/pom.xml b/hadoop-yarn-project/hadoop-yarn/hadoop-yarn-server/hadoop-yarn-server-nodemanager/pom.xml
-index 6d87785..17bce8e 100644
+index 0fbafd2..5fe4206 100644
 --- a/hadoop-yarn-project/hadoop-yarn/hadoop-yarn-server/hadoop-yarn-server-nodemanager/pom.xml
 +++ b/hadoop-yarn-project/hadoop-yarn/hadoop-yarn-server/hadoop-yarn-server-nodemanager/pom.xml
 @@ -53,10 +53,6 @@
@@ -2510,7 +2514,7 @@ index 29c9253..56ca16e 100644
  
    private HashMap<String, String> addAppContainers(Application app) 
 diff --git a/hadoop-yarn-project/hadoop-yarn/hadoop-yarn-server/hadoop-yarn-server-resourcemanager/pom.xml b/hadoop-yarn-project/hadoop-yarn/hadoop-yarn-server/hadoop-yarn-server-resourcemanager/pom.xml
-index 1ff750b..c628621 100644
+index 3e78e02..358a534 100644
 --- a/hadoop-yarn-project/hadoop-yarn/hadoop-yarn-server/hadoop-yarn-server-resourcemanager/pom.xml
 +++ b/hadoop-yarn-project/hadoop-yarn/hadoop-yarn-server/hadoop-yarn-server-resourcemanager/pom.xml
 @@ -55,10 +55,6 @@
@@ -2613,7 +2617,7 @@ index da2e2b1..77cdfa9 100644
  
    public void testNodesHelper(String path, String media) throws JSONException,
 diff --git a/hadoop-yarn-project/hadoop-yarn/hadoop-yarn-server/hadoop-yarn-server-tests/pom.xml b/hadoop-yarn-project/hadoop-yarn/hadoop-yarn-server/hadoop-yarn-server-tests/pom.xml
-index 3e86381..37f376d 100644
+index 44076eb..065bf72 100644
 --- a/hadoop-yarn-project/hadoop-yarn/hadoop-yarn-server/hadoop-yarn-server-tests/pom.xml
 +++ b/hadoop-yarn-project/hadoop-yarn/hadoop-yarn-server/hadoop-yarn-server-tests/pom.xml
 @@ -50,10 +50,6 @@
@@ -2628,7 +2632,7 @@ index 3e86381..37f376d 100644
      </dependency>
      <!-- 'mvn dependency:analyze' fails to detect use of this dependency -->
 diff --git a/hadoop-yarn-project/hadoop-yarn/hadoop-yarn-server/hadoop-yarn-server-web-proxy/pom.xml b/hadoop-yarn-project/hadoop-yarn/hadoop-yarn-server/hadoop-yarn-server-web-proxy/pom.xml
-index b7c6fd3..8e557ff 100644
+index 10f243c..af23544 100644
 --- a/hadoop-yarn-project/hadoop-yarn/hadoop-yarn-server/hadoop-yarn-server-web-proxy/pom.xml
 +++ b/hadoop-yarn-project/hadoop-yarn/hadoop-yarn-server/hadoop-yarn-server-web-proxy/pom.xml
 @@ -56,10 +56,6 @@
