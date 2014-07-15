@@ -1117,6 +1117,10 @@ fi
 %attr(6050,root,yarn) %{_bindir}/container-executor
 
 %changelog
+* Tue Jul 15 2014 Robert Rati <rrati@redhat> - 2.4.1-1
+- Update to upstream release 2.4.1
+- Fixed resolution of test jars
+
 * Thu Jun 26 2014 Robert Rati <rrati@redhat> - 2.4.0-3
 - Fixed FTBFS (#1106748)
 - Update to build with guava 17.0
