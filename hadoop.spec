@@ -171,11 +171,7 @@ BuildRequires: netty
 %else
 BuildRequires: netty3
 %endif
-%if 0%{?fedora} > 20
-BuildRequires: objectweb-asm3
-%else
 BuildRequires: objectweb-asm
-%endif
 BuildRequires: objenesis >= 1.2-16
 BuildRequires: openssl-devel
 BuildRequires: paranamer
@@ -259,11 +255,7 @@ Requires: jetty8
 Requires: jsr-311
 Requires: mockito
 Requires: nc6
-%if 0%{?fedora} > 20
-Requires: objectweb-asm3
-%else
 Requires: objectweb-asm
-%endif
 Requires: objenesis
 Requires: paranamer
 Requires: relaxngDatatype
@@ -561,8 +553,11 @@ rm -f hadoop-yarn-project/hadoop-yarn/hadoop-yarn-server/hadoop-yarn-server-test
 # Fix scope on hadoop-common:test-jar
 %pom_xpath_set "pom:project/pom:dependencies/pom:dependency[pom:artifactId='hadoop-common' and pom:type='test-jar']/pom:scope" test hadoop-tools/hadoop-openstack
 
-# Modify asm version to version 5.0.2
+%if 0%{?fedora} > 20
+# Modify asm version to version 5.0.2 and groupId to org.ow2.asm
 %pom_xpath_set "pom:project/pom:dependencyManagement/pom:dependencies/pom:dependency[pom:artifactId='asm']/pom:version" 5.0.2 hadoop-project
+%pom_xpath_set "pom:project/pom:dependencyManagement/pom:dependencies/pom:dependency[pom:artifactId='asm']/pom:groupId" org.ow2.asm hadoop-project
+%endif
 
 # War files we don't want
 %mvn_package :%{name}-auth-examples __noinstall
