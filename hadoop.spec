@@ -23,7 +23,7 @@
 
 Name:   hadoop
 Version: 2.4.1
-Release: 3%{?dist}
+Release: 4%{?dist}
 Summary: A software platform for processing vast amounts of data
 # The BSD license file is missing
 # https://issues.apache.org/jira/browse/HADOOP-9849
@@ -1117,6 +1117,11 @@ fi
 %attr(6050,root,yarn) %{_bindir}/container-executor
 
 %changelog
+* Wed Oct  8 2014 Robert Rati <rrati@redhat> - 2.4.1-4
+- Exclude asm3 as a runtime dependency
+- Removed explict dependency on yarn from the mapreduce package
+- Added mapreduce dependency on yarn package
+
 * Mon Sep 29 2014 Robert Rati <rrati@redhat> - 2.4.1-3
 - Rebuild
 
