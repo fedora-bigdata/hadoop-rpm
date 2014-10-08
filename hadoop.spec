@@ -387,7 +387,6 @@ This package provides the Apache Hadoop Filesystem Library.
 Summary: Apache Hadoop MapReduce (MRv2)
 BuildArch: noarch
 Requires(pre): %{name}-common = %{version}-%{release}
-Requires(pre): %{name}-yarn = %{version}-%{release}
 Requires(post): systemd
 Requires(preun): systemd
 Requires(postun): systemd
@@ -436,6 +435,7 @@ This package contains test related resources for Apache Hadoop.
 Summary: Apache Hadoop YARN
 BuildArch: noarch
 Requires(pre): %{name}-common = %{version}-%{release}
+Requires: %{name}-mapreduce = %{version}-%{release}
 Requires: aopalliance
 Requires: atinject
 Requires: hamcrest
