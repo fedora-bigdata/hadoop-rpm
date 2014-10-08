@@ -2041,7 +2041,7 @@ index 8ae5809..b7da2bc 100644
        </exclusions>
      </dependency>
 diff --git a/hadoop-mapreduce-project/pom.xml b/hadoop-mapreduce-project/pom.xml
-index 8f1d2b0..b0f511b 100644
+index 8f1d2b0..465c2df 100644
 --- a/hadoop-mapreduce-project/pom.xml
 +++ b/hadoop-mapreduce-project/pom.xml
 @@ -52,8 +52,8 @@
@@ -2074,8 +2074,21 @@ index 8f1d2b0..b0f511b 100644
          </exclusion>
        </exclusions>
      </dependency>
+@@ -136,6 +128,12 @@
+     <dependency>
+       <groupId>com.sun.jersey</groupId>
+       <artifactId>jersey-server</artifactId>
++      <exclusions>
++        <exclusion>
++          <groupId>asm</groupId>
++          <artifactId>asm</artifactId>
++        </exclusion>
++      </exclusions>
+     </dependency>
+     <dependency>
+       <groupId>com.sun.jersey.contribs</groupId>
 diff --git a/hadoop-project/pom.xml b/hadoop-project/pom.xml
-index b315e2b..e282926 100644
+index b315e2b..e9b072d 100644
 --- a/hadoop-project/pom.xml
 +++ b/hadoop-project/pom.xml
 @@ -59,7 +59,7 @@
@@ -2123,19 +2136,25 @@ index b315e2b..e282926 100644
        </dependency>
  
        <dependency>
-@@ -422,6 +410,11 @@
+@@ -421,6 +409,17 @@
+         <groupId>com.sun.jersey</groupId>
          <artifactId>jersey-server</artifactId>
          <version>${jersey.version}</version>
-       </dependency>
++        <exclusions>
++          <exclusion>
++            <groupId>asm</groupId>
++            <artifactId>asm</artifactId>
++          </exclusion>
++        </exclusions>
++      </dependency>
 +      <dependency>
 +        <groupId>com.sun.jersey</groupId>
 +        <artifactId>jersey-servlet</artifactId>
 +        <version>${jersey.version}</version>
-+      </dependency>
+       </dependency>
  
        <dependency>
-         <groupId>com.google.inject</groupId>
-@@ -472,34 +465,22 @@
+@@ -472,34 +471,22 @@
        </dependency>
  
        <dependency>
@@ -2182,7 +2201,7 @@ index b315e2b..e282926 100644
        </dependency>
        <dependency>
          <groupId>commons-el</groupId>
-@@ -728,7 +709,7 @@
+@@ -728,7 +715,7 @@
        <dependency>
          <groupId>org.apache.bookkeeper</groupId>
          <artifactId>bookkeeper-server</artifactId>
@@ -2362,7 +2381,7 @@ index 1efb54c..1b3463b 100644
  import org.apache.commons.cli.Options;
  
 diff --git a/hadoop-yarn-project/hadoop-yarn/hadoop-yarn-common/pom.xml b/hadoop-yarn-project/hadoop-yarn/hadoop-yarn-common/pom.xml
-index a19a78c..1cb621d 100644
+index a19a78c..83aa759 100644
 --- a/hadoop-yarn-project/hadoop-yarn/hadoop-yarn-common/pom.xml
 +++ b/hadoop-yarn-project/hadoop-yarn/hadoop-yarn-common/pom.xml
 @@ -51,10 +51,6 @@
@@ -2376,6 +2395,19 @@ index a19a78c..1cb621d 100644
        </exclusions>
      </dependency>
  
+@@ -151,6 +147,12 @@
+     <dependency>
+       <groupId>com.sun.jersey</groupId>
+       <artifactId>jersey-server</artifactId>
++      <exclusions>
++        <exclusion>
++          <groupId>asm</groupId>
++          <artifactId>asm</artifactId>
++        </exclusion>
++      </exclusions>
+     </dependency>
+     <dependency>
+       <groupId>com.sun.jersey</groupId>
 diff --git a/hadoop-yarn-project/hadoop-yarn/hadoop-yarn-common/src/main/java/org/apache/hadoop/yarn/webapp/WebApps.java b/hadoop-yarn-project/hadoop-yarn/hadoop-yarn-common/src/main/java/org/apache/hadoop/yarn/webapp/WebApps.java
 index f8c6f55..71df06b 100644
 --- a/hadoop-yarn-project/hadoop-yarn/hadoop-yarn-common/src/main/java/org/apache/hadoop/yarn/webapp/WebApps.java
