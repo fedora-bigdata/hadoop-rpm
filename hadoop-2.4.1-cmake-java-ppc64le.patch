@@ -1,0 +1,12 @@
+diff -up hadoop-common-9e2ef43a240fb0f603d8c384e501daec11524510/hadoop-common-project/hadoop-common/src/JNIFlags.cmake.ppc hadoop-common-9e2ef43a240fb0f603d8c384e501daec11524510/hadoop-common-project/hadoop-common/src/JNIFlags.cmake
+--- hadoop-common-9e2ef43a240fb0f603d8c384e501daec11524510/hadoop-common-project/hadoop-common/src/JNIFlags.cmake.ppc	2014-06-30 09:04:57.000000000 +0200
++++ hadoop-common-9e2ef43a240fb0f603d8c384e501daec11524510/hadoop-common-project/hadoop-common/src/JNIFlags.cmake	2014-10-10 10:37:39.000000000 +0200
+@@ -78,6 +78,8 @@ IF("${CMAKE_SYSTEM}" MATCHES "Linux")
+         SET(_java_libarch "amd64")
+     ELSEIF (CMAKE_SYSTEM_PROCESSOR MATCHES "^arm")
+         SET(_java_libarch "arm")
++    ELSEIF (CMAKE_SYSTEM_PROCESSOR MATCHES "^(powerpc|ppc)64le")
++      SET(_java_libarch "ppc64")
+     ELSE()
+         SET(_java_libarch ${CMAKE_SYSTEM_PROCESSOR})
+     ENDIF()
