@@ -23,7 +23,7 @@
 
 Name:   hadoop
 Version: 2.4.1
-Release: 4%{?dist}
+Release: 5%{?dist}
 Summary: A software platform for processing vast amounts of data
 # The BSD license file is missing
 # https://issues.apache.org/jira/browse/HADOOP-9849
@@ -65,6 +65,8 @@ Patch8: %{name}-netty-3.6.6-Final.patch
 Patch9: %{name}-tools.jar.patch
 # Workaround for bz1012059
 Patch10: %{name}-build.patch
+# Fix Java detection on ppc64le
+Patch11: %{name}-2.4.1-cmake-java-ppc64le.patch
 # The native bits don't compile on ARM
 ExcludeArch: %{arm}
 
@@ -480,6 +482,7 @@ This package contains files needed to run Apache Hadoop YARN in secure mode.
 %endif
 %patch9 -p1
 %patch10 -p1
+%patch11 -p1
 
 %if 0%{?fedora} < 21
 # The hadoop test suite needs classes from the zookeeper test suite.
@@ -601,6 +604,10 @@ opts="-j"
 %if %{without javadoc}
 opts="-j"
 %endif
+%endif
+# increase JVM memory limits to avoid OOM during build
+%ifarch s390x ppc64le
+export MAVEN_OPTS="-Xms2048M -Xmx4096M"
 %endif
 %mvn_build $opts -- -Drequire.snappy=true -Dcontainer-executor.conf.dir=%{_sysconfdir}/%{name} -Pdist,native -DskipTests -DskipTest -DskipIT
 
@@ -1117,6 +1124,10 @@ fi
 %attr(6050,root,yarn) %{_bindir}/container-executor
 
 %changelog
+* Fri Oct 10 2014 Dan Horák <dan[at]danny.cz> - 2.4.1-5
+- fix OOM during build on s390x and ppc64le (#1149295)
+- fix Java detection on ppc64le
+
 * Wed Oct  8 2014 Robert Rati <rrati@redhat> - 2.4.1-4
 - Exclude asm3 as a runtime dependency
 - Removed explict dependency on yarn from the mapreduce package
